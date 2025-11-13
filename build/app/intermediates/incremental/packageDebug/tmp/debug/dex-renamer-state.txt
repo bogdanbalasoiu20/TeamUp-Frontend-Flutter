@@ -1,0 +1,4 @@
+#Fri Nov 14 00:06:34 EET 2025
+base.0=D\:\\team_up_fe_new\\build\\app\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
