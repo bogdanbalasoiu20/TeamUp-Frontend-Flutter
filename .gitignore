@@ -1,18 +1,26 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.buildlog/
-.history
 
-
-
-# Flutter/Dart/Pub related
-**/doc/api/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.packages
 .pub/
+.dart-packages
+**/doc/api/
 
-app.*.symbols
+/build/
+**/intermediates/
+
+.idea/
+
+/android/local.properties
+/android/.gradle
+/android/app/build
+/android/app/.cxx
+/android/app/.gradle
+/ios/.symlinks
+/ios/Flutter/Generated.xcconfig
+
+*.log
+*.lock # pubspec.lock e exceptie, dar e bine sa fie pus daca apar altele
+pubspec.lock # EXCEPTIE: Vrem sa urcam pubspec.lock, asa ca il excludem de la regula *.lock (daca ar fi existat)
+*.DS_Store # macOS/iOS
