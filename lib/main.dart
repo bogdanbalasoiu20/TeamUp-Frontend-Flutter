@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/welcome_page.dart'; // Asigură-te că numele proiectului tău este corect!
+import 'package:team_up_fe_new/screens/welcome_page.dart';
 
 void main() {
   runApp(const FitnessClubApp());

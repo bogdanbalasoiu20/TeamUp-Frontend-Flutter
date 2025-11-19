@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
+import 'package:team_up_fe_new/screens/login_page.dart';
 
-// Ecranul de deschidere(login+sign up). Primul care apare cand deschizi aplicatia
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -34,7 +34,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Blur profesional peste imagine (look premium)
+          // Blur peste imagine
           BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
             child: Container(
@@ -57,112 +57,122 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
 
-          // CONȚINUT
+
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
 
-                  //Numele aplicatiei(coloana 1)
-                  _FadeSlide(
-                    delay: 0,
-                    child: const Text(
-                      'TeamUp',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
+
+                  Column(
+                    children: [
+                      const SizedBox(height: 140), // împinge titlul mai jos
+                      _FadeSlide(
+                        delay: 0,
+                        child: const Text(
+                          'TeamUp',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 50,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
 
-                  const SizedBox(height: 50),
 
-                  // Minge animata
-                  _FadeSlide(
-                    delay: 200,
-                    child: _AnimatedBall(),
-                  ),
-
-                  const SizedBox(height: 50),
-
-                  // Mesajul (coloana 2)
-                  _FadeSlide(
-                    delay: 350,
-                    child: const Text(
-                      'Football starts here',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.3,
+                  Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      _FadeSlide(
+                        delay: 200,
+                        child: _AnimatedBall(),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 10),
+                      const SizedBox(height: 40),
 
-                  // Subtitlu nou
-                  _FadeSlide(
-                    delay: 450,
-                    child: Text(
-                      'Become your own player',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 0.7,
+                      _FadeSlide(
+                        delay: 350,
+                        child: const Text(
+                          'Football starts here',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 1.3,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 80),
+                      const SizedBox(height: 10),
 
-                  //Butonul de sign in(coloana 3)
-                  _FadeSlide(
-                    delay: 600,
-                    child: _WelcomeButton(
-                      text: 'SIGN IN',
-                      onTap: () {
-                        // TODO: De facut navigarea catre SignInScreen
-                        print('Navigare la Sign In');
-                      },
-                      isFilled: true,
-                      fillColor: endColor,
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  //Butonul de sign up(coloana 4)
-                  _FadeSlide(
-                    delay: 750,
-                    child: _WelcomeButton(
-                      text: 'SIGN UP',
-                      onTap: () {
-                        // TODO: De facut navigarea catre SignUpScreen
-                        print('Navigare la Sign Up');
-                      },
-                      isFilled: false,
-                      fillColor: endColor,
-                    ),
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  // Footer
-                  _FadeSlide(
-                    delay: 900,
-                    child: Text(
-                      "Powered by TeamUp",
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
-                        fontSize: 12,
+                      // Subtitlu nou
+                      _FadeSlide(
+                        delay: 450,
+                        child: Text(
+                          'Become your own player',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 17,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.7,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
+                  ),
+
+
+                  Column(
+                    children: [
+                      _FadeSlide(
+                        delay: 600,
+                        child: _WelcomeButton(
+                          text: 'SIGN IN',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context)=> const LoginScreen())
+                            );
+                            print('Navigare la Sign In');
+                          },
+                          isFilled: true,
+                          fillColor: endColor,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      _FadeSlide(
+                        delay: 750,
+                        child: _WelcomeButton(
+                          text: 'SIGN UP',
+                          onTap: () {
+                            print('Navigare la Sign Up');
+                          },
+                          isFilled: false,
+                          fillColor: endColor,
+                        ),
+                      ),
+
+                      const SizedBox(height: 50),
+
+                      // Footer
+                      _FadeSlide(
+                        delay: 900,
+                        child: Text(
+                          "Powered by TeamUp",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
