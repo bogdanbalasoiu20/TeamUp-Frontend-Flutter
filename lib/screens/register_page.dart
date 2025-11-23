@@ -41,8 +41,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         phone.isEmpty ||
         birthday.isEmpty ||
         selectedPosition == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("All fields are required")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("All fields are required")),
+      );
       return;
     }
 
@@ -67,25 +68,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }),
       );
 
+      print("STATUS: ${response.statusCode}");
+      print("RAW BODY: ${response.body}");
+
+      // SUCCESS
       if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Account created successfully")),
         );
-
-        Navigator.pop(context); // înapoi la login
-      } else {
-        final err = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(err["message"] ?? "Registration error")),
-        );
+        Navigator.pop(context);
+        return;
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+
+      // ERROR HANDLING ---------------------
+      final body = jsonDecode(response.body);
+
+      String message = body["message"] ?? "Registration error";
+
+      // If validation errors exist
+      if (body["details"] != null) {
+        final List errors = body["details"];
+        message = errors
+            .map((e) => "${e['field']}: ${e['error']}")
+            .join("\n");
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+
+     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
     }
 
     setState(() => _isLoading = false);
   }
+
 
   @override
   Widget build(BuildContext context) {
