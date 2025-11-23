@@ -1,87 +1,87 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/welcome_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-
-  //Controller-ele pentru input (email si parola)
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Controllers
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController birthdayController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
 
-  bool _isLoading = false; //prtectie impotriva spam-ului. true-> request inca in desfasurare; false->nu exista un request activ; daca apas pe 10 ori pe un buton sa nu se trimita 10 requesturi
+  String? selectedPosition;
 
-  //functia care trimite requestul catre backend
-  Future<void> login() async {
+  bool _isLoading = false;
+
+  // API CALL
+  Future<void> register() async {
     final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+    final username = usernameController.text.trim();
+    final pass = passwordController.text.trim();
+    final phone = phoneController.text.trim();
+    final birthday = birthdayController.text.trim();
+    final city = cityController.text.trim();
+    final desc = descriptionController.text.trim();
 
-    //validare simpla pe FE – evita requesturile inutile spre backend
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
-      );
+    if (email.isEmpty ||
+        username.isEmpty ||
+        pass.isEmpty ||
+        phone.isEmpty ||
+        birthday.isEmpty ||
+        selectedPosition == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("All fields are required")));
       return;
     }
 
     setState(() => _isLoading = true);
 
-    //endpoint login
-    final url = Uri.parse("https://teamup-backend-omi4.onrender.com/api/auth/login");
+    final url = Uri.parse(
+        "https://teamup-backend-omi4.onrender.com/api/auth/register");
 
     try {
-      //Request HTTP catre backend
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "emailOrUsername": email,
-          "password": password,
+          "email": email,
+          "username": username,
+          "password": pass,
+          "phoneNumber": phone,
+          "birthday": birthday,
+          "position": selectedPosition,
+          "city": city,
+          "description": desc,
         }),
       );
 
-      //Dacă login-ul este corect
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        final token = data["data"]["token"];  //extragem JWT token
-
-        //salvam token-ul local in telefon
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("token", token);
-
+      if (response.statusCode == 200 || response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful")),
+          const SnackBar(content: Text("Account created successfully")),
         );
 
-        //navigam spre ecranul principal (temporar WelcomeScreen)
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => WelcomeScreen()),
-        );
+        Navigator.pop(context); // înapoi la login
       } else {
-        //eroare venita din backend – afisam mesajul lor
-        final error = jsonDecode(response.body);
+        final err = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error["message"] ?? "Authentication error")),
+          SnackBar(content: Text(err["message"] ?? "Registration error")),
         );
       }
-
     } catch (e) {
-      //eroare pe partea de retea / server
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: $e")));
     }
 
     setState(() => _isLoading = false);
@@ -89,16 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    final size = MediaQuery.of(context).size; //afla dimensiunea ecranului
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, //permite ridicarea UI-ului cand apare tastatura
-
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-
-          //FUNDAL (gradient + imagine)
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -118,41 +114,33 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          //TITLU ("Hello", "Sign in!")
+          // TITLE
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 80, 28, 0), //spatiere fata de margini
+            padding: const EdgeInsets.fromLTRB(28, 80, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Hello",
+                  "Create Your Account",
                   style: TextStyle(
-                    fontSize: 45,
+                    fontSize: 40,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 SizedBox(height: 6),
-                Text(
-                  "Sign in!",
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.white,
-                  ),
-                )
               ],
             ),
           ),
 
-          //CONTAINERUL ALB (inputuri + buton + forgot password)
+          // WHITE CONTAINER WITH INPUTS
           Positioned(
-            top: size.height * 0.32, //distanta fata de partea de sus
+            top: size.height * 0.32,
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
-
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
@@ -161,49 +149,82 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              child: SingleChildScrollView( //permite scroll cand apare tastatura
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    const SizedBox(height: 8),
-
-                    //Camp Username/Email
                     BehanceUnderlineInput(
-                      label: "Username/Email",
-                      rightIcon: Icons.check,
+                      label: "Email",
                       controller: emailController,
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    //Camp Password
+                    BehanceUnderlineInput(
+                      label: "Username",
+                      controller: usernameController,
+                    ),
+
+                    const SizedBox(height: 20),
+
                     BehanceUnderlineInput(
                       label: "Password",
                       isPassword: true,
                       controller: passwordController,
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
 
-                    //Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Forgot password?",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF2E8B57),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    BehanceUnderlineInput(
+                      label: "Phone Number",
+                      controller: phoneController,
                     ),
 
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 20),
 
-                    //BUTON SIGN IN
+                    BehanceUnderlineInput(
+                      label: "Birthday (yyyy-MM-dd)",
+                      controller: birthdayController,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // POSITION DROPDOWN
+                    Text("Position",
+                        style: const TextStyle(
+                            color: AppColors.primaryGreenLight,
+                            fontWeight: FontWeight.w700)),
+
+                    DropdownButton<String>(
+                      value: selectedPosition,
+                      isExpanded: true,
+                      items: [
+                        "GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"
+                      ].map((e) =>
+                          DropdownMenuItem(value: e, child: Text(e))).toList(),
+                      onChanged: (v) => setState((){ selectedPosition = v; }),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    BehanceUnderlineInput(
+                      label: "City",
+                      controller: cityController,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    BehanceUnderlineInput(
+                      label: "Description",
+                      controller: descriptionController,
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // REGISTER BUTTON
                     GestureDetector(
-                      onTap: _isLoading ? null : login, //apelam login doar daca nu e loading
+                      onTap: _isLoading ? null : register,
                       child: Container(
                         height: 50,
                         decoration: BoxDecoration(
@@ -222,18 +243,17 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : const Text(
-                            "SIGN IN",
+                            "CREATE ACCOUNT",
                             style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 120), //spatiu pentru tastatura
+                    const SizedBox(height: 120),
                   ],
                 ),
               ),
@@ -241,48 +261,20 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-
-      //FOOTER (Sign up) – ramane fix in partea de jos
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(right: 26, bottom: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              "Don't have an account?",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              "Sign up",
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF2E8B57),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-//WIDGET CUSTOM PENTRU INPUT (stil Behance)
+
+// SAME INPUT WIDGET YOU ALREADY HAVE
 class BehanceUnderlineInput extends StatefulWidget {
   final String label;
-  final IconData? rightIcon;
   final bool isPassword;
   final TextEditingController controller;
 
   const BehanceUnderlineInput({
     super.key,
     required this.label,
-    this.rightIcon,
     this.isPassword = false,
     required this.controller,
   });
@@ -292,19 +284,14 @@ class BehanceUnderlineInput extends StatefulWidget {
 }
 
 class _BehanceUnderlineInputState extends State<BehanceUnderlineInput> {
-  bool _obscure = true; //show/hide pentru parola
+  bool _obscure = true;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: widget.controller,
       obscureText: widget.isPassword ? _obscure : false,
-
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 16,
-      ),
-
+      style: const TextStyle(color: Colors.black, fontSize: 16),
       decoration: InputDecoration(
         labelText: widget.label,
         labelStyle: const TextStyle(
@@ -312,32 +299,21 @@ class _BehanceUnderlineInputState extends State<BehanceUnderlineInput> {
           fontSize: 14,
           fontWeight: FontWeight.w700,
         ),
-
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Color(0xFFD3D3D3), width: 1.2),
         ),
-
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: AppColors.primaryGreenLight, width: 1.4),
         ),
-
-        //Icon din dreapta (check sau eye)
         suffixIcon: widget.isPassword
             ? IconButton(
           icon: Icon(
             _obscure ? Icons.visibility_off : Icons.visibility,
             color: Colors.grey.shade600,
           ),
-          onPressed: () {
-            setState(() {
-              _obscure = !_obscure; //inverseaza show/hide
-            });
-          },
+          onPressed: () => setState(() => _obscure = !_obscure),
         )
-            : (widget.rightIcon != null
-            ? Icon(widget.rightIcon, color: Colors.grey.shade600)
-            : null),
-
+            : null,
         contentPadding: const EdgeInsets.only(top: 18, bottom: 10),
       ),
     );
