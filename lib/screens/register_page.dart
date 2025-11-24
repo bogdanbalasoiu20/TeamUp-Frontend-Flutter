@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/exceptions/api_exception.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -53,55 +53,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
         "https://teamup-backend-omi4.onrender.com/api/auth/register");
 
     try {
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": email,
-          "username": username,
-          "password": pass,
-          "phoneNumber": phone,
-          "birthday": birthday,
-          "position": selectedPosition,
-          "city": city,
-          "description": desc,
-        }),
-      );
-
-      print("STATUS: ${response.statusCode}");
-      print("RAW BODY: ${response.body}");
-
-      // SUCCESS
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Account created successfully")),
-        );
-        Navigator.pop(context);
-        return;
-      }
-
-      // ERROR HANDLING ---------------------
-      final body = jsonDecode(response.body);
-
-      String message = body["message"] ?? "Registration error";
-
-      // If validation errors exist
-      if (body["details"] != null) {
-        final List errors = body["details"];
-        message = errors
-            .map((e) => "${e['field']}: ${e['error']}")
-            .join("\n");
-      }
+      await ApiService.post("/api/auth/register", {
+        "email": emailController.text.trim(),
+        "username": usernameController.text.trim(),
+        "password": passwordController.text.trim(),
+        "phoneNumber": phoneController.text.trim(),
+        "birthday": birthdayController.text.trim(),
+        "position": selectedPosition,
+        "city": cityController.text.trim(),
+        "description": descriptionController.text.trim(),
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        const SnackBar(content: Text("Account created successfully")),
       );
 
-     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      Navigator.pop(context);
+
+    } catch (e) {
+      if (e is ApiException) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Unexpected error")));
+      }
     }
+
 
     setState(() => _isLoading = false);
   }
