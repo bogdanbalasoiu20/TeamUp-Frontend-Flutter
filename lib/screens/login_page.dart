@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/home_page.dart';
+import 'package:team_up_fe_new/screens/register_page.dart';
 import 'package:team_up_fe_new/screens/welcome_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -26,7 +28,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    //validare simpla pe FE – evita requesturile inutile spre backend
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("All fields are required")),
@@ -36,56 +37,42 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    //endpoint login
-    final url = Uri.parse("https://teamup-backend-omi4.onrender.com/api/auth/login");
-
     try {
-      //Request HTTP catre backend
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "emailOrUsername": email,
-          "password": password,
-        }),
+      // folosim ApiService
+      final response = await ApiService.post("/api/auth/login", {
+        "emailOrUsername": email,
+        "password": password,
+      });
+
+      // extragem token-ul din response
+      final token = response["data"]["token"];
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("token", token);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login successful")),
       );
 
-      //Dacă login-ul este corect
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        final token = data["data"]["token"];  //extragem JWT token
-
-        //salvam token-ul local in telefon
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("token", token);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful")),
-        );
-
-        //navigam spre ecranul principal (temporar WelcomeScreen)
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => WelcomeScreen()),
-        );
-      } else {
-        //eroare venita din backend – afisam mesajul lor
-        final error = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error["message"] ?? "Authentication error")),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => HomeScreen()),
+      );
 
     } catch (e) {
-      //eroare pe partea de retea / server
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      if (e is ApiException) {
+        // afisam mesajul de backend
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Unexpected error")));
+      }
     }
 
     setState(() => _isLoading = false);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -107,14 +94,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   AppColors.primaryGreenDark,
                   AppColors.primaryGreenLight,
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-              image: const DecorationImage(
-                image: AssetImage("lib/images/football_field.png"),
-                fit: BoxFit.cover,
-                opacity: 0.25,
-              ),
+              // image: const DecorationImage(
+              //   image: AssetImage("lib/images/football_field.png"),
+              //   fit: BoxFit.cover,
+              //   opacity: 0.25,
+              // ),
             ),
           ),
 
@@ -257,14 +244,24 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              "Sign up",
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF2E8B57),
-                fontWeight: FontWeight.bold,
+
+            GestureDetector(
+              onTap:(){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_)=>RegisterScreen())
+                );
+              },
+
+              child: const Text(
+                "Sign up",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF2E8B57),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
+            )
           ],
         ),
       ),

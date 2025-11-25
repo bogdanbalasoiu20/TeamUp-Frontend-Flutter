@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/home_page.dart';
+import 'package:team_up_fe_new/screens/login_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
@@ -27,30 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // API CALL
   Future<void> register() async {
-    final email = emailController.text.trim();
-    final username = usernameController.text.trim();
-    final pass = passwordController.text.trim();
-    final phone = phoneController.text.trim();
-    final birthday = birthdayController.text.trim();
-    final city = cityController.text.trim();
-    final desc = descriptionController.text.trim();
-
-    if (email.isEmpty ||
-        username.isEmpty ||
-        pass.isEmpty ||
-        phone.isEmpty ||
-        birthday.isEmpty ||
-        selectedPosition == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
-
-    final url = Uri.parse(
-        "https://teamup-backend-omi4.onrender.com/api/auth/register");
 
     try {
       await ApiService.post("/api/auth/register", {
@@ -68,7 +47,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text("Account created successfully")),
       );
 
-      Navigator.pop(context);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => HomeScreen()),
+      );
 
     } catch (e) {
       if (e is ApiException) {
@@ -80,9 +62,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
 
-
     setState(() => _isLoading = false);
   }
+
 
 
   @override
@@ -101,14 +83,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   AppColors.primaryGreenDark,
                   AppColors.primaryGreenLight,
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-              image: const DecorationImage(
-                image: AssetImage("lib/images/football_field.png"),
-                fit: BoxFit.cover,
-                opacity: 0.25,
-              ),
+              // image: const DecorationImage(
+              //   image: AssetImage("lib/images/football_field.png"),
+              //   fit: BoxFit.cover,
+              //   opacity: 0.25,
+              // ),
             ),
           ),
 
@@ -259,6 +241,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ],
       ),
+
+      //FOOTER (Sign up) – ramane fix in partea de jos
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(right: 26, bottom: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              "Do you have account?",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 6),
+
+            GestureDetector(
+              onTap:(){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_)=>LoginScreen())
+                );
+              },
+              child: const Text(
+                "Sign in",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF2E8B57),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+
     );
   }
 }

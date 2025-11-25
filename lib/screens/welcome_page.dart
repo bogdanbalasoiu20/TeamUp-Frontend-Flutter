@@ -24,14 +24,14 @@ class WelcomeScreen extends StatelessWidget {
                   AppColors.primaryGreenDark,
                   AppColors.primaryGreenLight,
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
-              image: const DecorationImage(
-                image: AssetImage("lib/images/football_field.png"),
-                fit: BoxFit.cover,
-                opacity: 0.18,
-              ),
+              // image: const DecorationImage(
+              //   image: AssetImage("lib/images/football_field.png"),
+              //   fit: BoxFit.cover,
+              //   opacity: 0.18,
+              // ),
             ),
           ),
 

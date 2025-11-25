@@ -11,9 +11,10 @@ class FitnessClubApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'TeamUp UI',
       theme: ThemeData(
-        primarySwatch: Colors.red,
+        primarySwatch: Colors.green,
         useMaterial3: true,
       ),
       // setez WelcomeScreen ca prima pagina

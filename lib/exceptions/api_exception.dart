@@ -10,7 +10,7 @@ ApiException(this.error);
 String toString() {
   if (error.details.isNotEmpty) {
     return error.details
-        .map((e) => "${e.field}: ${e.message}")
+        .map((e) => "${e.message}")
         .join("\n");
   }
 
