@@ -40,4 +40,28 @@ class ApiService {
       ApiError(code: "UNKNOWN", message: "Unknown error", details: []),
     );
   }
+
+
+  static Future<Map<String, dynamic>> get(String endpoint) async {
+    final url = Uri.parse("$baseUrl$endpoint");
+
+    final response = await http.get(url, headers: {
+      "Content-Type": "application/json",
+    });
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return data;
+    }
+
+    // backend returns { success: false, error: {...} }
+    if (data["error"] != null) {
+      throw ApiException(ApiError.fromJson(data["error"]));
+    }
+
+    throw ApiException(
+      ApiError(code: "UNKNOWN", message: "Unknown error", details: []),
+    );
+  }
 }

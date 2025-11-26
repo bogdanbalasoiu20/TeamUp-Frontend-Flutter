@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/home_page.dart';
+import 'package:team_up_fe_new/screens/map_page.dart';
 import 'package:team_up_fe_new/screens/register_page.dart';
-import 'package:team_up_fe_new/screens/welcome_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
@@ -56,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => MapPage()),
       );
 
     } catch (e) {
