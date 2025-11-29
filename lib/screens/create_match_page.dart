@@ -87,14 +87,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   // CREATE MATCH
   Future<void> _createMatch() async {
-    if (selectedVenue == null) {
-      showError("Selectează un teren");
-      return;
-    }
-    if (startsAt == null) {
-      showError("Selectează ora de start");
-      return;
-    }
+    // if (selectedVenue == null) {
+    //   showError("Selectează un teren");
+    //   return;
+    // }
+    // if (startsAt == null) {
+    //   showError("Selectează ora de start");
+    //   return;
+    // }
 
     print("### Preparing match creation request...");
     print("### Selected Venue:");
@@ -103,8 +103,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     print("   lat = ${selectedVenue!.latitude}, lng = ${selectedVenue!.longitude}");
 
     final payload = {
-      "venueId": selectedVenue!.id,
-      "startsAt": startsAt!.toUtc().toIso8601String(),
+      "venueId": selectedVenue?.id,
+      "startsAt": startsAt?.toUtc().toIso8601String(),
       "durationMinutes": int.tryParse(durationController.text),
       "maxPlayers": int.tryParse(maxPlayersController.text),
       "joinDeadline": joinDeadline?.toUtc().toIso8601String(),
@@ -129,13 +129,13 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       Navigator.pop(context);
 
     } catch (e) {
-      print("### ERROR CAUGHT:");
-      print(e);
-
       if (e is ApiException) {
-        showError(e.toString());
+        // afisam mesajul de backend
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       } else {
-        showError("Unexpected error");
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("Unexpected error")));
       }
     }
 
@@ -182,7 +182,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Choose field • Set time • Invite players",
+                  "Choose field • Set time • Have fun",
                   style: TextStyle(color: Colors.white70, fontSize: 16),
                 )
               ],
@@ -235,7 +235,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
                     const SizedBox(height: 20),
 
-                    const Text("Starts At"),
+                    const Text("Start Time"),
                     GestureDetector(
                       onTap: () => _pickDate(isStart: true),
                       child: Container(
@@ -274,7 +274,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
                     const SizedBox(height: 20),
 
-                    underlineInput("Max players",
+                    underlineInput("Maximum players",
                         controller: maxPlayersController),
 
                     const SizedBox(height: 20),
@@ -284,19 +284,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
                     const SizedBox(height: 20),
 
-                    const Text("Visibility"),
-                    DropdownButtonFormField<String>(
-                      value: visibility,
-                      items: const [
-                        DropdownMenuItem(
-                            value: "PUBLIC", child: Text("PUBLIC")),
-                        DropdownMenuItem(
-                            value: "PRIVATE", child: Text("PRIVATE")),
-                      ],
-                      onChanged: (v) => setState(() => visibility = v!),
-                    ),
-
-                    const SizedBox(height: 20),
 
                     underlineInput("Title",
                         controller: titleController),

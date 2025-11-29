@@ -9,11 +9,18 @@ ApiException(this.error);
 @override
 String toString() {
   if (error.details.isNotEmpty) {
-    return error.details
-        .map((e) => "${e.message}")
-        .join("\n");
+    return error.details.map((e) => e.message).join("\n");
   }
 
-  return error.message;
+  if (error.message.isNotEmpty) {
+    return error.message;
+  }
+
+  if (error.code.isNotEmpty) {
+    return error.code;
+  }
+
+  return "Unexpected server error";
 }
+
 }
