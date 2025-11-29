@@ -3,9 +3,13 @@ class Venue {
   final String name;
   final String? address;
   final String? phoneNumber;
-  final String? city;
+
+  // city eliminat total din JSON, se setează implicit București
+  final String city = "bucuresti";
+
   final double? latitude;
   final double? longitude;
+
   final String osmType;
   final int? osmId;
   final Map<String, dynamic>? tagsJson;
@@ -17,7 +21,6 @@ class Venue {
     required this.name,
     this.address,
     this.phoneNumber,
-    this.city,
     this.latitude,
     this.longitude,
     required this.osmType,
@@ -33,7 +36,7 @@ class Venue {
       name: json["name"] ?? "",
       address: json["address"],
       phoneNumber: json["phoneNumber"],
-      city: json["city"], // este deja String
+      // city ignorat complet
       latitude: json["latitude"]?.toDouble(),
       longitude: json["longitude"]?.toDouble(),
       osmType: json["osmType"] ?? "",
