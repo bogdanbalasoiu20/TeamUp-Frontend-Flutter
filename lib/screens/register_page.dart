@@ -1,10 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/create_match_page.dart';
 import 'package:team_up_fe_new/screens/home_page.dart';
 import 'package:team_up_fe_new/screens/login_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -32,7 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await ApiService.post("/api/auth/register", {
+      final response = await ApiService.post("/api/auth/register", {
         "email": emailController.text.trim(),
         "username": usernameController.text.trim(),
         "password": passwordController.text.trim(),
@@ -43,13 +45,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
         "description": descriptionController.text.trim(),
       });
 
+      //extrag token-ul din response ca la login
+      final token = response["data"]["token"];
+
+      //salvez token-ul sub aceeasi cheie ca în login
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString("access_token", token);
+
+      //succes
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Account created successfully")),
       );
 
+      //navigare
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => HomeScreen()),
+        MaterialPageRoute(builder: (_) => CreateMatchPage()),
       );
 
     } catch (e) {
@@ -64,6 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = false);
   }
+
 
 
 
