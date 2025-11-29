@@ -27,7 +27,7 @@ class _MapPageState extends State<MapPage> {
   Future<void> _loadInitial() async {
     setState(() => isLoading = true);
 
-    // București bounding box
+    // Bucuresti bounding box
     final data = await MapApi.fetchBBox(
       44.35, // sud
       25.95, // vest
@@ -43,7 +43,7 @@ class _MapPageState extends State<MapPage> {
 
   @override
   Widget build(BuildContext context) {
-    // marker doar dacă avem coordonate valide
+    // marker doar daca avem coordonate valide
     final markers = venues
         .where((v) => v.latitude != null && v.longitude != null)
         .map((v) {
