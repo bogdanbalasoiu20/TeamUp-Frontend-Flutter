@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/create_match_page.dart';
+import 'package:team_up_fe_new/screens/match_map_page.dart';
 import 'package:team_up_fe_new/screens/register_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
@@ -50,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const CreateMatchPage()),
+        MaterialPageRoute(builder: (_) => const MatchesMapPage()),
       );
     } catch (e) {
       if (e is ApiException) {

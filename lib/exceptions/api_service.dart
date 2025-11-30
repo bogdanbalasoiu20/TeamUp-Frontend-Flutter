@@ -46,11 +46,11 @@ class ApiService {
 
 
 
-  static Future<Map<String, dynamic>> get(String endpoint) async {
+  static Future<Map<String, dynamic>> get(String fullUrl) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("access_token");
 
-    final url = Uri.parse("$baseUrl$endpoint");
+    final url = Uri.parse(fullUrl);
 
     final response = await http.get(
       url,
@@ -73,5 +73,6 @@ class ApiService {
     throw ApiException(ApiError(
         code: "UNKNOWN", message: "Unknown error", details: []));
   }
+
 
 }
