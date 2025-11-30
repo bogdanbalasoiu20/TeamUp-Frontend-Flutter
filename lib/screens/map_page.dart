@@ -16,34 +16,27 @@ class _MapPageState extends State<MapPage> {
   final mapController = MapController();
   List<Venue> venues = [];
   Venue? selectedVenue;
-  bool isLoading = false;
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+    _loadVenues();
   }
 
-  Future<void> _loadInitial() async {
-    setState(() => isLoading = true);
-
-    // Bucuresti bounding box
+  Future<void> _loadVenues() async {
     final data = await MapApi.fetchBBox(
-      44.35, // sud
-      25.95, // vest
-      44.55, // nord
-      26.25, // est
+      44.35, 25.95, 44.55, 26.25,
     );
 
     setState(() {
       venues = data.map((e) => Venue.fromJson(e)).toList();
-      isLoading = false;
+      loading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // marker doar daca avem coordonate valide
     final markers = venues
         .where((v) => v.latitude != null && v.longitude != null)
         .map((v) {
@@ -53,19 +46,17 @@ class _MapPageState extends State<MapPage> {
         point: LatLng(v.latitude!, v.longitude!),
         builder: (ctx) => GestureDetector(
           onTap: () => setState(() => selectedVenue = v),
-          child: const Icon(
+          child: Icon(
             Icons.location_on,
-            color: Colors.red,
+            color: (selectedVenue?.id == v.id) ? Colors.green : Colors.red,
             size: 40,
           ),
         ),
       );
     }).toList();
 
-    print("Loaded venues: ${venues.length}");
-
     return Scaffold(
-      appBar: AppBar(title: const Text("TeamUp Venues")),
+      appBar: AppBar(title: const Text("Select field")),
       body: Stack(
         children: [
           FlutterMap(
@@ -80,6 +71,7 @@ class _MapPageState extends State<MapPage> {
                 userAgentPackageName: "teamup",
               ),
 
+              // Cluster layer
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                   markers: markers,
@@ -115,7 +107,7 @@ class _MapPageState extends State<MapPage> {
               child: _venueBottomSheet(selectedVenue!),
             ),
 
-          if (isLoading)
+          if (loading)
             const Center(child: CircularProgressIndicator()),
         ],
       ),
@@ -133,17 +125,34 @@ class _MapPageState extends State<MapPage> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(v.name,
-              style:
-              const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          Text(
+            v.name,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 6),
 
           if (v.address != null) Text(v.address!),
           const SizedBox(height: 4),
 
           if (v.city != null) Text("City: ${v.city}"),
-          if (v.phoneNumber != null) Text("Phone: ${v.phoneNumber}"),
           const SizedBox(height: 12),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context, v); // returnăm pinul selectat
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade700,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Select this field"),
+            ),
+          ),
         ],
       ),
     );

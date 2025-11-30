@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:team_up_fe_new/screens/map_page.dart';
+import 'package:team_up_fe_new/utils/app_colors.dart';
 import '../exceptions/api_exception.dart';
 import '../exceptions/api_service.dart';
 import '../models/venue.dart';
-import '../services/map_api.dart';
 import '../widgets/mini_map_widget.dart';
 
 class CreateMatchPage extends StatefulWidget {
@@ -24,31 +25,10 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   DateTime? startsAt;
   DateTime? joinDeadline;
 
-  List<Venue> venues = [];
   Venue? selectedVenue;
-  bool loadingVenues = true;
   bool creating = false;
 
   String visibility = "PUBLIC";
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVenues();
-  }
-
-  // LOAD VENUES
-  Future<void> _loadVenues() async {
-    print("### Loading venues from backend...");
-    final raw = await MapApi.fetchBBox(44.35, 25.95, 44.55, 26.25);
-
-    print("### RAW venue list length: ${raw.length}");
-
-    setState(() {
-      venues = raw.map((v) => Venue.fromJson(v)).toList();
-      loadingVenues = false;
-    });
-  }
 
   // PICK DATE
   Future<void> _pickDate({required bool isStart}) async {
@@ -87,24 +67,18 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   // CREATE MATCH
   Future<void> _createMatch() async {
-    // if (selectedVenue == null) {
-    //   showError("Selectează un teren");
-    //   return;
-    // }
-    // if (startsAt == null) {
-    //   showError("Selectează ora de start");
-    //   return;
-    // }
-
-    print("### Preparing match creation request...");
-    print("### Selected Venue:");
-    print("   id = ${selectedVenue!.id}");
-    print("   name = ${selectedVenue!.name}");
-    print("   lat = ${selectedVenue!.latitude}, lng = ${selectedVenue!.longitude}");
+    if (selectedVenue == null) {
+      showError("Select a field on the map");
+      return;
+    }
+    if (startsAt == null) {
+      showError("Select the start time");
+      return;
+    }
 
     final payload = {
-      "venueId": selectedVenue?.id,
-      "startsAt": startsAt?.toUtc().toIso8601String(),
+      "venueId": selectedVenue!.id,
+      "startsAt": startsAt!.toUtc().toIso8601String(),
       "durationMinutes": int.tryParse(durationController.text),
       "maxPlayers": int.tryParse(maxPlayersController.text),
       "joinDeadline": joinDeadline?.toUtc().toIso8601String(),
@@ -113,9 +87,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       "totalPrice": double.tryParse(priceController.text),
       "visibility": visibility,
     };
-
-    print("### Payload to backend:");
-    print(payload);
 
     setState(() => creating = true);
 
@@ -130,7 +101,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
     } catch (e) {
       if (e is ApiException) {
-        // afisam mesajul de backend
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
       } else {
@@ -142,7 +112,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     setState(() => creating = false);
   }
 
-  // BUILD UI
+  // UI
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -151,14 +121,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Background
+          // Background gradient premium
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFF003B2F),
-                  Colors.green.shade800,
-                  Colors.green.shade400,
+                  AppColors.primaryGreenDark,
+                  AppColors.primaryGreenLight,
                 ],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
@@ -175,21 +145,31 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 Text(
                   "Create Match",
                   style: TextStyle(
-                    fontSize: 40,
+                    fontSize: 42,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 12,
+                        color: Colors.black54,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 6),
                 Text(
                   "Choose field • Set time • Have fun",
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                )
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 17,
+                  ),
+                ),
               ],
             ),
           ),
 
-          // Sheet
+          // White sheet
           Positioned(
             top: size.height * 0.28,
             left: 0,
@@ -197,119 +177,125 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(26, 32, 26, 0),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 25,
+                    color: Colors.black.withOpacity(0.15),
+                    offset: const Offset(0, -3),
+                  )
+                ],
               ),
-              child: loadingVenues
-                  ? const Center(child: CircularProgressIndicator())
-                  : SingleChildScrollView(
+
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const MiniMapWidget(),
-                    const SizedBox(height: 20),
 
-                    const Text("Venue"),
-                    DropdownButtonFormField<Venue>(
-                      value: selectedVenue,
-                      isExpanded: true,
-                      items: venues
-                          .map((v) => DropdownMenuItem(
-                        value: v,
-                        child: Text(v.name),
-                      ))
-                          .toList(),
-                      onChanged: (v) {
-                        print("### Venue selected:");
-                        print("   id=${v?.id}");
-                        print("   name=${v?.name}");
-                        print("   lat=${v?.latitude}, lng=${v?.longitude}");
+                    // MINI MAP
+                    MiniMapWidget(
+                      selectedVenue: selectedVenue,
+                      onTap: () async {
+                        final venue = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const MapPage()),
+                        );
 
-                        setState(() => selectedVenue = v);
+                        if (venue != null) {
+                          setState(() => selectedVenue = venue);
+                        }
                       },
                     ),
 
                     const SizedBox(height: 20),
 
-                    const Text("Start Time"),
-                    GestureDetector(
+                    if (selectedVenue != null)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Selected field:",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF003B2F),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            selectedVenue!.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+
+                    _label("Start Time"),
+                    _pickerBox(
+                      text: startsAt == null
+                          ? "Select date & time"
+                          : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
                       onTap: () => _pickDate(isStart: true),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: boxDecoration(),
-                        child: Text(
-                          startsAt == null
-                              ? "Select date & time"
-                              : DateFormat("yyyy-MM-dd HH:mm")
-                              .format(startsAt!),
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    const Text("Join Deadline (optional)"),
-                    GestureDetector(
+                    _label("Join Deadline (optional)"),
+                    _pickerBox(
+                      text: joinDeadline == null
+                          ? "Select deadline"
+                          : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
                       onTap: () => _pickDate(isStart: false),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: boxDecoration(),
-                        child: Text(
-                          joinDeadline == null
-                              ? "Select deadline"
-                              : DateFormat("yyyy-MM-dd HH:mm")
-                              .format(joinDeadline!),
-                        ),
-                      ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    underlineInput("Duration (minutes)",
-                        controller: durationController),
-
+                    _textFieldCard("Duration (minutes)", durationController),
                     const SizedBox(height: 20),
 
-                    underlineInput("Maximum players",
-                        controller: maxPlayersController),
-
+                    _textFieldCard("Maximum players", maxPlayersController),
                     const SizedBox(height: 20),
 
-                    underlineInput("Total price",
-                        controller: priceController),
-
+                    _textFieldCard("Total price", priceController),
                     const SizedBox(height: 20),
 
-
-                    underlineInput("Title",
-                        controller: titleController),
-
+                    _textFieldCard("Title", titleController),
                     const SizedBox(height: 20),
 
-                    underlineInput("Notes",
-                        controller: notesController, maxLines: 3),
+                    _textFieldCard("Notes", notesController, maxLines: 3),
 
                     const SizedBox(height: 40),
 
+                    // BUTTON
                     GestureDetector(
                       onTap: creating ? null : _createMatch,
-                      child: Container(
-                        height: 50,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        height: 55,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              const Color(0xFF003B2F),
-                              Colors.green.shade800,
-                              Colors.green.shade400,
+                              Color(0xFF003B2F),
+                              Color(0xFF0A6F4A),
+                              Color(0xFF46C264),
                             ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
                           ),
-                          borderRadius: BorderRadius.circular(25),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 12,
+                              color: Colors.greenAccent.withOpacity(0.4),
+                              offset: const Offset(0, 6),
+                            )
+                          ],
                         ),
                         child: Center(
                           child: creating
@@ -317,9 +303,10 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                               : const Text(
                             "CREATE MATCH",
                             style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                              fontSize: 19,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -336,27 +323,72 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
   }
 
-  Widget underlineInput(String label,
-      {required TextEditingController controller, int maxLines = 1}) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFFD3D3D3)),
+  // Label beautified
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF003B2F),
+      ),
+    );
+  }
+
+  // Date & Time picker box
+  Widget _pickerBox({required String text, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.black12),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFF00A86B), width: 1.4),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 15),
         ),
       ),
     );
   }
 
-  BoxDecoration boxDecoration() {
-    return BoxDecoration(
-      border: Border.all(color: Colors.black26),
-      borderRadius: BorderRadius.circular(12),
+  // Card-style text field
+  Widget _textFieldCard(
+      String label,
+      TextEditingController controller, {
+        int maxLines = 1,
+      }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003B2F),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

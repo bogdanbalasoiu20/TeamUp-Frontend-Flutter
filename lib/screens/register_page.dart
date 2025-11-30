@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/create_match_page.dart';
-import 'package:team_up_fe_new/screens/home_page.dart';
 import 'package:team_up_fe_new/screens/login_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
@@ -29,7 +28,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isLoading = false;
 
-  // API CALL
+  // --------------------------
+  // SEND REGISTER REQUEST
+  // --------------------------
   Future<void> register() async {
     setState(() => _isLoading = true);
 
@@ -45,24 +46,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         "description": descriptionController.text.trim(),
       });
 
-      //extrag token-ul din response ca la login
       final token = response["data"]["token"];
-
-      //salvez token-ul sub aceeasi cheie ca în login
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", token);
 
-      //succes
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Account created successfully")),
       );
 
-      //navigare
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => CreateMatchPage()),
+        MaterialPageRoute(builder: (_) => const CreateMatchPage()),
       );
-
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
@@ -76,9 +71,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
   }
 
-
-
-
+  // --------------------------
+  // UI BUILD
+  // --------------------------
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -87,8 +82,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
+          // ------------------ BACKGROUND ------------------
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFF003B2F),
@@ -98,47 +94,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              // image: const DecorationImage(
-              //   image: AssetImage("lib/images/football_field.png"),
-              //   fit: BoxFit.cover,
-              //   opacity: 0.25,
-              // ),
             ),
           ),
 
-          // TITLE
+          // ------------------ TITLE -----------------------
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 80, 28, 0),
+            padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Create Your Account",
+                  "Create Account",
                   style: TextStyle(
-                    fontSize: 40,
+                    fontSize: 42,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 14,
+                        color: Colors.black54,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 6),
+                Text(
+                  "Join the TeamUp community",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                  ),
+                ),
               ],
             ),
           ),
 
-          // WHITE CONTAINER WITH INPUTS
+          // ------------------ WHITE SHEET ------------------
           Positioned(
-            top: size.height * 0.32,
+            top: size.height * 0.30,
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 25,
+                    color: Colors.black.withOpacity(0.15),
+                    offset: const Offset(0, -3),
+                  ),
+                ],
               ),
 
               child: SingleChildScrollView(
@@ -146,90 +158,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    BehanceUnderlineInput(
-                      label: "Email",
-                      controller: emailController,
+                    const SizedBox(height: 8),
+
+                    // INPUTS (CARD STYLE)
+                    _inputCard("Email", emailController, Icons.mail),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Username", usernameController, Icons.person),
+                    const SizedBox(height: 20),
+
+                    _passwordCard("Password", passwordController),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Phone Number", phoneController, Icons.phone),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Birthday (yyyy-MM-dd)", birthdayController, Icons.calendar_today),
+                    const SizedBox(height: 20),
+
+                    // POSITION DROPDOWN RE-DESIGNED
+                    const Text(
+                      "Preferred Position",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF003B2F),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.black12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedPosition,
+                          isExpanded: true,
+                          icon: Icon(Icons.arrow_drop_down,
+                              color: Colors.grey.shade700),
+                          items: [
+                            "GOALKEEPER",
+                            "DEFENDER",
+                            "MIDFIELDER",
+                            "FORWARD"
+                          ].map((e) =>
+                              DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          onChanged: (v) => setState(() => selectedPosition = v),
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    BehanceUnderlineInput(
-                      label: "Username",
-                      controller: usernameController,
-                    ),
-
+                    _inputCard("City", cityController, Icons.location_city),
                     const SizedBox(height: 20),
 
-                    BehanceUnderlineInput(
-                      label: "Password",
-                      isPassword: true,
-                      controller: passwordController,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    BehanceUnderlineInput(
-                      label: "Phone Number",
-                      controller: phoneController,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    BehanceUnderlineInput(
-                      label: "Birthday (yyyy-MM-dd)",
-                      controller: birthdayController,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // POSITION DROPDOWN
-                    Text("Position",
-                        style: const TextStyle(
-                            color: AppColors.primaryGreenLight,
-                            fontWeight: FontWeight.w700)),
-
-                    DropdownButton<String>(
-                      value: selectedPosition,
-                      isExpanded: true,
-                      items: [
-                        "GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"
-                      ].map((e) =>
-                          DropdownMenuItem(value: e, child: Text(e))).toList(),
-                      onChanged: (v) => setState((){ selectedPosition = v; }),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    BehanceUnderlineInput(
-                      label: "City",
-                      controller: cityController,
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    BehanceUnderlineInput(
-                      label: "Description",
-                      controller: descriptionController,
-                    ),
-
+                    _inputCard("Description", descriptionController, Icons.info),
                     const SizedBox(height: 40),
 
-                    // REGISTER BUTTON
+                    // ------------------ REGISTER BUTTON ---------------
                     GestureDetector(
                       onTap: _isLoading ? null : register,
-                      child: Container(
-                        height: 50,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        height: 55,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
                               Color(0xFF003B2F),
-                              AppColors.primaryGreenDark,
-                              AppColors.primaryGreenLight,
+                              Color(0xFF0A6F4A),
+                              Color(0xFF46C264),
                             ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
                           ),
-                          borderRadius: BorderRadius.circular(25),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 12,
+                              color: Colors.green.withOpacity(0.35),
+                              offset: const Offset(0, 6),
+                            )
+                          ],
                         ),
                         child: Center(
                           child: _isLoading
@@ -237,9 +249,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               : const Text(
                             "CREATE ACCOUNT",
                             style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                              fontSize: 19,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -254,7 +267,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
 
-      //FOOTER (Sign up) – ramane fix in partea de jos
+      // ------------------ FOOTER ------------------
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(right: 26, bottom: 24),
         child: Column(
@@ -262,89 +275,143 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "Do you have account?",
+              "Already have an account?",
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 color: Colors.grey.shade700,
               ),
             ),
             const SizedBox(height: 6),
 
             GestureDetector(
-              onTap:(){
+              onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_)=>LoginScreen())
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                 );
               },
               child: const Text(
                 "Sign in",
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF2E8B57),
-                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF0A6F4A),
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             )
           ],
         ),
       ),
+    );
+  }
 
+  // -------------------------------------------------------
+  // ⭐️ REUSABLE PREMIUM INPUT CARD
+  // -------------------------------------------------------
+  Widget _inputCard(
+      String label,
+      TextEditingController controller,
+      IconData icon,
+      ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF003B2F),
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(icon, color: Colors.grey.shade700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ------------------ PASSWORD FIELD ------------------
+  Widget _passwordCard(String label, TextEditingController controller) {
+    return PasswordInputCard(
+      label: label,
+      controller: controller,
     );
   }
 }
 
-
-// SAME INPUT WIDGET YOU ALREADY HAVE
-class BehanceUnderlineInput extends StatefulWidget {
+// -------------------------------------------------------
+// PASSWORD CARD WIDGET
+// -------------------------------------------------------
+class PasswordInputCard extends StatefulWidget {
   final String label;
-  final bool isPassword;
   final TextEditingController controller;
 
-  const BehanceUnderlineInput({
+  const PasswordInputCard({
     super.key,
     required this.label,
-    this.isPassword = false,
     required this.controller,
   });
 
   @override
-  State<BehanceUnderlineInput> createState() => _BehanceUnderlineInputState();
+  State<PasswordInputCard> createState() => _PasswordInputCardState();
 }
 
-class _BehanceUnderlineInputState extends State<BehanceUnderlineInput> {
+class _PasswordInputCardState extends State<PasswordInputCard> {
   bool _obscure = true;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      obscureText: widget.isPassword ? _obscure : false,
-      style: const TextStyle(color: Colors.black, fontSize: 16),
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: const TextStyle(
-          color: AppColors.primaryGreenLight,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFFD3D3D3), width: 1.2),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.primaryGreenLight, width: 1.4),
-        ),
-        suffixIcon: widget.isPassword
-            ? IconButton(
-          icon: Icon(
-            _obscure ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey.shade600,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF003B2F),
           ),
-          onPressed: () => setState(() => _obscure = !_obscure),
-        )
-            : null,
-        contentPadding: const EdgeInsets.only(top: 18, bottom: 10),
-      ),
+        ),
+        const SizedBox(height: 6),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: TextField(
+            controller: widget.controller,
+            obscureText: _obscure,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
+              suffixIcon: IconButton(
+                icon: Icon(
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey.shade600),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

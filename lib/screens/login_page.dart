@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/create_match_page.dart';
-import 'package:team_up_fe_new/screens/map_page.dart';
 import 'package:team_up_fe_new/screens/register_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
@@ -16,14 +15,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-
-  //Controller-ele pentru input (email si parola)
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool _isLoading = false; //prtectie impotriva spam-ului. true-> request inca in desfasurare; false->nu exista un request activ; daca apas pe 10 ori pe un buton sa nu se trimita 10 requesturi
+  bool _isLoading = false;
 
-  //functia care trimite requestul catre backend
   Future<void> login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -38,13 +34,11 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // folosim ApiService
       final response = await ApiService.post("/api/auth/login", {
         "emailOrUsername": email,
         "password": password,
       });
 
-      // extragem token-ul din response
       final token = response["data"]["token"];
 
       final prefs = await SharedPreferences.getInstance();
@@ -56,12 +50,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => CreateMatchPage()),
+        MaterialPageRoute(builder: (_) => const CreateMatchPage()),
       );
-
     } catch (e) {
       if (e is ApiException) {
-        // afisam mesajul de backend
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
       } else {
@@ -73,21 +65,17 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    final size = MediaQuery.of(context).size; //afla dimensiunea ecranului
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true, //permite ridicarea UI-ului cand apare tastatura
-
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-
-          //FUNDAL (gradient + imagine)
+          // BACKGROUND GRADIENT PREMIUM
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFF003B2F),
@@ -97,113 +85,125 @@ class _LoginScreenState extends State<LoginScreen> {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
-              // image: const DecorationImage(
-              //   image: AssetImage("lib/images/football_field.png"),
-              //   fit: BoxFit.cover,
-              //   opacity: 0.25,
-              // ),
             ),
           ),
 
-          //TITLU ("Hello", "Sign in!")
+          // TITLU
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 80, 28, 0), //spatiere fata de margini
+            padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Hello",
+                  "Welcome Back",
                   style: TextStyle(
-                    fontSize: 45,
+                    fontSize: 40,
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 14,
+                        color: Colors.black54,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Sign in!",
+                  "Sign in to continue",
                   style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.white,
+                    fontSize: 18,
+                    color: Colors.white70,
                   ),
-                )
+                ),
               ],
             ),
           ),
 
-          //CONTAINERUL ALB (inputuri + buton + forgot password)
+          // WHITE SHEET
           Positioned(
-            top: size.height * 0.32, //distanta fata de partea de sus
+            top: size.height * 0.32,
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
-
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 25,
+                    color: Colors.black.withOpacity(0.1),
+                    offset: const Offset(0, -3),
+                  ),
+                ],
               ),
 
-              child: SingleChildScrollView( //permite scroll cand apare tastatura
+              child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
                     const SizedBox(height: 8),
 
-                    //Camp Username/Email
-                    BehanceUnderlineInput(
-                      label: "Username/Email",
-                      rightIcon: Icons.check,
+                    // INPUT CARD: EMAIL
+                    _inputCard(
+                      label: "Username or Email",
                       controller: emailController,
+                      icon: Icons.person_outline,
                     ),
 
                     const SizedBox(height: 24),
 
-                    //Camp Password
-                    BehanceUnderlineInput(
+                    // INPUT CARD: PASSWORD
+                    _passwordCard(
                       label: "Password",
-                      isPassword: true,
                       controller: passwordController,
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 10),
 
-                    //Forgot Password
                     Align(
                       alignment: Alignment.centerRight,
                       child: Text(
                         "Forgot password?",
                         style: TextStyle(
                           fontSize: 16,
-                          color: Color(0xFF2E8B57),
-                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0A6F4A),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 60),
 
-                    //BUTON SIGN IN
+                    // BUTTON LOGIN
                     GestureDetector(
-                      onTap: _isLoading ? null : login, //apelam login doar daca nu e loading
-                      child: Container(
-                        height: 50,
+                      onTap: _isLoading ? null : login,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        height: 55,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
                             colors: [
                               Color(0xFF003B2F),
-                              AppColors.primaryGreenDark,
-                              AppColors.primaryGreenLight,
+                              Color(0xFF0A6F4A),
+                              Color(0xFF46C264),
                             ],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
                           ),
-                          borderRadius: BorderRadius.circular(25),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 12,
+                              color: Colors.greenAccent.withOpacity(0.4),
+                              offset: const Offset(0, 6),
+                            )
+                          ],
                         ),
                         child: Center(
                           child: _isLoading
@@ -211,16 +211,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               : const Text(
                             "SIGN IN",
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 19,
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 120), //spatiu pentru tastatura
+                    const SizedBox(height: 120),
                   ],
                 ),
               ),
@@ -229,7 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
 
-      //FOOTER (Sign up) – ramane fix in partea de jos
+      // FOOTER
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(right: 26, bottom: 24),
         child: Column(
@@ -239,104 +239,145 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               "Don't have an account?",
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15,
                 color: Colors.grey.shade700,
               ),
             ),
             const SizedBox(height: 6),
 
             GestureDetector(
-              onTap:(){
+              onTap: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_)=>RegisterScreen())
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen())
                 );
               },
-
               child: const Text(
                 "Sign up",
                 style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF2E8B57),
-                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  color: Color(0xFF0A6F4A),
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
+
+  // --------------------
+  // BEAUTIFUL INPUT CARDS
+  // --------------------
+
+  Widget _inputCard({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003B2F),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(icon, color: Colors.grey.shade700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _passwordCard({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return PasswordInputCard(
+      label: label,
+      controller: controller,
+    );
+  }
 }
 
-//WIDGET CUSTOM PENTRU INPUT (stil Behance)
-class BehanceUnderlineInput extends StatefulWidget {
+// --------------------
+// CUSTOM PASSWORD FIELD
+// --------------------
+class PasswordInputCard extends StatefulWidget {
   final String label;
-  final IconData? rightIcon;
-  final bool isPassword;
   final TextEditingController controller;
 
-  const BehanceUnderlineInput({
+  const PasswordInputCard({
     super.key,
     required this.label,
-    this.rightIcon,
-    this.isPassword = false,
     required this.controller,
   });
 
   @override
-  State<BehanceUnderlineInput> createState() => _BehanceUnderlineInputState();
+  State<PasswordInputCard> createState() => _PasswordInputCardState();
 }
 
-class _BehanceUnderlineInputState extends State<BehanceUnderlineInput> {
-  bool _obscure = true; //show/hide pentru parola
+class _PasswordInputCardState extends State<PasswordInputCard> {
+  bool _obscure = true;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller,
-      obscureText: widget.isPassword ? _obscure : false,
-
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 16,
-      ),
-
-      decoration: InputDecoration(
-        labelText: widget.label,
-        labelStyle: const TextStyle(
-          color: AppColors.primaryGreenLight,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
-
-        enabledBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: Color(0xFFD3D3D3), width: 1.2),
-        ),
-
-        focusedBorder: const UnderlineInputBorder(
-          borderSide: BorderSide(color: AppColors.primaryGreenLight, width: 1.4),
-        ),
-
-        //Icon din dreapta (check sau eye)
-        suffixIcon: widget.isPassword
-            ? IconButton(
-          icon: Icon(
-            _obscure ? Icons.visibility_off : Icons.visibility,
-            color: Colors.grey.shade600,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003B2F),
           ),
-          onPressed: () {
-            setState(() {
-              _obscure = !_obscure; //inverseaza show/hide
-            });
-          },
-        )
-            : (widget.rightIcon != null
-            ? Icon(widget.rightIcon, color: Colors.grey.shade600)
-            : null),
+        ),
+        const SizedBox(height: 8),
 
-        contentPadding: const EdgeInsets.only(top: 18, bottom: 10),
-      ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: TextField(
+            controller: widget.controller,
+            obscureText: _obscure,
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscure ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey.shade600,
+                ),
+                onPressed: () => setState(() => _obscure = !_obscure),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

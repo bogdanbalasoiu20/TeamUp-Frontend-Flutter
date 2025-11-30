@@ -2,105 +2,159 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/venue.dart';
-import '../services/map_api.dart';
-import '../screens/map_page.dart';
 
-class MiniMapWidget extends StatefulWidget {
-  const MiniMapWidget({super.key});
+class MiniMapWidget extends StatelessWidget {
+  final Venue? selectedVenue;
+  final VoidCallback onTap;
 
-  @override
-  State<MiniMapWidget> createState() => _MiniMapWidgetState();
-}
+  const MiniMapWidget({
+    super.key,
+    required this.onTap,
+    required this.selectedVenue,
+  });
 
-class _MiniMapWidgetState extends State<MiniMapWidget> {
-  List<Venue> venues = [];   //lista terenurilor incarcate de backend
-  bool loading = true;  //indicator de incarcare pana vin datele
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVenues();
-  }
-
-  //incarc terenurile din backend folosind bounding box-ul bucurestiului(momentan hardcodat)
-  Future<void> _loadVenues() async {
-    final data = await MapApi.fetchBBox(
-      44.35, 25.95, 44.55, 26.25,
-    );
-
-    setState(() {
-      venues = data.map((e) => Venue.fromJson(e)).toList();
-      loading = false;   //dupa ce datele se incarca ascund loading
-    });
-  }
-
-  //construiesc o mini-harta, lipsita de interactiune, doar vizualizare
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: FlutterMap(
-              options: MapOptions(
-                interactiveFlags: InteractiveFlag.none,   //dezactivare zoom
-                center: LatLng(44.4268, 26.1025),  //centram pe bucuresti
-                zoom: 12,
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                  userAgentPackageName: "teamup",
-                ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 170,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            children: [
+              // MAPĂ PASIVĂ
+              IgnorePointer(
+                ignoring: true,
+                child: FlutterMap(
+                  options: MapOptions(
+                    center: selectedVenue != null
+                        ? LatLng(
+                      selectedVenue!.latitude!,
+                      selectedVenue!.longitude!,
+                    )
+                        :  LatLng(44.4268, 26.1025),
+                    zoom: selectedVenue != null ? 15 : 11,
+                    interactiveFlags: InteractiveFlag.none,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      userAgentPackageName: "teamup",
+                    ),
 
-
-                //marker-ele terenurilor afisate fara clustering
-                MarkerLayer(
-                  markers: venues.map((v) {
-                    return Marker(
-                      point: LatLng(v.latitude!, v.longitude!),
-                      width: 30,
-                      height: 30,
-                      builder: (context) => const Icon(
-                        Icons.location_on,
-                        color: Colors.red,
-                        size: 26,
+                    if (selectedVenue != null)
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: LatLng(
+                              selectedVenue!.latitude!,
+                              selectedVenue!.longitude!,
+                            ),
+                            width: 50,
+                            height: 50,
+                            builder: (_) => Column(
+                              children: const [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 42,
+                                  color: Colors.green,
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
                       ),
-                    );
-                  }).toList(),
-                )
-              ],
-            ),
-          ),
-
-          // buton full-screen
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black87,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  ],
                 ),
               ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MapPage()),
-                );
-              },
-              child: const Text("Full Screen"),
-            ),
+
+              // GRADIENT TOP
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 40,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.35),
+                        Colors.transparent
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                  ),
+                ),
+              ),
+
+              // GRADIENT BOTTOM + TEXT
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 55,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.45),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ),
+
+              // CENTERED INFO TEXT
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Column(
+                  children: [
+                    const Text(
+                      "Tap to choose field",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.black,
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Icon(
+                      Icons.open_in_full_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ],
+                ),
+              ),
+
+              // RIPPLE EFFECT (vizual feedback)
+              Positioned.fill(
+                child: AnimatedOpacity(
+                  opacity: 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: Container(color: Colors.black.withOpacity(0.1)),
+                ),
+              ),
+            ],
           ),
-
-
-          //indicator pentru loading(incacarea terenurilor)
-          if (loading)
-            const Center(child: CircularProgressIndicator()),
-        ],
+        ),
       ),
     );
   }
