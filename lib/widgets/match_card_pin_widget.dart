@@ -9,131 +9,102 @@ class MatchCardPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateFormat("EEE, dd MMM • HH:mm")
-        .format(DateTime.parse(match.startsAt).toLocal());
-
-    final progress = match.joinedPlayers / match.maxPlayers;
+    final date = DateFormat("EEEE, dd MMM • HH:mm")
+        .format(DateTime.parse(match.startsAt));
 
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
         borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF003B2F),
+            const Color(0xFF0A5444),
+            const Color(0xFF2E8B57).withOpacity(0.85),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: Colors.black.withOpacity(0.15),
             blurRadius: 16,
-            offset: const Offset(0, 4),
-          )
+            offset: const Offset(0, 6),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
+          // ----------- ICON LEFT (large) ----------
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.sports_soccer,
+              color: Colors.white,
+              size: 38,
+            ),
+          ),
 
-          /// ---------- TOP ROW ----------
-          Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF16A34A), Color(0xFF065F46)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.sports_soccer,
-                    size: 32, color: Colors.white),
-              ),
+          const SizedBox(width: 16),
 
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Text(
+          // ----------- TEXT AREA ----------
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   match.title,
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF003B2F),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.1,
                   ),
                 ),
-              )
-            ],
-          ),
 
-          const SizedBox(height: 14),
+                const SizedBox(height: 6),
 
-          /// ---------- DATE ----------
-          Row(
-            children: [
-              const Icon(Icons.schedule, size: 20, color: Colors.grey),
-              const SizedBox(width: 8),
-              Text(
-                date,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w600,
+                Row(
+                  children: [
+                    const Icon(Icons.access_time,
+                        size: 17, color: Colors.white70),
+                    const SizedBox(width: 6),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
-          /// ---------- PLAYERS ----------
-          Text(
-            "Players: ${match.joinedPlayers}/${match.maxPlayers}",
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          /// ---------- PROGRESS BAR ----------
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation(
-                progress < 1
-                    ? const Color(0xFF16A34A)
-                    : Colors.redAccent,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          /// -------- BUTTON JOIN --------
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF003B2F),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                // ---------- BADGE ----------
+                Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.20),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "Players: ${match.joinedPlayers}/${match.maxPlayers}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
-              onPressed: () {},
-              child: const Text(
-                "VIEW MATCH",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.8,
-                ),
-              ),
+              ],
             ),
           )
         ],
