@@ -57,7 +57,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
       isScrollControlled: true,
       builder: (_) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.35,
+          initialChildSize: 0.45,
           minChildSize: 0.25,
           maxChildSize: 0.55,
           expand: false,

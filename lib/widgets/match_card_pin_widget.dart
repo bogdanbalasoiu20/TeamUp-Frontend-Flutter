@@ -21,9 +21,9 @@ class MatchCardPin extends StatelessWidget {
           borderRadius: BorderRadius.circular(22),
           gradient: LinearGradient(
             colors: [
-              Color(0xFF003B2F),
-              Color(0xFF0A5444),
-              Color(0xFF2E8B57).withOpacity(0.85),
+              const Color(0xFF003B2F),
+              const Color(0xFF0A5444),
+              const Color(0xFF2E8B57).withOpacity(0.85),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -95,6 +95,7 @@ class MatchCardPin extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
+                  // ---------- PLAYERS BADGE ----------
                   Container(
                     padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -111,6 +112,43 @@ class MatchCardPin extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 10),
+
+                  // ---------- DURATION ----------
+                  Row(
+                    children: [
+                      const Icon(Icons.timer, size: 18, color: Colors.white70),
+                      const SizedBox(width: 6),
+                      Text(
+                        "${match.durationMinutes} min",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // ---------- PRICE ----------
+                  Row(
+                    children: [
+                      const Icon(Icons.payments,
+                          size: 18, color: Colors.white70),
+                      const SizedBox(width: 6),
+                      Text(
+                        "${match.totalPrice.toStringAsFixed(0)} lei",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             )
@@ -118,6 +156,5 @@ class MatchCardPin extends StatelessWidget {
         ),
       ),
     );
-
   }
 }

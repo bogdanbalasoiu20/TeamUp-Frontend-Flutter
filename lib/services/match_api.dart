@@ -98,6 +98,8 @@ class MatchPin {
   final String startsAt;
   final int maxPlayers;
   final int joinedPlayers;
+  final int durationMinutes;
+  final double totalPrice;
 
   MatchPin({
     required this.id,
@@ -107,17 +109,23 @@ class MatchPin {
     required this.startsAt,
     required this.maxPlayers,
     required this.joinedPlayers,
+    required this.durationMinutes,
+    required this.totalPrice
   });
 
   factory MatchPin.fromJson(Map<String, dynamic> json) {
+    print("### RAW PIN JSON = $json");
+
     return MatchPin(
-      id: json["matchId"],
+      id: (json["matchId"] ?? json["id"] ?? "").toString(),
       title: json["title"] ?? "Match",
-      latitude: (json["lat"] as num).toDouble(),
-      longitude: (json["lng"] as num).toDouble(),
-      startsAt: json["startsAt"],
-      maxPlayers: json["maxPlayers"],
-      joinedPlayers: json["currentPlayers"],
+      latitude: (json["lat"] ?? json["latitude"] ?? 0).toDouble(),
+      longitude: (json["lng"] ?? json["longitude"] ?? 0).toDouble(),
+      startsAt: json["startsAt"] ?? DateTime.now().toIso8601String(),
+      maxPlayers: json["maxPlayers"] ?? json["capacity"] ?? 0,
+      joinedPlayers: json["currentPlayers"] ?? json["players"] ?? 0,
+      durationMinutes: json["durationMinutes"] ?? json["duration"] ?? 0,
+      totalPrice: (json["totalPrice"] ?? json["price"] ?? 0).toDouble(),
     );
   }
 }
