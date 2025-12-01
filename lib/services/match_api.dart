@@ -6,7 +6,7 @@ import 'package:team_up_fe_new/exceptions/api_service.dart';
 class MatchApi {
   static const baseUrl = "https://teamup-backend-omi4.onrender.com/api/matches";
 
-
+ 
   static Future<bool> createMatch({
     required String venueId,
     required DateTime startsAt,
@@ -18,10 +18,9 @@ class MatchApi {
     double? totalPrice,
     String? visibility,
   }) async {
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("access_token");
-
-    print("### TOKEN USED IN CREATE MATCH = $token");
 
     final body = jsonEncode({
       "venueId": venueId,
@@ -76,15 +75,19 @@ class MatchApi {
     return list.map((e) => MatchPin.fromJson(e)).toList();
   }
 
+
   static Future<List<MatchItem>> getAllMatches() async {
     final json = await ApiService.get("/api/matches");
 
     if (json["data"] == null) return [];
 
-    final List list = json["data"]["content"];
-    return list.map((e) => MatchItem.fromJson(e)).toList();
+    final List content = json["data"]["content"];
+
+    return content.map((e) => MatchItem.fromJson(e)).toList();
   }
 }
+
+
 
 
 class MatchPin {
@@ -119,6 +122,8 @@ class MatchPin {
   }
 }
 
+
+
 class MatchItem {
   final String id;
   final String title;
@@ -143,7 +148,7 @@ class MatchItem {
       startsAt: json["startsAt"],
       maxPlayers: json["maxPlayers"],
       currentPlayers: json["currentPlayers"],
-      venueName: json["venue"]["name"] ?? "",
+      venueName: json["venueName"] ?? "",
     );
   }
 }

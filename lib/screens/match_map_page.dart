@@ -41,14 +41,11 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     });
   }
 
-  /// ----------------------------------------------
-  /// CLUSTER TAP → ARATĂ LISTA CU MECIURI ÎN MODAL
-  /// ----------------------------------------------
+
   void _openClusterModal(List<Marker> clusterMarkers) {
-    final clusterMatches = clusterMarkers.map((m) {
-      return pins.firstWhere((p) =>
-      p.latitude == m.point.latitude &&
-          p.longitude == m.point.longitude);
+    final clusterMatches = clusterMarkers.map((marker) {
+      final id = (marker.key as ValueKey).value;
+      return pins.firstWhere((p) => p.id == id);
     }).toList();
 
     showModalBottomSheet(
@@ -66,9 +63,13 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
               final match = clusterMatches[i];
               return ListTile(
                 leading: const Icon(Icons.sports_soccer, color: Colors.green),
-                title: Text(match.title,
-                    style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                title: Text(
+                    match.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    )
+                ),
                 subtitle: Text(match.startsAt),
                 onTap: () {
                   Navigator.pop(context);
@@ -82,7 +83,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     );
   }
 
-  /// SELECT MEET + CENTER MAP
+  // SELECT PIN
   void _selectPin(MatchPin pin) {
     setState(() => selectedPin = pin);
 
@@ -90,17 +91,18 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
       LatLng(pin.latitude, pin.longitude),
       16,
     );
+    mapController.rotate(0);
   }
 
   @override
   Widget build(BuildContext context) {
-    final double cardHeight = 180;
+    final double cardHeight = 220;
 
-    /// ---- MARKERE ----
     final markers = pins.map((m) {
       final bool isSelected = selectedPin?.id == m.id;
 
       return Marker(
+        key: ValueKey(m.id),
         width: isSelected ? 54 : 42,
         height: isSelected ? 54 : 42,
         point: LatLng(m.latitude, m.longitude),
@@ -121,7 +123,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     return Scaffold(
       body: Stack(
         children: [
-          /// ---------------- MAPA ----------------
           FlutterMap(
             mapController: mapController,
             options: MapOptions(
@@ -135,17 +136,15 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                 userAgentPackageName: "teamup",
               ),
 
-              /// -------- CLUSTER --------
               MarkerClusterLayerWidget(
                 options: MarkerClusterLayerOptions(
                   markers: markers,
                   maxClusterRadius: 45,
                   size: const Size(40, 40),
-
-                  /// cluster dispare la zoom >= 16
                   disableClusteringAtZoom: 16,
+                  centerMarkerOnClick: false,
+                  zoomToBoundsOnClick: false,
 
-                  /// cluster tap → deschide lista
                   onClusterTap: (cluster) {
                     _openClusterModal(cluster.markers);
                   },
@@ -162,7 +161,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
             ],
           ),
 
-          /// -------- CARD SELECTAT --------
           if (selectedPin != null)
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
@@ -188,7 +186,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                 ),
                 child: Column(
                   children: [
-                    /// close button
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -198,7 +195,11 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                         ),
                       ],
                     ),
-                    Expanded(child: MatchCardPin(match: selectedPin!)),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: MatchCardPin(match: selectedPin!),
+                      ),
+                    ),
                   ],
                 ),
               ),
