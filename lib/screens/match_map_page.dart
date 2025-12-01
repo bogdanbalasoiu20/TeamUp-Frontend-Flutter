@@ -43,7 +43,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     });
   }
 
-
   // ------------------ Open cluster modal ------------------
   void _openClusterModal(List<Marker> clusterMarkers) {
     final clusterMatches = clusterMarkers.map((marker) {
@@ -69,8 +68,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
               ),
               child: Column(
                 children: [
-
-
                   Padding(
                     padding: const EdgeInsets.only(top: 10, bottom: 10),
                     child: Container(
@@ -82,8 +79,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                       ),
                     ),
                   ),
-
-
                   Expanded(
                     child: ListView.builder(
                       controller: controller,
@@ -113,8 +108,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     );
   }
 
-
-
   // ------------------ Select pin ------------------
   void _selectPin(MatchPin pin) {
     setState(() => selectedPin = pin);
@@ -131,17 +124,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF0A6F4A),
-        child: const Icon(Icons.add, size: 30),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateMatchPage()),
-          );
-        },
-      ),
-
       body: Stack(
         children: [
           // ------------------ BACKGROUND GRADIENT ------------------
@@ -194,7 +176,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
 
           // ------------------ WHITE SHEET ------------------
           Positioned(
-            top: size.height * 0.28,
+            top: size.height * 0.32,
             left: 0,
             right: 0,
             bottom: 0,
@@ -215,66 +197,138 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                 ],
               ),
 
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
-                child: FlutterMap(
-                  mapController: mapController,
-                  options: MapOptions(
-                    center: LatLng(44.4268, 26.1025),
-                    zoom: 12,
-                    keepAlive: true,
-                  ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      userAgentPackageName: "teamup",
-                    ),
+              child: Column(
+                children: [
+                  // ------------------ MAP ------------------
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: SizedBox(
+                      height: size.height * 0.42, // înălțimea hărții
+                      child: FlutterMap(
+                        mapController: mapController,
+                        options: MapOptions(
+                          center: LatLng(44.4268, 26.1025),
+                          zoom: 12,
+                          keepAlive: true,
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                            userAgentPackageName: "teamup",
+                          ),
 
-                    MarkerClusterLayerWidget(
-                      options: MarkerClusterLayerOptions(
-                        markers: pins.map((m) {
-                          final isSelected = m.id == selectedPin?.id;
-
-                          return Marker(
-                            key: ValueKey(m.id),
-                            width: isSelected ? 54 : 42,
-                            height: isSelected ? 54 : 42,
-                            point: LatLng(m.latitude, m.longitude),
-                            builder: (_) => GestureDetector(
-                              onTap: () => _selectPin(m),
-                              child: Icon(
-                                Icons.sports_soccer,
-                                size: isSelected ? 50 : 38,
-                                color: isSelected
-                                    ? Colors.blueAccent
-                                    : Colors.green,
+                          MarkerClusterLayerWidget(
+                            options: MarkerClusterLayerOptions(
+                              markers: pins.map((m) => Marker(
+                                key: ValueKey(m.id),
+                                width: 42,
+                                height: 42,
+                                point: LatLng(m.latitude, m.longitude),
+                                builder: (_) => GestureDetector(
+                                  onTap: () => _selectPin(m),
+                                  child: Icon(
+                                    Icons.sports_soccer,
+                                    size: 38,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              )).toList(),
+                              maxClusterRadius: 45,
+                              disableClusteringAtZoom: 16,
+                              onClusterTap: (cluster) =>
+                                  _openClusterModal(cluster.markers),
+                              builder: (context, cluster) => CircleAvatar(
+                                backgroundColor: Colors.green.shade700,
+                                child: Text(
+                                  cluster.length.toString(),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
-                          );
-                        }).toList(),
-                        maxClusterRadius: 45,
-                        disableClusteringAtZoom: 16,
-
-                        onClusterTap: (cluster) =>
-                            _openClusterModal(cluster.markers),
-
-                        builder: (context, cluster) => CircleAvatar(
-                          backgroundColor: Colors.green.shade700,
-                          child: Text(
-                            cluster.length.toString(),
-                            style: const TextStyle(color: Colors.white),
                           ),
-                        ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 18),
+
+                  // ------------------ LOCATION + NEW MATCH (NOT FLOATING) ------------------
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 15,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: const [
+                            Icon(Icons.location_on, color: Color(0xFF0A6F4A), size: 26),
+                            SizedBox(width: 8),
+                            Text(
+                              "Bucharest",
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const CreateMatchPage()),
+                            );
+                          },
+                          child: Container(
+                            padding:
+                            const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF003B2F),
+                                  Color(0xFF0A6F4A),
+                                  Color(0xFF46C264),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Text(
+                              "New Match",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+
             ),
           ),
 
-          // ------------------ PIN SELECTED CARD------------------
 
+
+          // ------------------ PIN SELECTED CARD ------------------
           if (selectedPin != null)
             NotificationListener<DraggableScrollableNotification>(
               onNotification: (notification) {
@@ -319,7 +373,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-
                         Expanded(
                           child: SingleChildScrollView(
                             controller: scrollController,
@@ -332,9 +385,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                   );
                 },
               ),
-            )
-
-
+            ),
         ],
       ),
     );
