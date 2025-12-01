@@ -44,44 +44,52 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
 
   void _openClusterModal(List<Marker> clusterMarkers) {
     final clusterMatches = clusterMarkers.map((marker) {
-      final id = (marker.key as ValueKey).value;
-      return pins.firstWhere((p) => p.id == id);
+      final markerId = (marker.key as ValueKey).value;
+
+      return pins.firstWhere((p) => p.id == markerId);
     }).toList();
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) {
-        return SizedBox(
-          height: 360,
-          child: ListView.builder(
-            itemCount: clusterMatches.length,
-            itemBuilder: (_, i) {
-              final match = clusterMatches[i];
-              return ListTile(
-                leading: const Icon(Icons.sports_soccer, color: Colors.green),
-                title: Text(
-                    match.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    )
-                ),
-                subtitle: Text(match.startsAt),
-                onTap: () {
-                  Navigator.pop(context);
-                  _selectPin(match);
+        return DraggableScrollableSheet(
+          initialChildSize: 0.45,
+          minChildSize: 0.30,
+          maxChildSize: 0.85,
+          builder: (_, controller) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: ListView.builder(
+                controller: controller,
+                padding: const EdgeInsets.all(16),
+                itemCount: clusterMatches.length,
+                itemBuilder: (_, i) {
+                  final match = clusterMatches[i];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _selectPin(match);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: MatchCardPin(match: match),
+                    ),
+                  );
                 },
-              );
-            },
-          ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
+
 
   // SELECT PIN
   void _selectPin(MatchPin pin) {
@@ -96,7 +104,8 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
 
   @override
   Widget build(BuildContext context) {
-    final double cardHeight = 220;
+    final double cardHeight = MediaQuery.of(context).size.height * 0.45;
+
 
     final markers = pins.map((m) {
       final bool isSelected = selectedPin?.id == m.id;
