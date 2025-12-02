@@ -4,7 +4,6 @@ class Venue {
   final String? address;
   final String? phoneNumber;
 
-  // city eliminat total din JSON, se setează implicit București
   final String city = "bucuresti";
 
   final double? latitude;

@@ -203,7 +203,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(28),
                     child: SizedBox(
-                      height: size.height * 0.42, // înălțimea hărții
+                      height: size.height * 0.42,
                       child: FlutterMap(
                         mapController: mapController,
                         options: MapOptions(
@@ -229,7 +229,9 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                                   child: Icon(
                                     Icons.sports_soccer,
                                     size: 38,
-                                    color: Colors.green,
+                                    color: (selectedPin != null && selectedPin!.id == m.id)
+                                        ? Colors.red
+                                        : Colors.green,
                                   ),
                                 ),
                               )).toList(),
