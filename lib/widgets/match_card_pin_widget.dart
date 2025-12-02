@@ -144,7 +144,7 @@ class MatchCardPin extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        MatchParticipantsPage(matchId: match.id),
+                        MatchOverviewPage(matchId: match.id),
                   ),
                 );
               },

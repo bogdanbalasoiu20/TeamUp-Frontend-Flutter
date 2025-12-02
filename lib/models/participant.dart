@@ -18,7 +18,7 @@ class Participant{
       username:json["username"],
       status:json["status"],
       bringsBall:json["bringsBall"] ?? false,
-      createdAt:json["joinedAt"]
+      createdAt: DateTime.parse(json["joinedAt"]),
     );
   }
 }
