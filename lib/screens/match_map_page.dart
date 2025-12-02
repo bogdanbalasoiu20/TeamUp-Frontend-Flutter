@@ -6,6 +6,7 @@ import '../utils/app_colors.dart';
 import '../services/match_api.dart';
 import '../widgets/match_card_pin_widget.dart';
 import '../screens/create_match_page.dart';
+import 'package:team_up_fe_new/models/match.dart';
 
 class MatchesMapPage extends StatefulWidget {
   const MatchesMapPage({super.key});

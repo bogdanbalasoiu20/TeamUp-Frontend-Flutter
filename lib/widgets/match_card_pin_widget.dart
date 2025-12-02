@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/match_api.dart';
 import '../screens/match_details_page.dart';
+import 'package:team_up_fe_new/models/match.dart';
 
 class MatchCardPin extends StatelessWidget {
   final MatchPin match;

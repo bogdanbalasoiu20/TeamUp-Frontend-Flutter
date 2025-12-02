@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/match_api.dart';
 import '../widgets/match_card_widget.dart';
+import 'package:team_up_fe_new/models/match.dart';
 
 class MatchesListPage extends StatefulWidget {
   const MatchesListPage({super.key});

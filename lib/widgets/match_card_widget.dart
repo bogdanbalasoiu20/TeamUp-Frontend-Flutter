@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/match_api.dart';
+import 'package:team_up_fe_new/models/match.dart';
 
 class MatchCardList extends StatelessWidget {
   final MatchItem match;
