@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/utils/mini_action_button.dart';
 import '../models/participant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/match_participant_api.dart';
@@ -20,6 +21,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   int mainTab = 0;
   int statusTab = 0;
   String? currentUsername;
+  String? creatorId;
+  String? currentUserId;
 
   List<Participant> participants = [];
   bool loading = true;
@@ -53,18 +56,26 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   }
 
   Future<void> _loadParticipants() async {
-    final res = await MatchParticipantApi.fetchParticipants(widget.matchId);
+    final resp = await MatchParticipantApi.fetchParticipants(widget.matchId);
+
     setState(() {
-      participants = res;
+      creatorId = resp.creatorId;
+      participants = resp.participants;
       loading = false;
     });
   }
 
   Future<void> _loadCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
-    currentUsername = prefs.getString("username");
-    setState(() {});
+    setState(() {
+      currentUsername = prefs.getString("username");
+      currentUserId = prefs.getString("user_id");
+    });
+
+    print("### CURRENT USERNAME = $currentUsername");
+    print("### CURRENT USER ID = $currentUserId");
   }
+
 
   Participant? getCurrentParticipant() {
     if (currentUsername == null) return null;
@@ -77,6 +88,12 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       return null;
     }
   }
+
+  bool isCreator() {
+    if (creatorId == null || currentUserId == null) return false;
+    return creatorId == currentUserId;
+  }
+
 
   @override
   void dispose() {
@@ -314,6 +331,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   Widget _buildBottomActionButton() {
     if (currentUsername == null) return SizedBox.shrink();
 
+    if (isCreator()) {
+      return _creatorCancelMatchButton();
+    }
+
     final me = getCurrentParticipant();
 
     if (me == null) return _joinButtonVisual();
@@ -331,6 +352,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         return _joinButtonVisual();
     }
   }
+
 
   // ---------------- BUTTON WIDGET TEMPLATES ----------------
 
@@ -462,6 +484,17 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
+  Widget _creatorCancelMatchButton() {
+    return ActionButtonAnimated(
+      colors: const [Colors.red, Colors.deepOrange],
+      text: "Cancel Match",
+      onTap: () {
+        showTopBanner(context, "Feature not implemented yet");
+      },
+    );
+  }
+
+
 
   // ---------------- SECTIONS CONTENT ----------------
 
@@ -505,6 +538,9 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   }
 
   Widget _userCard(Participant p) {
+    final bool creator = isCreator();
+    final bool canModerate = creator && p.status == "REQUESTED";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
@@ -520,6 +556,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
             radius: 28,
@@ -533,6 +570,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
               ),
             ),
           ),
+
           const SizedBox(width: 16),
 
           Expanded(
@@ -559,11 +597,59 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
             ),
           ),
 
-          const Icon(Icons.chevron_right, color: Colors.black45),
+          //approve/decline a join request button
+          if (canModerate)
+            Row(
+              children: [
+                _approveButton(p),
+                const SizedBox(width: 10),
+                _rejectButton(p),
+              ],
+            )
+          else
+            const Icon(Icons.chevron_right, color: Colors.black45),
         ],
       ),
     );
   }
+
+
+  Widget _approveButton(Participant p) {
+    return MiniActionButton(
+      colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+      icon: Icons.check,
+      onTap: () async {
+        try {
+          await MatchParticipantApi.approveRequest(widget.matchId, p.userID);
+          await _loadParticipants();
+          showTopBanner(context, "Request approved");
+        } catch (_) {
+          showTopBanner(context, "Failed to approve request", error: true);
+        }
+      },
+    );
+  }
+
+
+
+  Widget _rejectButton(Participant p) {
+    return MiniActionButton(
+      colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+      icon: Icons.close,
+      onTap: () async {
+        try {
+          await MatchParticipantApi.rejectRequest(widget.matchId, p.userID);
+          await _loadParticipants();
+          showTopBanner(context, "Request declined");
+        } catch (_) {
+          showTopBanner(context, "Failed to decline request", error: true);
+        }
+      },
+    );
+  }
+
+
+
 
   Widget _detailsPlaceholder() {
     return const Center(
