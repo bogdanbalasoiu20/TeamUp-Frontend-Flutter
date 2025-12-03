@@ -40,10 +40,16 @@ class _LoginScreenState extends State<LoginScreen> {
         "password": password,
       });
 
+      print("### LOGIN RAW RESPONSE = $response");
+
       final token = response["data"]["token"];
+      final username = response["data"]["userDto"]["username"];
+      final userId = response["data"]["userDto"]["id"];
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", token);
+      await prefs.setString("username", username);
+      await prefs.setString("user_id", userId);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Login successful")),
@@ -63,8 +69,10 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
 
+
     setState(() => _isLoading = false);
   }
+
 
   @override
   Widget build(BuildContext context) {

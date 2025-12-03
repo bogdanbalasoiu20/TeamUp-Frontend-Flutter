@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/participant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/match_participant_api.dart';
 
 class MatchOverviewPage extends StatefulWidget {
@@ -16,6 +17,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     with TickerProviderStateMixin {
   int mainTab = 0;   // 0 = Participants
   int statusTab = 0; // 0 = Confirmed
+  String? currentUsername;
 
   List<Participant> participants = [];
   bool loading = true;
@@ -42,6 +44,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     ));
 
     _loadParticipants();
+    _loadCurrentUser();
 
     // Safely start animation after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -56,6 +59,24 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       loading = false;
     });
   }
+
+
+  Future<void> _loadCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      currentUsername = prefs.getString("username");
+    });
+    print("### CURRENT USERNAME = $currentUsername");
+  }
+
+  bool isUserParticipant() {
+    if (currentUsername == null) return false;
+
+    return participants.any(
+          (p) => p.username.toLowerCase() == currentUsername!.toLowerCase(),
+    );
+  }
+
 
   @override
   void dispose() {
@@ -200,6 +221,26 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
               )
                   : _buildContent(confirmed, invited, requests, waitlist),
             ),
+
+
+            // ---------- JOIN / LEAVE BUTTON (VISUAL ONLY) ----------
+            if (mainTab == 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    currentUsername == null
+                        ? SizedBox.shrink()
+                        : (
+                        isUserParticipant()
+                            ? _leaveButtonVisual()
+                            : _joinButtonVisual()
+                    ),
+                  ],
+                ),
+              ),
+
           ],
         ),
       ),
@@ -284,6 +325,100 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       ),
     );
   }
+
+
+  // ----------------------------------------------------------
+  // Join Button
+  // ----------------------------------------------------------
+
+  Widget _joinButtonVisual() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF0A6F4A),
+            Color(0xFF46C264),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.20),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Text(
+          "Join Match",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(
+                blurRadius: 6,
+                color: Colors.black26,
+                offset: Offset(0, 2),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  // ----------------------------------------------------------
+// NEW — Leave Button
+// ----------------------------------------------------------
+  Widget _leaveButtonVisual() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFA30000),
+            Color(0xFFE53935),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.20),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Center(
+        child: Text(
+          "Leave Match",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(
+                blurRadius: 6,
+                color: Colors.black26,
+                offset: Offset(0, 2),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 
   // ----------------------------------------------------------
   // MAIN CONTENT
