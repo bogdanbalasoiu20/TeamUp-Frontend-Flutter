@@ -15,14 +15,13 @@ class MatchOverviewPage extends StatefulWidget {
 
 class _MatchOverviewPageState extends State<MatchOverviewPage>
     with TickerProviderStateMixin {
-  int mainTab = 0;   // 0 = Participants
-  int statusTab = 0; // 0 = Confirmed
+  int mainTab = 0;
+  int statusTab = 0;
   String? currentUsername;
 
   List<Participant> participants = [];
   bool loading = true;
 
-  // --- Animation for second navbar ---
   late AnimationController barController;
   late Animation<Offset> barOffset;
 
@@ -46,7 +45,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     _loadParticipants();
     _loadCurrentUser();
 
-    // Safely start animation after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mainTab == 0) barController.forward();
     });
@@ -60,23 +58,23 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     });
   }
 
-
   Future<void> _loadCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      currentUsername = prefs.getString("username");
-    });
-    print("### CURRENT USERNAME = $currentUsername");
+    currentUsername = prefs.getString("username");
+    setState(() {});
   }
 
-  bool isUserParticipant() {
-    if (currentUsername == null) return false;
+  Participant? getCurrentParticipant() {
+    if (currentUsername == null) return null;
 
-    return participants.any(
-          (p) => p.username.toLowerCase() == currentUsername!.toLowerCase(),
-    );
+    try {
+      return participants.firstWhere(
+            (p) => p.username.toLowerCase() == currentUsername!.toLowerCase(),
+      );
+    } catch (_) {
+      return null;
+    }
   }
-
 
   @override
   void dispose() {
@@ -86,10 +84,13 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   @override
   Widget build(BuildContext context) {
-    final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
-    final invited   = participants.where((p) => p.status == "INVITED").toList();
-    final requests  = participants.where((p) => p.status == "REQUESTED").toList();
-    final waitlist  = participants.where((p) => p.status == "WAITLIST").toList();
+    final confirmed =
+    participants.where((p) => p.status == "ACCEPTED").toList();
+    final invited = participants.where((p) => p.status == "INVITED").toList();
+    final requests =
+    participants.where((p) => p.status == "REQUESTED").toList();
+    final waitlist =
+    participants.where((p) => p.status == "WAITLIST").toList();
 
     return Container(
       decoration: const BoxDecoration(
@@ -129,7 +130,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
         body: Column(
           children: [
-
             // ---------------- MAIN NAVBAR ----------------
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -142,11 +142,12 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.16),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      border:
+                      Border.all(color: Colors.white.withOpacity(0.25)),
                     ),
                     child: Row(
                       children: [
-                        _mainTabButton("Participants", 0, isRootTab: true),
+                        _mainTabButton("Participants", 0),
                         _mainTabButton("Details", 1),
                         _mainTabButton("Chat", 2),
                       ],
@@ -156,53 +157,51 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
               ),
             ),
 
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
 
-            // --------- SECOND NAVBAR (MERGED WITH PARTICIPANTS) ----------
+            // --------- SECOND NAVBAR ---------
             if (mainTab == 0)
-              Builder(
-                builder: (_) => SlideTransition(
-                  position: barOffset,
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(40),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: Container(
-                          height: 50,
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(22),
-                              bottomRight: Radius.circular(22),
-                            ),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.35),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+              SlideTransition(
+                position: barOffset,
+                child: Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        height: 50,
+                        padding:
+                        const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.25),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.35),
                           ),
-
-                          // ---- FIX OVERFLOW: horizontal scroll ----
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _reactionPill("Confirmed", 0, Colors.green),
-                                const SizedBox(width: 10),
-                                _reactionPill("Invited", 1, Colors.orange),
-                                const SizedBox(width: 10),
-                                _reactionPill("Requests", 2, Colors.blue),
-                                const SizedBox(width: 10),
-                                _reactionPill("Waitlist", 3, Colors.grey),
-                              ],
-                            ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _reactionPill(
+                                  "Confirmed", 0, Colors.green),
+                              const SizedBox(width: 10),
+                              _reactionPill(
+                                  "Invited", 1, Colors.orange),
+                              const SizedBox(width: 10),
+                              _reactionPill(
+                                  "Requests", 2, Colors.blue),
+                              const SizedBox(width: 10),
+                              _reactionPill(
+                                  "Waitlist", 3, Colors.grey),
+                            ],
                           ),
                         ),
                       ),
@@ -219,52 +218,32 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                   ? const Center(
                 child: CircularProgressIndicator(color: Colors.white),
               )
-                  : _buildContent(confirmed, invited, requests, waitlist),
+                  : _buildContent(
+                  confirmed, invited, requests, waitlist),
             ),
 
-
-            // ---------- JOIN / LEAVE BUTTON (VISUAL ONLY) ----------
+            // ---------------- ACTION BUTTON ----------------
             if (mainTab == 0)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    currentUsername == null
-                        ? SizedBox.shrink()
-                        : (
-                        isUserParticipant()
-                            ? _leaveButtonVisual()
-                            : _joinButtonVisual()
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 22, vertical: 12),
+                child: _buildBottomActionButton(),
               ),
-
           ],
         ),
       ),
     );
   }
 
-  // ----------------------------------------------------------
-  // MAIN NAVBAR BUTTONS
-  // ----------------------------------------------------------
-  Widget _mainTabButton(String label, int index, {bool isRootTab = false}) {
-    bool selected = mainTab == index;
+  // ---------------- MAIN TAB BUTTONS ----------------
 
-    BorderRadius radius = isRootTab
-        ? const BorderRadius.only(
-      topLeft: Radius.circular(16),
-      topRight: Radius.circular(16),
-    )
-        : BorderRadius.circular(12);
+  Widget _mainTabButton(String label, int index) {
+    bool selected = mainTab == index;
 
     return Expanded(
       child: GestureDetector(
         onTap: () {
           setState(() => mainTab = index);
-
           if (index == 0) barController.forward();
           else barController.reverse();
         },
@@ -272,8 +251,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
           duration: const Duration(milliseconds: 180),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? Colors.white.withOpacity(0.34) : Colors.transparent,
-            borderRadius: radius,
+            color: selected
+                ? Colors.white.withOpacity(0.34)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
@@ -288,9 +269,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
-  // ----------------------------------------------------------
-  // SECOND NAVBAR — REACTION PILLS
-  // ----------------------------------------------------------
+  // ---------------- SECOND NAVBAR BUTTONS ----------------
+
   Widget _reactionPill(String text, int idx, Color color) {
     bool selected = statusTab == idx;
 
@@ -317,7 +297,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         child: Text(
           text,
           style: TextStyle(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.9),
+            color:
+            selected ? Colors.white : Colors.white.withOpacity(0.9),
             fontWeight: FontWeight.w700,
             fontSize: 14,
           ),
@@ -326,109 +307,218 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
+  // ---------------- ACTION BUTTON SELECTOR ----------------
 
-  // ----------------------------------------------------------
-  // Join Button
-  // ----------------------------------------------------------
+  Widget _buildBottomActionButton() {
+    if (currentUsername == null) return SizedBox.shrink();
+
+    final me = getCurrentParticipant();
+
+    if (me == null) return _joinButtonVisual();
+
+    switch (me.status) {
+      case "REQUESTED":
+        return _cancelRequestButton();
+      case "INVITED":
+        return _acceptInviteButton();
+      case "WAITLIST":
+        return _leaveWaitlistButton();
+      case "ACCEPTED":
+        return _leaveButtonVisual();
+      default:
+        return _joinButtonVisual();
+    }
+  }
+
+  // ---------------- BUTTON WIDGET TEMPLATES ----------------
+
+  Widget _actionButton({required List<Color> colors, required String text}) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: colors,
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.20),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void showTopBanner(String msg, {bool error = false}) {
+    OverlayEntry entry = OverlayEntry(
+      builder: (_) => Positioned(
+        top: 40,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: error ? Colors.red.shade700 : Colors.green.shade700,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 10,
+                  color: Colors.black.withOpacity(0.3),
+                ),
+              ],
+            ),
+            child: Text(
+              msg,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(entry);
+
+    Future.delayed(const Duration(seconds: 2)).then((_) {
+      entry.remove();
+    });
+  }
+
+
+  // ---------------- JOIN BUTTON ----------------
 
   Widget _joinButtonVisual() {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF0A6F4A),
-            Color(0xFF46C264),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.20),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Text(
-          "Join Match",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            shadows: [
-              Shadow(
-                blurRadius: 6,
-                color: Colors.black26,
-                offset: Offset(0, 2),
-              )
-            ],
-          ),
-        ),
+    return GestureDetector(
+      onTap: () async {
+        try {
+          await MatchParticipantApi.joinMatch(widget.matchId);
+          await _loadParticipants();
+          setState(() {});
+
+          showTopBanner("Sent a join request!");
+        } catch (e) {
+          showTopBanner("Join error", error: true);
+        }
+      },
+      child: _actionButton(
+        colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+        text: "Join Match",
       ),
     );
   }
 
 
-  // ----------------------------------------------------------
-// NEW — Leave Button
-// ----------------------------------------------------------
+  // ---------------- LEAVE BUTTON ----------------
+
   Widget _leaveButtonVisual() {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFFA30000),
-            Color(0xFFE53935),
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.20),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Center(
-        child: Text(
-          "Leave Match",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            shadows: [
-              Shadow(
-                blurRadius: 6,
-                color: Colors.black26,
-                offset: Offset(0, 2),
-              )
-            ],
-          ),
-        ),
+    return GestureDetector(
+      onTap: () async {
+        try {
+          await MatchParticipantApi.leaveMatch(widget.matchId);
+          await _loadParticipants();
+          setState(() {});
+
+          showTopBanner("Left the match");
+        } catch (e) {
+          showTopBanner("Leave match error", error: true);
+        }
+      },
+      child: _actionButton(
+        colors: [Color(0xFFA30000), Color(0xFFE53935)],
+        text: "Leave Match",
       ),
     );
   }
 
+  // ---------------- CANCEL REQUEST ----------------
 
-  // ----------------------------------------------------------
-  // MAIN CONTENT
-  // ----------------------------------------------------------
+  Widget _cancelRequestButton() {
+    return GestureDetector(
+      onTap: () async {
+        try{
+        await MatchParticipantApi.cancelRequest(widget.matchId);
+        await _loadParticipants();
+        setState(() {});
+
+        showTopBanner("Canceled the join request");
+      }catch (e) {
+          showTopBanner("Cancel join request error", error: true);
+        }
+      },
+      child: _actionButton(
+        colors: [Color(0xFFA30000), Color(0xFFE53935)],
+        text: "Cancel Request",
+      ),
+    );
+  }
+
+  // ---------------- ACCEPT INVITE ----------------
+
+  Widget _acceptInviteButton() {
+    return GestureDetector(
+      onTap: () async {
+        try{
+        await MatchParticipantApi.acceptInvite(widget.matchId);
+        await _loadParticipants();
+        setState(() {});
+
+        showTopBanner("Invite accepted");
+      }catch (e) {
+          showTopBanner("Accept invite error", error: true);
+        }
+      },
+      child: _actionButton(
+        colors: [Colors.blue, Colors.lightBlue],
+        text: "Accept Invite",
+      ),
+    );
+  }
+
+  // ---------------- LEAVE WAITLIST ----------------
+
+  Widget _leaveWaitlistButton() {
+    return GestureDetector(
+      onTap: () async {
+        try{
+        await MatchParticipantApi.leaveWaitlist(widget.matchId);
+        await _loadParticipants();
+        setState(() {});
+
+        showTopBanner("Left waitlist");
+      }catch (e) {
+    showTopBanner("Leave waitlist error", error: true);
+    }
+      },
+      child: _actionButton(
+        colors: [Colors.grey, Colors.black45],
+        text: "Leave Waitlist",
+      ),
+    );
+  }
+
+  // ---------------- SECTIONS CONTENT ----------------
+
   Widget _buildContent(
       List<Participant> confirmed,
       List<Participant> invited,
       List<Participant> requests,
-      List<Participant> waitlist,
-      ) {
+      List<Participant> waitlist) {
     if (mainTab == 1) return _detailsPlaceholder();
     if (mainTab == 2) return _chatPlaceholder();
 
@@ -442,9 +532,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     return _buildUserList(sections[statusTab]);
   }
 
-  // ----------------------------------------------------------
-  // USER LIST
-  // ----------------------------------------------------------
   Widget _buildUserList(List<Participant> users) {
     if (users.isEmpty) {
       return const Center(
@@ -466,9 +553,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
-  // ----------------------------------------------------------
-  // USER CARD
-  // ----------------------------------------------------------
   Widget _userCard(Participant p) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),

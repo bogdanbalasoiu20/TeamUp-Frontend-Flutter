@@ -11,4 +11,31 @@ class MatchParticipantApi{
 
     return list.map((e) => Participant.fromJson(e)).toList();
   }
+
+  static Future<void> joinMatch(String matchId) async{
+    await ApiService.post("/api/matches/$matchId/participants/join", {});
+  }
+
+  static Future<void> leaveMatch(String matchId) async {
+    await ApiService.delete("/api/matches/$matchId/participants/leave");
+  }
+
+  static Future<void> cancelRequest(String matchId) async {
+    await ApiService.delete("/api/matches/$matchId/participants/leave");
+  }
+
+  static Future<void> acceptInvite(String matchId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/accept-invite",
+      {},
+    );
+  }
+
+
+  static Future<void> leaveWaitlist(String matchId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/leave-waitlist",
+      {},
+    );
+  }
 }

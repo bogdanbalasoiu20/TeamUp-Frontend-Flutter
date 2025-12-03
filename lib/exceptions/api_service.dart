@@ -74,5 +74,32 @@ class ApiService {
         code: "UNKNOWN", message: "Unknown error", details: []));
   }
 
+  static Future<dynamic> delete(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("access_token");
 
+    final url = Uri.parse("$baseUrl$path");
+
+    final response = await http.delete(
+      url,
+      headers:{
+        "Content-Type":"application/json",
+        if(token!=null) "Authorization":"Bearer $token"
+      }
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return data;
+    }
+
+    if (data["error"] != null) {
+      throw ApiException(ApiError.fromJson(data["error"]));
+    }
+
+    throw ApiException(ApiError(
+        code: "UNKNOWN", message: "Unknown error", details: []));
+
+  }
 }
