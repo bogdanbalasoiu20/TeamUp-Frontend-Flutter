@@ -58,8 +58,8 @@ class MatchInfo {
       venueName: venue["name"]?.toString() ?? "",
       venueAddress: venue["address"]?.toString() ?? "",
 
-      lat: (venue["latitude"] ?? 0).toDouble(),
-      lng: (venue["longitude"] ?? 0).toDouble(),
+      lat: (venue["lat"] ?? 0).toDouble(),
+      lng: (venue["lng"] ?? 0).toDouble(),
 
       startsAt: DateTime.parse(json["startsAt"]),
       endsAt: json["endsAt"] != null ? DateTime.parse(json["endsAt"]) : null,

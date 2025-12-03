@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 import '../models/participant.dart';
 import '../models/match_info.dart';
 import 'package:team_up_fe_new/utils/action_button_animated.dart';
@@ -11,7 +14,6 @@ class MatchDetailsTab extends StatelessWidget {
   final String? currentUserId;
   final Participant? me;
 
-  /// CALLBACKS
   final Future<void> Function() onLeaveMatch;
   final Future<void> Function() onCancelMatch;
   final Future<void> Function() onInvitePlayers;
@@ -40,32 +42,22 @@ class MatchDetailsTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-
-        // -------------------------------------------
-        // MATCH DETAILS CARD
-        // -------------------------------------------
         _buildMatchDetailsCard(),
+        const SizedBox(height: 25),
 
+        _sectionTitle("Location"),
+        _buildLocationMap(),
         const SizedBox(height: 35),
 
-        // -------------------------------------------
-        // USER STATUS SECTION
-        // -------------------------------------------
         _sectionTitle("Your Status"),
-
         if (me == null)
           const Text(
             "You are not part of this match.",
             style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
-
         if (me != null) _buildStatusCard(context),
-
         const SizedBox(height: 35),
 
-        // -------------------------------------------
-        // CREATOR ONLY: ADMIN PANEL
-        // -------------------------------------------
         if (isCreator) _sectionTitle("Match Admin"),
         if (isCreator) _buildAdminCard(context),
       ],
@@ -73,7 +65,7 @@ class MatchDetailsTab extends StatelessWidget {
   }
 
   // ============================================================
-  // MATCH DETAILS CARD UI
+  // MATCH DETAILS CARD
   // ============================================================
   Widget _buildMatchDetailsCard() {
     final m = match!;
@@ -88,7 +80,6 @@ class MatchDetailsTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Text(
             m.title.isEmpty ? "Match Details" : m.title,
             style: const TextStyle(
@@ -102,11 +93,9 @@ class MatchDetailsTab extends StatelessWidget {
 
           _detailRow(Icons.place, m.venueName),
           _detailRow(Icons.map, m.venueAddress),
-          _detailRow(Icons.schedule,
-              "${m.startsAt.toLocal()}".replaceAll(".000", "")),
+          _detailRow(Icons.schedule, "${m.startsAt.toLocal()}".replaceAll(".000", "")),
           _detailRow(Icons.timer, "${m.durationMinutes} minutes"),
-          _detailRow(Icons.people,
-              "${m.currentPlayers}/${m.maxPlayers} players"),
+          _detailRow(Icons.people, "${m.currentPlayers}/${m.maxPlayers} players"),
           _detailRow(Icons.payments, "${m.totalPrice.toStringAsFixed(2)} lei"),
 
           if (m.notes.isNotEmpty) ...[
@@ -145,6 +134,51 @@ class MatchDetailsTab extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // MAP
+  // ============================================================
+  Widget _buildLocationMap() {
+    final m = match!;
+
+    return Container(
+      height: 240,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white30),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: FlutterMap(
+        options: MapOptions(
+          center: LatLng(m.lat, m.lng),
+          zoom: 15,
+          interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            userAgentPackageName: "com.teamup.app.team_up_application",
+            tileProvider: NetworkTileProvider(), // important
+          ),
+
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(m.lat, m.lng),
+                width: 40,
+                height: 40,
+                builder: (_) => const Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 40,
+                ),
+              ),
+            ],
           ),
         ],
       ),
