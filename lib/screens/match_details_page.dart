@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/participant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/match_participant_api.dart';
+import 'package:team_up_fe_new/utils/action_button_animated.dart';
+import 'package:team_up_fe_new/utils/top_banner.dart';
 
 class MatchOverviewPage extends StatefulWidget {
   final String matchId;
@@ -364,62 +366,23 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
-  void showTopBanner(String msg, {bool error = false}) {
-    OverlayEntry entry = OverlayEntry(
-      builder: (_) => Positioned(
-        top: 40,
-        left: 16,
-        right: 16,
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: error ? Colors.red.shade700 : Colors.green.shade700,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 10,
-                  color: Colors.black.withOpacity(0.3),
-                ),
-              ],
-            ),
-            child: Text(
-              msg,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    Overlay.of(context).insert(entry);
-
-    Future.delayed(const Duration(seconds: 2)).then((_) {
-      entry.remove();
-    });
-  }
 
 
   // ---------------- JOIN BUTTON ----------------
 
   Widget _joinButtonVisual() {
-    return GestureDetector(
+    return ActionButtonAnimated(
+      colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+      text: "Join Match",
       onTap: () async {
         try {
           await MatchParticipantApi.joinMatch(widget.matchId);
           await _loadParticipants();
-          setState(() {});
-
-          showTopBanner("Sent a join request!");
+          showTopBanner(context,"Join request sent!");
         } catch (e) {
-          showTopBanner("Join error", error: true);
+          showTopBanner(context,"Join Error", error: true);
         }
       },
-      child: _actionButton(
-        colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
-        text: "Join Match",
-      ),
     );
   }
 
@@ -427,90 +390,78 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   // ---------------- LEAVE BUTTON ----------------
 
   Widget _leaveButtonVisual() {
-    return GestureDetector(
+    return ActionButtonAnimated(
+      colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+      text: "Leave Match",
       onTap: () async {
         try {
           await MatchParticipantApi.leaveMatch(widget.matchId);
           await _loadParticipants();
-          setState(() {});
-
-          showTopBanner("Left the match");
+          showTopBanner(context,"Left the match");
         } catch (e) {
-          showTopBanner("Leave match error", error: true);
+          showTopBanner(context,"Leave match error", error: true);
         }
       },
-      child: _actionButton(
-        colors: [Color(0xFFA30000), Color(0xFFE53935)],
-        text: "Leave Match",
-      ),
     );
   }
+
 
   // ---------------- CANCEL REQUEST ----------------
 
   Widget _cancelRequestButton() {
-    return GestureDetector(
+    return ActionButtonAnimated(
+      colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+      text: "Cancel Request",
       onTap: () async {
-        try{
-        await MatchParticipantApi.cancelRequest(widget.matchId);
-        await _loadParticipants();
-        setState(() {});
-
-        showTopBanner("Canceled the join request");
-      }catch (e) {
-          showTopBanner("Cancel join request error", error: true);
+        try {
+          await MatchParticipantApi.cancelRequest(widget.matchId);
+          await _loadParticipants();
+          showTopBanner(context,"Canceled the join request");
+        } catch (e) {
+          showTopBanner(context,"Cancel request error", error: true);
         }
       },
-      child: _actionButton(
-        colors: [Color(0xFFA30000), Color(0xFFE53935)],
-        text: "Cancel Request",
-      ),
     );
   }
+
 
   // ---------------- ACCEPT INVITE ----------------
 
   Widget _acceptInviteButton() {
-    return GestureDetector(
+    return ActionButtonAnimated(
+      colors: const [Colors.blue, Colors.lightBlue],
+      text: "Accept Invite",
       onTap: () async {
-        try{
-        await MatchParticipantApi.acceptInvite(widget.matchId);
-        await _loadParticipants();
-        setState(() {});
-
-        showTopBanner("Invite accepted");
-      }catch (e) {
-          showTopBanner("Accept invite error", error: true);
+        try {
+          await MatchParticipantApi.acceptInvite(widget.matchId);
+          await _loadParticipants();
+          showTopBanner(context,"Invite accepted");
+        } catch (e) {
+          showTopBanner(context,"Accept invite error", error: true);
         }
       },
-      child: _actionButton(
-        colors: [Colors.blue, Colors.lightBlue],
-        text: "Accept Invite",
-      ),
     );
   }
+
 
   // ---------------- LEAVE WAITLIST ----------------
 
   Widget _leaveWaitlistButton() {
-    return GestureDetector(
+    return ActionButtonAnimated(
+      colors: const [Colors.grey, Colors.black45],
+      text: "Leave Waitlist",
       onTap: () async {
-        try{
-        await MatchParticipantApi.leaveWaitlist(widget.matchId);
-        await _loadParticipants();
-        setState(() {});
-
-        showTopBanner("Left waitlist");
-      }catch (e) {
-    showTopBanner("Leave waitlist error", error: true);
-    }
+        try {
+          await MatchParticipantApi.leaveWaitlist(widget.matchId);
+          await _loadParticipants();
+          showTopBanner(context,"Left waitlist");
+        } catch (e) {
+          showTopBanner(context,"Leave waitlist error", error: true);
+        }
       },
-      child: _actionButton(
-        colors: [Colors.grey, Colors.black45],
-        text: "Leave Waitlist",
-      ),
     );
   }
+
 
   // ---------------- SECTIONS CONTENT ----------------
 
