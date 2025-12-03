@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/models/match.dart';
+import 'package:team_up_fe_new/models/match_info.dart';
 
 class MatchApi {
   static const baseUrl = "https://teamup-backend-omi4.onrender.com/api/matches";
@@ -86,6 +87,13 @@ class MatchApi {
 
     return content.map((e) => MatchItem.fromJson(e)).toList();
   }
+
+  static Future<MatchInfo> fetchMatchDetails(String matchId) async {
+    final json = await ApiService.get("$baseUrl/$matchId");
+
+    return MatchInfo.fromJson(json["data"]);
+  }
+
 }
 
 
