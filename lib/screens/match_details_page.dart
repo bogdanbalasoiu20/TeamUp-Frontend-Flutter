@@ -45,22 +45,182 @@ class MatchDetailsTab extends StatelessWidget {
         _buildMatchDetailsCard(),
         const SizedBox(height: 25),
 
+        if (match!.notes.isNotEmpty) ...[
+          _sectionTitle("Notes"),
+          _buildNotesCard(match!.notes),
+          const SizedBox(height: 25),
+        ],
+
         _sectionTitle("Location"),
         _buildLocationMap(),
         const SizedBox(height: 35),
 
         _sectionTitle("Your Status"),
-        if (me == null)
-          const Text(
-            "You are not part of this match.",
-            style: TextStyle(fontSize: 16, color: Colors.white70),
-          ),
-        if (me != null) _buildStatusCard(context),
-        const SizedBox(height: 35),
+        _buildStatusCard(),
+        const SizedBox(height: 25),
 
-        if (isCreator) _sectionTitle("Match Admin"),
-        if (isCreator) _buildAdminCard(context),
+        if (isCreator || me?.status == "ACCEPTED") ...[
+          _sectionTitle("Actions"),
+          _buildActionCard(context),
+        ],
       ],
+    );
+  }
+
+  // ============================================================
+  // STATUS CARD (separat, doar text)
+  // ============================================================
+  Widget _buildStatusCard() {
+    final bool userIsCreator = isCreator;
+    final bool isAccepted = me?.status == "ACCEPTED";
+
+    String statusText;
+
+    if (userIsCreator) {
+      statusText = "Match Admin";
+    } else if (me == null) {
+      statusText = "Not part of this match";
+    } else if (isAccepted) {
+      statusText = "Confirmed player";
+    } else {
+      statusText = me!.status;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Text(
+        statusText,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // ACTION CARD (separat, doar butoane)
+  // ============================================================
+  Widget _buildActionCard(BuildContext context) {
+    final bool userIsCreator = isCreator;
+    final bool isAccepted = me?.status == "ACCEPTED";
+
+    // CREATOR → Invite + Cancel Match
+    if (userIsCreator) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Column(
+          children: [
+            ActionButtonAnimated(
+              colors: const [Colors.blue, Colors.lightBlueAccent],
+              text: "Invite Players",
+              onTap: () async {
+                await onInvitePlayers();
+                showTopBanner(context, "Invite menu opened");
+              },
+            ),
+            const SizedBox(height: 14),
+            ActionButtonAnimated(
+              colors: const [Color(0xFF6A0000), Color(0xFFDA1E28)],
+              text: "Cancel Match",
+              onTap: () async {
+                await onCancelMatch();
+                showTopBanner(context, "Match canceled");
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    // PLAYER ACCEPTED → Leave Match
+    if (!userIsCreator && isAccepted) {
+      return Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white24),
+        ),
+        child: ActionButtonAnimated(
+          colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+          text: "Leave Match",
+          onTap: () async {
+            await onLeaveMatch();
+            showTopBanner(context, "You left the match");
+          },
+        ),
+      );
+    }
+
+    // PLAYER NON-ACCEPTED
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: const Text(
+        "You can leave only after your request is accepted.",
+        style: TextStyle(color: Colors.white70, fontSize: 14),
+      ),
+    );
+  }
+
+  // ============================================================
+  // LOCATION MAP
+  // ============================================================
+  Widget _buildLocationMap() {
+    final m = match!;
+
+    return Container(
+      height: 240,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white30),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: FlutterMap(
+        options: MapOptions(
+          center: LatLng(m.lat, m.lng),
+          zoom: 15,
+          interactiveFlags: InteractiveFlag.none,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+            userAgentPackageName: "com.teamup.app",
+            tileProvider: NetworkTileProvider(),
+          ),
+
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(m.lat, m.lng),
+                width: 40,
+                height: 40,
+                builder: (_) => const Icon(
+                  Icons.location_on,
+                  color: Colors.red,
+                  size: 40,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -93,27 +253,12 @@ class MatchDetailsTab extends StatelessWidget {
 
           _detailRow(Icons.place, m.venueName),
           _detailRow(Icons.map, m.venueAddress),
-          _detailRow(Icons.schedule, "${m.startsAt.toLocal()}".replaceAll(".000", "")),
+          _detailRow(Icons.schedule, "${m.startsAt.toLocal()}"),
           _detailRow(Icons.timer, "${m.durationMinutes} minutes"),
           _detailRow(Icons.people, "${m.currentPlayers}/${m.maxPlayers} players"),
           _detailRow(Icons.payments, "${m.totalPrice.toStringAsFixed(2)} lei"),
 
-          if (m.notes.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Text(
-              "Notes",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              m.notes,
-              style: const TextStyle(fontSize: 15, color: Colors.white70),
-            ),
-          ],
+
         ],
       ),
     );
@@ -140,135 +285,25 @@ class MatchDetailsTab extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // MAP
-  // ============================================================
-  Widget _buildLocationMap() {
-    final m = match!;
-
+  Widget _buildNotesCard(String notes) {
     return Container(
-      height: 240,
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white30),
+        border: Border.all(color: Colors.white24),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: FlutterMap(
-        options: MapOptions(
-          center: LatLng(m.lat, m.lng),
-          zoom: 15,
-          interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+      child: Text(
+        notes,
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.white70,
+          height: 1.35,
         ),
-        children: [
-          TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: "com.teamup.app.team_up_application",
-            tileProvider: NetworkTileProvider(), // important
-          ),
-
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: LatLng(m.lat, m.lng),
-                width: 40,
-                height: 40,
-                builder: (_) => const Icon(
-                  Icons.location_on,
-                  color: Colors.red,
-                  size: 40,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
 
-  // ============================================================
-  // USER STATUS CARD
-  // ============================================================
-  Widget _buildStatusCard(BuildContext context) {
-    final isAccepted = me!.status == "ACCEPTED";
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Status: ${me!.status}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          if (!isCreator && isAccepted)
-            ActionButtonAnimated(
-              colors: const [Color(0xFFA30000), Color(0xFFE53935)],
-              text: "Leave Match",
-              onTap: () async {
-                await onLeaveMatch();
-                showTopBanner(context, "You left the match");
-              },
-            ),
-
-          if (!isCreator && !isAccepted)
-            const Text(
-              "You can leave only after your request is accepted.",
-              style: TextStyle(fontSize: 14, color: Colors.white54),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
-  // CREATOR ADMIN PANEL
-  // ============================================================
-  Widget _buildAdminCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ActionButtonAnimated(
-            colors: const [Colors.blue, Colors.lightBlueAccent],
-            text: "Invite Players",
-            onTap: () async {
-              await onInvitePlayers();
-              showTopBanner(context, "Invite menu opened");
-            },
-          ),
-
-          const SizedBox(height: 16),
-
-          ActionButtonAnimated(
-            colors: const [Color(0xFF6A0000), Color(0xFFDA1E28)],
-            text: "Cancel Match",
-            onTap: () async {
-              await onCancelMatch();
-              showTopBanner(context, "Match canceled");
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // ============================================================
   // SECTION TITLE
