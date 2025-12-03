@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:team_up_fe_new/utils/data_formator.dart';
 
 import '../models/participant.dart';
 import '../models/match_info.dart';
@@ -252,8 +253,10 @@ class MatchDetailsTab extends StatelessWidget {
           const SizedBox(height: 12),
 
           _detailRow(Icons.place, m.venueName),
-          _detailRow(Icons.map, m.venueAddress),
-          _detailRow(Icons.schedule, "${m.startsAt.toLocal()}"),
+          _detailRow(
+            Icons.schedule,
+            formatMatchTime(m.startsAt, m.endsAt),
+          ),
           _detailRow(Icons.timer, "${m.durationMinutes} minutes"),
           _detailRow(Icons.people, "${m.currentPlayers}/${m.maxPlayers} players"),
           _detailRow(Icons.payments, "${m.totalPrice.toStringAsFixed(2)} lei"),
