@@ -182,9 +182,9 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    // VENUE – STATIC
+                    // FIELD (DISABLED) WITH ICONS
                     const Text(
-                      "Field",
+                      "Field (cannot be changed)",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -192,23 +192,39 @@ class _EditMatchPageState extends State<EditMatchPage> {
                       ),
                     ),
                     const SizedBox(height: 6),
+
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.black12),
+                        border: Border.all(color: Colors.black26),
                       ),
-                      child: Text(
-                        m.venueName,
-                        style: const TextStyle(fontSize: 16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 22, color: Colors.black54),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              m.venueName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black54,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.lock, size: 20, color: Colors.black45),
+                        ],
                       ),
                     ),
+
                     const SizedBox(height: 20),
 
                     // START TIME
-                    _label("Start Time"),
-                    _pickerBox(
+                    _iconPickerBox(
+                      icon: Icons.schedule,
+                      label: "Start Time",
                       text: startsAt == null
                           ? "Select date & time"
                           : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
@@ -217,8 +233,9 @@ class _EditMatchPageState extends State<EditMatchPage> {
                     const SizedBox(height: 20),
 
                     // DEADLINE
-                    _label("Join Deadline (optional)"),
-                    _pickerBox(
+                    _iconPickerBox(
+                      icon: Icons.lock_clock,
+                      label: "Join Deadline (optional)",
                       text: joinDeadline == null
                           ? "Select deadline"
                           : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
@@ -226,19 +243,19 @@ class _EditMatchPageState extends State<EditMatchPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Duration (minutes)", durationController),
+                    _iconTextField("Duration (minutes)", durationController, Icons.timer),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Maximum players", maxPlayersController),
+                    _iconTextField("Maximum players", maxPlayersController, Icons.people),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Total price", priceController),
+                    _iconTextField("Total price", priceController, Icons.payments),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Title", titleController),
+                    _iconTextField("Title", titleController, Icons.sports_soccer),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Notes", notesController, maxLines: 3),
+                    _iconTextField("Notes", notesController, Icons.note_alt, maxLines: 3),
 
                     const SizedBox(height: 40),
 
@@ -283,36 +300,13 @@ class _EditMatchPageState extends State<EditMatchPage> {
     );
   }
 
-  // Helpers ↓↓↓↓
 
-  Widget _label(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF003B2F),
-      ),
-    );
-  }
-
-  Widget _pickerBox({required String text, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black12),
-        ),
-        child: Text(text, style: const TextStyle(fontSize: 15)),
-      ),
-    );
-  }
-
-  Widget _textFieldCard(String label, TextEditingController controller,
-      {int maxLines = 1}) {
+  Widget _iconPickerBox({
+    required IconData icon,
+    required String label,
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -324,7 +318,45 @@ class _EditMatchPageState extends State<EditMatchPage> {
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.black87),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(text, style: const TextStyle(fontSize: 15)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _iconTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003B2F),
+          ),
+        ),
+        const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
@@ -332,10 +364,20 @@ class _EditMatchPageState extends State<EditMatchPage> {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.black12),
           ),
-          child: TextField(
-            controller: controller,
-            maxLines: maxLines,
-            decoration: const InputDecoration(border: InputBorder.none),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.black87),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  maxLines: maxLines,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],

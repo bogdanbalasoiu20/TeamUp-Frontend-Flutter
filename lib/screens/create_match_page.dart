@@ -48,7 +48,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
     if (time == null) return;
 
-    final dt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final dt =
+    DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
     setState(() {
       if (isStart) {
@@ -98,7 +99,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       );
 
       Navigator.pop(context);
-
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
@@ -121,12 +121,12 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Background gradient premium
+          // BACKGROUND
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF003B2F),
+                  Color(0xFF003B2F),
                   AppColors.primaryGreenDark,
                   AppColors.primaryGreenLight,
                 ],
@@ -136,7 +136,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ),
           ),
 
-          // Title
+          // TITLE
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 70, 28, 0),
             child: Column(
@@ -169,7 +169,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ),
           ),
 
-          // White sheet
+          // WHITE SHEET
           Positioned(
             top: size.height * 0.28,
             left: 0,
@@ -196,7 +196,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // MINI MAP
                     MiniMapWidget(
                       selectedVenue: selectedVenue,
@@ -238,39 +237,48 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                         ],
                       ),
 
-                    _label("Start Time"),
-                    _pickerBox(
+                    // ---------------------- ICON FIELDS -----------------------
+
+                    _iconPickerBox(
+                      icon: Icons.schedule,
+                      label: "Start Time",
                       text: startsAt == null
                           ? "Select date & time"
                           : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
                       onTap: () => _pickDate(isStart: true),
                     ),
-
                     const SizedBox(height: 20),
 
-                    _label("Join Deadline (optional)"),
-                    _pickerBox(
+                    _iconPickerBox(
+                      icon: Icons.lock_clock,
+                      label: "Join Deadline (optional)",
                       text: joinDeadline == null
                           ? "Select deadline"
-                          : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
+                          : DateFormat("yyyy-MM-dd HH:mm")
+                          .format(joinDeadline!),
                       onTap: () => _pickDate(isStart: false),
                     ),
-
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Duration (minutes)", durationController),
+                    _iconTextField(
+                        "Duration (minutes)", durationController, Icons.timer),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Maximum players", maxPlayersController),
+                    _iconTextField("Maximum players", maxPlayersController,
+                        Icons.people),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Total price", priceController),
+                    _iconTextField(
+                        "Total price", priceController, Icons.payments),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Title", titleController),
+                    _iconTextField(
+                        "Title", titleController, Icons.sports_soccer),
                     const SizedBox(height: 20),
 
-                    _textFieldCard("Notes", notesController, maxLines: 3),
+                    _iconTextField(
+                        "Notes", notesController, Icons.note_alt,
+                        maxLines: 3),
 
                     const SizedBox(height: 40),
 
@@ -299,7 +307,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                         ),
                         child: Center(
                           child: creating
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                              color: Colors.white)
                               : const Text(
                             "CREATE MATCH",
                             style: TextStyle(
@@ -323,43 +332,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
   }
 
-  // Label beautified
-  Widget _label(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF003B2F),
-      ),
-    );
-  }
+  // ------------------ ICON WIDGETS ------------------
 
-  // Date & Time picker box
-  Widget _pickerBox({required String text, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black12),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 15),
-        ),
-      ),
-    );
-  }
-
-  // Card-style text field
-  Widget _textFieldCard(
-      String label,
-      TextEditingController controller, {
-        int maxLines = 1,
-      }) {
+  Widget _iconPickerBox({
+    required IconData icon,
+    required String label,
+    required String text,
+    required VoidCallback onTap,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -371,21 +351,71 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.black12),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: Colors.black87),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text,
+                    style: const TextStyle(fontSize: 15),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _iconTextField(
+      String label, TextEditingController controller, IconData icon,
+      {int maxLines = 1}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF003B2F),
+          ),
+        ),
+        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: Colors.black12),
           ),
-          child: TextField(
-            controller: controller,
-            maxLines: maxLines,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-            ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.black87),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  maxLines: maxLines,
+                  decoration:
+                  const InputDecoration(border: InputBorder.none),
+                ),
+              ),
+            ],
           ),
         ),
       ],

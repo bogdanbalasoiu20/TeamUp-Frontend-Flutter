@@ -81,7 +81,7 @@ class MatchCardPin extends StatelessWidget {
           // ---------------- PLAYERS & DURATION ----------------
           Row(
             children: [
-              Icon(Icons.sports_soccer, size: 18, color: Colors.white70),
+              Icon(Icons.people, size: 18, color: Colors.white70),
               const SizedBox(width: 6),
               Text(
                 "${match.joinedPlayers}/${match.maxPlayers} players",

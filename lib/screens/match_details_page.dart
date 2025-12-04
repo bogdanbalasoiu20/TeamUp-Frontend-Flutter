@@ -50,6 +50,12 @@ class MatchDetailsTab extends StatelessWidget {
         _buildMatchDetailsCard(),
         const SizedBox(height: 25),
 
+        if (match!.joinDeadline != null) ...[
+          _sectionTitle("Join Deadline"),
+          _buildJoinDeadlineCard(),
+          const SizedBox(height: 25),
+        ],
+
         if (match!.notes.isNotEmpty) ...[
           _sectionTitle("Notes"),
           _buildNotesCard(match!.notes),
@@ -289,6 +295,39 @@ class MatchDetailsTab extends StatelessWidget {
       ),
     );
   }
+
+
+  Widget _buildJoinDeadlineCard() {
+    final d = match!.joinDeadline!;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.14),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.lock_clock, color: Colors.white70, size: 22),
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              formatMatchTime(d, null),
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _detailRow(IconData icon, String text) {
     return Padding(
