@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:team_up_fe_new/screens/edit_match_page.dart';
 import 'package:team_up_fe_new/utils/data_formator.dart';
 
 import '../models/participant.dart';
@@ -112,7 +113,7 @@ class MatchDetailsTab extends StatelessWidget {
     final bool userIsCreator = isCreator;
     final bool isAccepted = me?.status == "ACCEPTED";
 
-    // CREATOR → Invite + Cancel Match
+    // CREATOR → Invite + Cancel Match + Edit
     if (userIsCreator) {
       return Container(
         padding: const EdgeInsets.all(18),
@@ -123,6 +124,21 @@ class MatchDetailsTab extends StatelessWidget {
         ),
         child: Column(
           children: [
+            ActionButtonAnimated(
+              colors: const [Colors.green, Colors.lightGreenAccent],
+              text: "Edit Match",
+              onTap: () {
+                // Navighezi către pagina ta de edit
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditMatchPage(match: match!),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 14),
+
             ActionButtonAnimated(
               colors: const [Colors.blue, Colors.lightBlueAccent],
               text: "Invite Players",
