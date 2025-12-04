@@ -512,7 +512,12 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         },
         onCancelMatch: () async {},
         onInvitePlayers: () async {},
+        onRefreshRequest: () async {
+          await _loadMatchInfo();
+          await _loadParticipants();
+        },
       );
+
 
 
     if (mainTab == 2)

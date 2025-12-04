@@ -19,6 +19,8 @@ class MatchDetailsTab extends StatelessWidget {
   final Future<void> Function() onLeaveMatch;
   final Future<void> Function() onCancelMatch;
   final Future<void> Function() onInvitePlayers;
+  final Future<void> Function() onRefreshRequest;
+
 
   const MatchDetailsTab({
     super.key,
@@ -29,6 +31,7 @@ class MatchDetailsTab extends StatelessWidget {
     required this.onLeaveMatch,
     required this.onCancelMatch,
     required this.onInvitePlayers,
+    required this.onRefreshRequest
   });
 
   bool get isCreator => currentUserId == creatorId;
@@ -127,16 +130,20 @@ class MatchDetailsTab extends StatelessWidget {
             ActionButtonAnimated(
               colors: const [Colors.green, Colors.lightGreenAccent],
               text: "Edit Match",
-              onTap: () {
-                // Navighezi către pagina ta de edit
-                Navigator.push(
+              onTap: () async {
+                final updated = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) => EditMatchPage(match: match!),
                   ),
                 );
+
+                if (updated == true) {
+                  await onRefreshRequest();   // <--- REFRESH AUTOMAT
+                }
               },
             ),
+
             const SizedBox(height: 14),
 
             ActionButtonAnimated(
