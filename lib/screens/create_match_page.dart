@@ -98,7 +98,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         const SnackBar(content: Text("Match created successfully")),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context,true);
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)

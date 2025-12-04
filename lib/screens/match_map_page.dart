@@ -289,11 +289,15 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                         ),
 
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
+                          onTap: () async {
+                            final created = await Navigator.push(
                               context,
                               MaterialPageRoute(builder: (_) => const CreateMatchPage()),
                             );
+
+                            if (created == true) {
+                              await _fetchMatchesOnInit();
+                            }
                           },
                           child: Container(
                             padding:
