@@ -127,6 +127,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     participants.where((p) => p.status == "REQUESTED").toList();
     final waitlist =
     participants.where((p) => p.status == "WAITLIST").toList();
+    final maxPlayers = matchInfo?.maxPlayers;
+    final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
 
 
 
@@ -351,14 +353,22 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     if (currentUsername == null) return SizedBox.shrink();
 
     final me = getCurrentParticipant();
+    final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
+    final maxPlayers = matchInfo?.maxPlayers;
+    final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
 
-    // CREATOR → nu are butoane în tabul Participants
+
     if (isCreator()) return const SizedBox.shrink();
 
-    // USER NEPARTICIPANT
-    if (me == null) return _joinButtonVisual();
+    if (me == null) {
+      if (isFull) {
+        return _joinWaitlistButton();
+      } else {
+        return _joinButtonVisual();
+      }
+    }
 
-    // USER PARTICIPANT
+    // USER DEJA ÎN MECI
     switch (me.status) {
       case "REQUESTED":
         return _cancelRequestButton();
@@ -366,11 +376,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         return _acceptInviteButton();
       case "WAITLIST":
         return _leaveWaitlistButton();
-    // ACCEPTED → Leave mutat în tabul Details
       case "ACCEPTED":
-        return const SizedBox.shrink();
+        return SizedBox.shrink();
       default:
-        return _joinButtonVisual();
+        return SizedBox.shrink();
     }
   }
 
@@ -480,7 +489,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       text: "Leave Waitlist",
       onTap: () async {
         try {
-          await MatchParticipantApi.leaveWaitlist(widget.matchId);
+          await MatchParticipantApi.leaveMatch(widget.matchId);
           await _loadParticipants();
           showTopBanner(context,"Left waitlist");
         } catch (e) {
@@ -489,6 +498,23 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       },
     );
   }
+
+  Widget _joinWaitlistButton() {
+    return ActionButtonAnimated(
+      colors: const [Colors.grey, Colors.black54],
+      text: "Join Waitlist",
+      onTap: () async {
+        try {
+          await MatchParticipantApi.joinMatch(widget.matchId);
+          await _loadParticipants();
+          showTopBanner(context, "Added to waitlist!");
+        } catch (e) {
+          showTopBanner(context, "Error joining waitlist", error: true);
+        }
+      },
+    );
+  }
+
 
 
 
@@ -532,7 +558,12 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       waitlist,
     ];
 
+    if (statusTab == 3) {
+      return _buildWaitlistContent(waitlist);
+    }
+
     return _buildUserList(sections[statusTab]);
+
   }
 
 
@@ -560,7 +591,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   Widget _userCard(Participant p) {
     final bool creator = isCreator();
     final bool canApproveRequest = creator && p.status == "REQUESTED";
-    final bool canPromote = creator && p.status == "WAITLIST";
+    final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
+    final maxPlayers = matchInfo?.maxPlayers;
+    final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
+    final bool canPromote = creator && p.status == "WAITLIST" && !isFull;
+
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -698,4 +733,48 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       ),
     );
   }
+
+
+  Widget _buildWaitlistContent(List<Participant> waitlist) {
+    final confirmed =
+    participants.where((p) => p.status == "ACCEPTED").toList();
+
+    final maxPlayers = matchInfo?.maxPlayers;
+    final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
+
+    final creator = isCreator();
+
+    final bool showWarning = creator && isFull && waitlist.isNotEmpty;
+
+    return Column(
+      children: [
+        if (showWarning)
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.withOpacity(0.4)),
+            ),
+            child: const Text(
+              "The match is full.\n"
+                  "You cannot promote players from the waitlist until a spot opens.\n"
+                  "You may edit the match to increase the maximum number of players.",
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
+              ),
+            ),
+          ),
+
+        Expanded(
+          child: _buildUserList(waitlist),
+        ),
+      ],
+    );
+  }
+
 }

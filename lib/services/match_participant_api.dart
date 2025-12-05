@@ -32,12 +32,6 @@ class MatchParticipantApi{
   }
 
 
-  static Future<void> leaveWaitlist(String matchId) async {
-    await ApiService.post(
-      "/api/matches/$matchId/participants/leave-waitlist",
-      {},
-    );
-  }
 
   static Future<void> approveRequest(String matchId, String userId) async {
     await ApiService.post(
