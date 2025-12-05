@@ -128,6 +128,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     final waitlist =
     participants.where((p) => p.status == "WAITLIST").toList();
 
+
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -557,7 +559,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   Widget _userCard(Participant p) {
     final bool creator = isCreator();
-    final bool canModerate = creator && p.status == "REQUESTED";
+    final bool canApproveRequest = creator && p.status == "REQUESTED";
+    final bool canPromote = creator && p.status == "WAITLIST";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -616,7 +619,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
           ),
 
           //approve/decline a join request button
-          if (canModerate)
+          if (canApproveRequest)
             Row(
               children: [
                 _approveButton(p),
@@ -624,8 +627,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                 _rejectButton(p),
               ],
             )
+          else if (canPromote)
+            _promoteButton(p)
           else
-            const Icon(Icons.chevron_right, color: Colors.black45),
+            const Icon(Icons.chevron_right, color: Colors.black45)
+
         ],
       ),
     );
@@ -665,6 +671,23 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       },
     );
   }
+
+  Widget _promoteButton(Participant p) {
+    return MiniActionButton(
+      colors: const [Colors.blue, Colors.lightBlue],
+      icon: Icons.arrow_upward,
+      onTap: () async {
+        try {
+          await MatchParticipantApi.promoteFromWaitlist(widget.matchId, p.userID);
+          await _loadParticipants();
+          showTopBanner(context, "Promoted to participants!");
+        } catch (e) {
+          showTopBanner(context, "Promote error", error: true);
+        }
+      },
+    );
+  }
+
 
 
   Widget _chatPlaceholder() {

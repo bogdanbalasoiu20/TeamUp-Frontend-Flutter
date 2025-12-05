@@ -53,4 +53,29 @@ class MatchParticipantApi{
     );
   }
 
+  static Future<List<Participant>> fetchWaitlist(String matchId) async {
+    final response = await ApiService.get(
+      "https://teamup-backend-omi4.onrender.com/api/matches/$matchId/participants",
+    );
+
+    final data = response["data"];
+    final List<dynamic> list = data["participants"];
+
+    return list
+        .where((p) => p["status"] == "WAITLIST")
+        .map((p) => Participant.fromJson(p))
+        .toList();
+  }
+
+
+  static Future<void> promoteFromWaitlist(String matchId, String userId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/$userId/promote",
+      {},
+    );
+  }
+
+
+
+
 }

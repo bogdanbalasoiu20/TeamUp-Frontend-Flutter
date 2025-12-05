@@ -125,7 +125,6 @@ class ApiService {
       decoded = null;
     }
 
-    // Success 2xx
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return decoded;
     }
