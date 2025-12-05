@@ -44,7 +44,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     });
   }
 
-  // ------------------ Open cluster modal ------------------
   void _openClusterModal(List<Marker> clusterMarkers) {
     final clusterMatches = clusterMarkers.map((marker) {
       final markerId = (marker.key as ValueKey).value;
@@ -109,7 +108,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     );
   }
 
-  // ------------------ Select pin ------------------
   void _selectPin(MatchPin pin) {
     setState(() => selectedPin = pin);
 
@@ -125,128 +123,237 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // ------------------ BACKGROUND GRADIENT ------------------
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF003B2F),
-                  AppColors.primaryGreenDark,
-                  AppColors.primaryGreenLight,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-            ),
-          ),
+      body: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (overscroll) {
+          overscroll.disallowIndicator(); // împiedică bounce vizual
+          return true;
+        },
 
-          // ------------------ HEADER TEXT ------------------
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Browse Matches",
-                  style: TextStyle(
-                    fontSize: 40,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 14,
-                        color: Colors.black54,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  "Find & join matches near you",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        child: RefreshIndicator(
+          onRefresh: _fetchMatchesOnInit,
+          color: Colors.green,
+          backgroundColor: Colors.white,
 
-          // ------------------ WHITE SHEET ------------------
-          Positioned(
-            top: size.height * 0.32,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 25,
-                    color: Colors.black.withOpacity(0.1),
-                    offset: const Offset(0, -3),
-                  ),
-                ],
-              ),
-
-              child: Column(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: size.height, // împiedică scroll real
+              child: Stack(
                 children: [
-                  // ------------------ MAP ------------------
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: SizedBox(
-                      height: size.height * 0.42,
-                      child: FlutterMap(
-                        mapController: mapController,
-                        options: MapOptions(
-                          center: LatLng(44.4268, 26.1025),
-                          zoom: 12,
-                          keepAlive: true,
+
+                  // ------------------ BACKGROUND GRADIENT ------------------
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF003B2F),
+                          AppColors.primaryGreenDark,
+                          AppColors.primaryGreenLight,
+                        ],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                    ),
+                  ),
+
+                  // ------------------ HEADER TEXT ------------------
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        Text(
+                          "Browse Matches",
+                          style: TextStyle(
+                            fontSize: 40,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 14,
+                                color: Colors.black54,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
                         ),
+                        SizedBox(height: 6),
+                        Text(
+                          "Find & join matches near you",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ------------------ WHITE SHEET ------------------
+                  Positioned(
+                    top: size.height * 0.32,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      padding: const EdgeInsets.fromLTRB(22, 22, 22, 0),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(40),
+                          topRight: Radius.circular(40),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 25,
+                            color: Colors.black.withOpacity(0.1),
+                            offset: const Offset(0, -3),
+                          ),
+                        ],
+                      ),
+
+                      child: Column(
                         children: [
-                          TileLayer(
-                            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-                            userAgentPackageName: "teamup",
+                          // ------------------ MAP ------------------
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(28),
+                            child: SizedBox(
+                              height: size.height * 0.42,
+                              child: FlutterMap(
+                                mapController: mapController,
+                                options: MapOptions(
+                                  center: LatLng(44.4268, 26.1025),
+                                  zoom: 12,
+                                  keepAlive: true,
+                                ),
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                    userAgentPackageName: "teamup",
+                                  ),
+                                  MarkerClusterLayerWidget(
+                                    options: MarkerClusterLayerOptions(
+                                      markers: pins
+                                          .map(
+                                            (m) => Marker(
+                                          key: ValueKey(m.id),
+                                          width: 42,
+                                          height: 42,
+                                          point: LatLng(
+                                              m.latitude, m.longitude),
+                                          builder: (_) => GestureDetector(
+                                            onTap: () => _selectPin(m),
+                                            child: Icon(
+                                              Icons.sports_soccer,
+                                              size: 38,
+                                              color: (selectedPin != null &&
+                                                  selectedPin!.id ==
+                                                      m.id)
+                                                  ? Colors.red
+                                                  : Colors.green,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                          .toList(),
+                                      maxClusterRadius: 45,
+                                      disableClusteringAtZoom: 16,
+                                      onClusterTap: (cluster) =>
+                                          _openClusterModal(cluster.markers),
+                                      builder: (context, cluster) =>
+                                          CircleAvatar(
+                                            backgroundColor:
+                                            Colors.green.shade700,
+                                            child: Text(
+                                              cluster.length.toString(),
+                                              style: const TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
 
-                          MarkerClusterLayerWidget(
-                            options: MarkerClusterLayerOptions(
-                              markers: pins.map((m) => Marker(
-                                key: ValueKey(m.id),
-                                width: 42,
-                                height: 42,
-                                point: LatLng(m.latitude, m.longitude),
-                                builder: (_) => GestureDetector(
-                                  onTap: () => _selectPin(m),
-                                  child: Icon(
-                                    Icons.sports_soccer,
-                                    size: 38,
-                                    color: (selectedPin != null && selectedPin!.id == m.id)
-                                        ? Colors.red
-                                        : Colors.green,
+                          const SizedBox(height: 18),
+
+                          // ------------------ LOCATION + NEW MATCH ------------------
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 18),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(22),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 4),
+                                )
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: const [
+                                    Icon(Icons.location_on,
+                                        color: Color(0xFF0A6F4A), size: 26),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Bucharest",
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                GestureDetector(
+                                  onTap: () async {
+                                    final created = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (_) =>
+                                          const CreateMatchPage()),
+                                    );
+
+                                    if (created == true) {
+                                      await _fetchMatchesOnInit();
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 18, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF003B2F),
+                                          Color(0xFF0A6F4A),
+                                          Color(0xFF46C264),
+                                        ],
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Text(
+                                      "New Match",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              )).toList(),
-                              maxClusterRadius: 45,
-                              disableClusteringAtZoom: 16,
-                              onClusterTap: (cluster) =>
-                                  _openClusterModal(cluster.markers),
-                              builder: (context, cluster) => CircleAvatar(
-                                backgroundColor: Colors.green.shade700,
-                                child: Text(
-                                  cluster.length.toString(),
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                         ],
@@ -254,146 +361,73 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
-
-                  // ------------------ LOCATION + NEW MATCH (NOT FLOATING) ------------------
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(22),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: const [
-                            Icon(Icons.location_on, color: Color(0xFF0A6F4A), size: 26),
-                            SizedBox(width: 8),
-                            Text(
-                              "Bucharest",
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        GestureDetector(
-                          onTap: () async {
-                            final created = await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const CreateMatchPage()),
-                            );
-
-                            if (created == true) {
-                              await _fetchMatchesOnInit();
+                  // ------------------ PIN SELECTED CARD ------------------
+                  if (selectedPin != null)
+                    NotificationListener<DraggableScrollableNotification>(
+                      onNotification: (notification) {
+                        if (notification.extent <= 0.28) {
+                          Future.microtask(() {
+                            if (mounted) {
+                              setState(() {
+                                selectedPin = null;
+                              });
                             }
-                          },
-                          child: Container(
-                            padding:
-                            const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF003B2F),
-                                  Color(0xFF0A6F4A),
-                                  Color(0xFF46C264),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                          });
+                        }
+                        return true;
+                      },
+                      child: DraggableScrollableSheet(
+                        initialChildSize: 0.30,
+                        minChildSize: 0.25,
+                        maxChildSize: 0.55,
+                        builder: (context, scrollController) {
+                          return Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(28),
                               ),
-                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 18,
+                                  offset: Offset(0, -4),
+                                ),
+                              ],
                             ),
-                            child: const Text(
-                              "New Match",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
+                            child: Column(
+                              children: [
+                                Container(
+                                  margin: const EdgeInsets.only(
+                                      top: 8, bottom: 8),
+                                  width: 45,
+                                  height: 5,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade400,
+                                    borderRadius:
+                                    BorderRadius.circular(10),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: SingleChildScrollView(
+                                    controller: scrollController,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    child:
+                                    MatchCardPin(match: selectedPin!),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ],
+                          );
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
-
             ),
           ),
-
-
-
-          // ------------------ PIN SELECTED CARD ------------------
-          if (selectedPin != null)
-            NotificationListener<DraggableScrollableNotification>(
-              onNotification: (notification) {
-                if (notification.extent <= 0.28) {
-                  Future.microtask(() {
-                    if (mounted) {
-                      setState(() {
-                        selectedPin = null;
-                      });
-                    }
-                  });
-                }
-                return true;
-              },
-              child: DraggableScrollableSheet(
-                initialChildSize: 0.30,
-                minChildSize: 0.25,
-                maxChildSize: 0.55,
-                builder: (context, scrollController) {
-                  return Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(28),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 18,
-                          offset: Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(top: 8, bottom: 8),
-                          width: 45,
-                          height: 5,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            controller: scrollController,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: MatchCardPin(match: selectedPin!),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
