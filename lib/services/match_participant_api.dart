@@ -69,6 +69,12 @@ class MatchParticipantApi{
     );
   }
 
+  static Future<void> moveAllRequestsToWaitlist(String matchId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/move-requests-to-waitlist",
+      {},
+    );
+  }
 
 
 

@@ -562,6 +562,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       return _buildWaitlistContent(waitlist);
     }
 
+    if (statusTab == 2) {
+      return _buildRequestsContent(requests);
+    }
+
     return _buildUserList(sections[statusTab]);
 
   }
@@ -776,5 +780,64 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       ],
     );
   }
+
+
+  Widget _buildRequestsContent(List<Participant> requests) {
+    final confirmed =
+    participants.where((p) => p.status == "ACCEPTED").toList();
+    final maxPlayers = matchInfo?.maxPlayers;
+    final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
+
+    final bool creator = isCreator();
+    final bool showMoveButton = creator && isFull && requests.isNotEmpty;
+
+    return Column(
+      children: [
+        if (showMoveButton) ...[
+          // --- Minimal Info Text ---
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              "The match is full. You can move remaining requests to the waitlist.",
+              style: TextStyle(
+                color: Colors.orange,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          // --- Action Button ---
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+            child: ActionButtonAnimated(
+              colors: const [Colors.orange, Colors.deepOrangeAccent],
+              text: "Move all to waitlist",
+              onTap: () async {
+                try {
+                  await MatchParticipantApi.moveAllRequestsToWaitlist(widget.matchId);
+                  await _loadParticipants();
+                  showTopBanner(context, "All requests moved to waitlist!");
+                } catch (e) {
+                  showTopBanner(context, "Move failed", error: true);
+                }
+              },
+            ),
+          ),
+        ],
+
+        Expanded(
+          child: _buildUserList(requests),
+        ),
+      ],
+    );
+  }
+
+
 
 }
