@@ -594,11 +594,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   Widget _userCard(Participant p) {
     final bool creator = isCreator();
-    final bool canApproveRequest = creator && p.status == "REQUESTED";
     final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
     final maxPlayers = matchInfo?.maxPlayers;
     final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
     final bool canPromote = creator && p.status == "WAITLIST" && !isFull;
+    final bool canApproveRequest = creator && p.status == "REQUESTED" && !isFull;
 
 
     return Container(
