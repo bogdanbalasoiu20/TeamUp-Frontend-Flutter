@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:team_up_fe_new/screens/notifications_page.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
 import '../utils/app_colors.dart';
@@ -163,8 +164,8 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                   TopSheetBar(
                     unseenCount: 3,
                     onNotificationsTap: () {
-                      // Navigator.push(context,
-                      //     MaterialPageRoute(builder: (_) => const NotificationsPage()));
+                      Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const NotificationsPage()));
                     },
                   ),
 

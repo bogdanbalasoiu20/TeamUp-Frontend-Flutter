@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/screens/map_page.dart';
+import 'package:team_up_fe_new/screens/notifications_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
 import '../exceptions/api_exception.dart';
@@ -143,8 +144,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
           TopSheetBar(
             unseenCount: 3,
             onNotificationsTap: () {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (_) => const NotificationsPage()));
+              Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const NotificationsPage()));
             },
           ),
 
