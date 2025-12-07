@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:team_up_fe_new/widgets/navbar.dart';
+import 'package:team_up_fe_new/widgets/top_bar.dart';
 import '../utils/app_colors.dart';
 import '../services/match_api.dart';
 import '../widgets/match_card_pin_widget.dart';
@@ -156,9 +158,19 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                     ),
                   ),
 
+
+
+                  TopSheetBar(
+                    unseenCount: 3,
+                    onNotificationsTap: () {
+                      // Navigator.push(context,
+                      //     MaterialPageRoute(builder: (_) => const NotificationsPage()));
+                    },
+                  ),
+
                   // ------------------ HEADER TEXT ------------------
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
+                    padding: const EdgeInsets.fromLTRB(28, 125, 28, 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
@@ -359,6 +371,13 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                         ],
                       ),
                     ),
+                  ),
+
+                  TeamUpNavBar(
+                    currentIndex: 2,
+                    onTabSelected: (index) {
+                      // TODO: navigate către alte pagini
+                    },
                   ),
 
                   // ------------------ PIN SELECTED CARD ------------------

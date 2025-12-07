@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/screens/map_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
+import 'package:team_up_fe_new/widgets/navbar.dart';
 import '../exceptions/api_exception.dart';
 import '../exceptions/api_service.dart';
 import '../models/venue.dart';
 import '../widgets/mini_map_widget.dart';
+import '../widgets/top_bar.dart';
+
 
 class CreateMatchPage extends StatefulWidget {
   const CreateMatchPage({super.key});
@@ -136,9 +139,18 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ),
           ),
 
+          //TOPBAR
+          TopSheetBar(
+            unseenCount: 3,
+            onNotificationsTap: () {
+              // Navigator.push(context,
+              //     MaterialPageRoute(builder: (_) => const NotificationsPage()));
+            },
+          ),
+
           // TITLE
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 70, 28, 0),
+            padding: const EdgeInsets.fromLTRB(28, 125, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
@@ -171,7 +183,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
           // WHITE SHEET
           Positioned(
-            top: size.height * 0.28,
+            top: size.height * 0.32,
             left: 0,
             right: 0,
             bottom: 0,
@@ -326,6 +338,13 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 ),
               ),
             ),
+          ),
+
+          TeamUpNavBar(
+            currentIndex: 2,
+            onTabSelected: (index) {
+              // TODO: navigate către alte pagini
+            },
           ),
         ],
       ),
