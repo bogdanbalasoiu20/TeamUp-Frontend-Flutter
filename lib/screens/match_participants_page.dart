@@ -124,12 +124,15 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     final confirmed =
     participants.where((p) => p.status == "ACCEPTED").toList();
     final invited = participants.where((p) => p.status == "INVITED").toList();
-    final requests =
-    participants.where((p) => p.status == "REQUESTED").toList();
-    final waitlist =
-    participants.where((p) => p.status == "WAITLIST").toList();
+    final requests = participants.where((p) => p.status == "REQUESTED").toList();
+    final waitlist = participants.where((p) => p.status == "WAITLIST").toList();
+    final me = getCurrentParticipant();
+    final bool canChat = me?.status == "ACCEPTED" || creatorId == currentUserId;
     final maxPlayers = matchInfo?.maxPlayers;
     final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
+
+
+
 
 
 
@@ -260,7 +263,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                 child: CircularProgressIndicator(color: Colors.white),
               )
                   : _buildContent(
-                  confirmed, invited, requests, waitlist),
+                  confirmed, invited, requests, waitlist, canChat),
             ),
 
             // ---------------- ACTION BUTTON ----------------
@@ -526,7 +529,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       List<Participant> confirmed,
       List<Participant> invited,
       List<Participant> requests,
-      List<Participant> waitlist) {
+      List<Participant> waitlist,
+      bool canChat) {
 
     if (mainTab == 1)
       return MatchDetailsTab(
@@ -553,6 +557,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       return MatchChatTab(
         matchId: widget.matchId,
         currentUserId: currentUserId ?? "",
+        isAllowedToChat: canChat,
       );
 
     List<List<Participant>> sections = [

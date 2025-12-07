@@ -12,11 +12,13 @@ import '../services/match_chat_api.dart';
 class MatchChatTab extends StatefulWidget {
   final String matchId;
   final String currentUserId;
+  final bool isAllowedToChat;
 
   const MatchChatTab({
     super.key,
     required this.matchId,
     required this.currentUserId,
+    required this.isAllowedToChat,
   });
 
   @override
@@ -34,12 +36,19 @@ class _MatchChatTabState extends State<MatchChatTab> {
   @override
   void initState() {
     super.initState();
+
+    /// dacă userul NU are voie la chat → nu inițializăm nimic
+    if (!widget.isAllowedToChat) {
+      print("### USER NOT ALLOWED TO CHAT → SKIP WS & HISTORY");
+      return;
+    }
+
     _loadChatHistory();
     _initWebSocket();
   }
 
   // -----------------------------------------------------------
-  // LOAD HISTORY (ONE TIME)
+  // LOAD HISTORY
   // -----------------------------------------------------------
   Future<void> _loadChatHistory() async {
     if (_historyLoaded) return;
@@ -71,14 +80,10 @@ class _MatchChatTabState extends State<MatchChatTab> {
             callback: (StompFrame frame) {
               if (frame.body == null) return;
 
-              final json = jsonDecode(frame.body!);
-              final msg = ChatMessage.fromJson(json);
+              final msg = ChatMessage.fromJson(jsonDecode(frame.body!));
 
-              /// Duplicate protection (id-based)
-              if (messages.any((m) => m.id == msg.id)) return;
-
-              /// Only newly saved messages come with createdAt
               if (msg.createdAt == null) return;
+              if (messages.any((m) => m.id == msg.id)) return;
 
               setState(() => messages.add(msg));
               _scrollToBottom();
@@ -102,10 +107,14 @@ class _MatchChatTabState extends State<MatchChatTab> {
   }
 
   // -----------------------------------------------------------
-  // UI
+  // UI ROOT
   // -----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
+    if (!widget.isAllowedToChat) {
+      return _buildLockedChatMessage();
+    }
+
     return Column(
       children: [
         Expanded(
@@ -121,11 +130,42 @@ class _MatchChatTabState extends State<MatchChatTab> {
     );
   }
 
+  // -----------------------------------------------------------
+  // LOCKED VIEW
+  // -----------------------------------------------------------
+  Widget _buildLockedChatMessage() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(22),
+        child: Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: const Text(
+            "Join the match to access the chat",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.white70,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // -----------------------------------------------------------
+  // CHAT BUBBLE
+  // -----------------------------------------------------------
   Widget _chatBubble(ChatMessage msg) {
     final bool isMe = msg.senderId == widget.currentUserId;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12), // SPAȚIU LATERAL
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
         crossAxisAlignment:
@@ -144,7 +184,6 @@ class _MatchChatTabState extends State<MatchChatTab> {
               ),
             ),
 
-          /// Mesajul propriu-zis (BUBBLE)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             constraints: const BoxConstraints(maxWidth: 280),
@@ -155,16 +194,12 @@ class _MatchChatTabState extends State<MatchChatTab> {
                   Color(0xFF0A6F4A),
                   Color(0xFF0E8C60),
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               )
-                  : LinearGradient(
+                  : const LinearGradient(
                 colors: [
                   Colors.white10,
                   Colors.white24,
                 ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(18),
@@ -173,22 +208,13 @@ class _MatchChatTabState extends State<MatchChatTab> {
                 bottomRight: Radius.circular(isMe ? 4 : 18),
               ),
               border: Border.all(
-                color: isMe
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.white24.withOpacity(0.2),
+                color: Colors.white.withOpacity(0.15),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.15),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                )
-              ],
             ),
             child: Text(
               msg.content,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.white,
+              style: const TextStyle(
+                color: Colors.white,
                 fontSize: 15,
                 height: 1.3,
               ),
@@ -199,10 +225,12 @@ class _MatchChatTabState extends State<MatchChatTab> {
     );
   }
 
-
+  // -----------------------------------------------------------
+  // INPUT BAR
+  // -----------------------------------------------------------
   Widget _buildMessageInput() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), // SPAȚIU LATERAL
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
         child: BackdropFilter(
@@ -232,10 +260,10 @@ class _MatchChatTabState extends State<MatchChatTab> {
                 const SizedBox(width: 10),
                 GestureDetector(
                   onTap: _sendMessage,
-                  child: CircleAvatar(
+                  child: const CircleAvatar(
                     radius: 24,
-                    backgroundColor: const Color(0xFF18C77A),
-                    child: const Icon(Icons.send, color: Colors.black),
+                    backgroundColor: Color(0xFF18C77A),
+                    child: Icon(Icons.send, color: Colors.black),
                   ),
                 ),
               ],
@@ -246,11 +274,8 @@ class _MatchChatTabState extends State<MatchChatTab> {
     );
   }
 
-
-
-
   // -----------------------------------------------------------
-  // SEND MESSAGE (WS ONLY!)
+  // SEND MESSAGE
   // -----------------------------------------------------------
   void _sendMessage() async {
     final text = _msgController.text.trim();
