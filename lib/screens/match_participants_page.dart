@@ -139,7 +139,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
           colors: [
             Color(0xFF003B2F),
             Color(0xFF0A6F4A),
-            Color(0xFFE6F5F0),
+            Color(0xFF062D24),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,

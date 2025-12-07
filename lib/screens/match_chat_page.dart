@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -124,33 +125,72 @@ class _MatchChatTabState extends State<MatchChatTab> {
     final bool isMe = msg.senderId == widget.currentUserId;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12), // SPAȚIU LATERAL
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
         crossAxisAlignment:
         isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (!isMe)
-            Text(
-              msg.senderUsername,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.black54,
+            Padding(
+              padding: const EdgeInsets.only(left: 6, bottom: 2),
+              child: Text(
+                msg.senderUsername,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
+                ),
               ),
             ),
 
+          /// Mesajul propriu-zis (BUBBLE)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            constraints: const BoxConstraints(maxWidth: 280),
             decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF0A6F4A) : Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(14),
+              gradient: isMe
+                  ? const LinearGradient(
+                colors: [
+                  Color(0xFF0A6F4A),
+                  Color(0xFF0E8C60),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+                  : LinearGradient(
+                colors: [
+                  Colors.white10,
+                  Colors.white24,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(isMe ? 18 : 4),
+                bottomRight: Radius.circular(isMe ? 4 : 18),
+              ),
+              border: Border.all(
+                color: isMe
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.white24.withOpacity(0.2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                )
+              ],
             ),
             child: Text(
               msg.content,
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
+                color: isMe ? Colors.white : Colors.white,
                 fontSize: 15,
+                height: 1.3,
               ),
             ),
           ),
@@ -158,41 +198,56 @@ class _MatchChatTabState extends State<MatchChatTab> {
       ),
     );
   }
+
 
   Widget _buildMessageInput() {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _msgController,
-              decoration: InputDecoration(
-                hintText: "Write a message...",
-                filled: true,
-                fillColor: Colors.grey.shade200,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(22),
-                  borderSide: BorderSide.none,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), // SPAȚIU LATERAL
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(25),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.18),
               ),
             ),
-          ),
-
-          const SizedBox(width: 10),
-
-          GestureDetector(
-            onTap: _sendMessage,
-            child: const CircleAvatar(
-              radius: 24,
-              backgroundColor: Color(0xFF0A6F4A),
-              child: Icon(Icons.send, color: Colors.white),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _msgController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: const InputDecoration(
+                      hintText: "Write a message...",
+                      hintStyle: TextStyle(color: Colors.white60),
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: _sendMessage,
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: const Color(0xFF18C77A),
+                    child: const Icon(Icons.send, color: Colors.black),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+
+
+
 
   // -----------------------------------------------------------
   // SEND MESSAGE (WS ONLY!)
