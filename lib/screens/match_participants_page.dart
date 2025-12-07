@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
+import 'package:team_up_fe_new/screens/match_chat_page.dart';
 import 'package:team_up_fe_new/screens/match_details_page.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:team_up_fe_new/utils/mini_action_button.dart';
@@ -549,7 +550,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
 
     if (mainTab == 2)
-      return _chatPlaceholder();
+      return MatchChatTab(
+        matchId: widget.matchId,
+        currentUserId: currentUserId ?? "",
+      );
 
     List<List<Participant>> sections = [
       confirmed,
@@ -724,17 +728,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
           showTopBanner(context, "Promote error", error: true);
         }
       },
-    );
-  }
-
-
-
-  Widget _chatPlaceholder() {
-    return const Center(
-      child: Text(
-        "Chat coming soon...",
-        style: TextStyle(fontSize: 18, color: Colors.white70),
-      ),
     );
   }
 
