@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/create_match_page.dart';
 import 'package:team_up_fe_new/screens/match_map_page.dart';
 import 'package:team_up_fe_new/screens/register_page.dart';
+import 'package:team_up_fe_new/screens/user_profile_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
@@ -55,9 +56,11 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text("Login successful")),
       );
 
+      print("####USERNAME: "+ username);
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const MatchesMapPage()),
+        MaterialPageRoute(builder: (_) => UserProfilePage(username: username)),
       );
     } catch (e) {
       if (e is ApiException) {

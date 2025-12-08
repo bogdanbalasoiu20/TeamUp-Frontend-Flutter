@@ -143,4 +143,45 @@ class ApiService {
     ));
   }
 
+  static Future<dynamic> put(String path, Map<String, dynamic> body) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("access_token");
+
+    final url = Uri.parse("$baseUrl$path");
+
+    final response = await http.put(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        if (token != null) "Authorization": "Bearer $token",
+      },
+      body: jsonEncode(body),
+    );
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(response.body);
+    } catch (_) {
+      decoded = null;
+    }
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return decoded;
+    }
+
+    if (decoded is Map && decoded["error"] != null) {
+      throw ApiException(ApiError.fromJson(decoded["error"]));
+    }
+
+    print("### RAW BACKEND RESPONSE:");
+    print(response.body);
+
+    throw ApiException(ApiError(
+      code: "UNKNOWN",
+      message: "Unknown error",
+      details: [],
+    ));
+  }
+
+
 }

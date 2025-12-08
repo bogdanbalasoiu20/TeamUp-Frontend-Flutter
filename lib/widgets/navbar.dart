@@ -28,7 +28,7 @@ class TeamUpNavBar extends StatelessWidget {
             ),
           ],
         ),
-        height: 58, // 🔥 compact navbar
+        height: 58,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -50,7 +50,7 @@ class TeamUpNavBar extends StatelessWidget {
       onTap: () => onTabSelected(index),
       child: Icon(
         icon,
-        size: 24, // 🔥 reduced
+        size: 24,
         color: isActive ? const Color(0xFF2E8B57) : Colors.grey.shade600,
       ),
     );
@@ -60,7 +60,7 @@ class TeamUpNavBar extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTabSelected(2),
       child: Container(
-        padding: const EdgeInsets.all(10), // 🔥 reduced
+        padding: const EdgeInsets.all(10),
         decoration: const BoxDecoration(
           shape: BoxShape.circle,
           gradient: LinearGradient(
@@ -75,7 +75,7 @@ class TeamUpNavBar extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: Colors.greenAccent,
-              blurRadius: 6, // 🔥 reduced
+              blurRadius: 6,
               offset: Offset(0, 3),
             )
           ],
@@ -83,7 +83,7 @@ class TeamUpNavBar extends StatelessWidget {
         child: const Icon(
           Icons.add,
           color: Colors.white,
-          size: 22, // 🔥 reduced
+          size: 22,
         ),
       ),
     );
