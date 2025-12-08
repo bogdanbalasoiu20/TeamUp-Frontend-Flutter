@@ -25,15 +25,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> _loadProfile() async {
     try {
-      // 1. Luăm username-ul logat local
       final prefs = await SharedPreferences.getInstance();
       final loggedUser = prefs.getString("username");
 
-      // 2. Verificăm dacă profilul este al meu
       isMyProfile = (widget.username == loggedUser);
 
-      // 3. Fetch profile
       final result = await UserApi.fetchProfile(widget.username);
+
+      print("### PROFILE RAW = ${result.toJson()}");
+      print("### isMyProfile FE = $isMyProfile");
+      print("### loggedUser FE = $loggedUser");
+      print("### requestedProfile = ${widget.username}");
 
       setState(() {
         profile = result;
@@ -42,11 +44,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
     } catch (e) {
       setState(() => loading = false);
 
+      print("### PROFILE ERROR = $e");
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Error while loading profile")),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -144,39 +149,101 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 child: _buildActionButton(),
               ),
 
-              const SizedBox(height: 25),
+              const SizedBox(height: 35),
 
-              // ---------- DESCRIPTION ----------
-              if (p.description != null && p.description!.trim().isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      p.description!,
+              // ---------- ABOUT / USER INFO ----------
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "User Info",
                       style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey.shade800,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 16),
+
+                    if (isMyProfile && p.email != null)
+                      _infoTile(Icons.email, "Email", p.email!),
+
+                    if (isMyProfile && p.phoneNumber != null)
+                      _infoTile(Icons.phone, "Phone", p.phoneNumber!),
+
+                    if (p.birthday != null)
+                      _infoTile(Icons.cake, "Birthday",
+                          "${p.birthday!.year}-${p.birthday!.month.toString().padLeft(2, '0')}-${p.birthday!.day.toString().padLeft(2, '0')}"),
+
+                    if (p.city != null)
+                      _infoTile(Icons.location_on, "City", p.city!),
+
+                    if (p.position != null)
+                      _infoTile(Icons.sports_soccer, "Position", p.position!),
+
+                    if (p.rank != null)
+                      _infoTile(Icons.star, "Rank", p.rank!),
+
+                    _infoTile(
+                      Icons.calendar_today,
+                      "Joined",
+                      "${p.createdAt.year}-${p.createdAt.month.toString().padLeft(2, '0')}-${p.createdAt.day.toString().padLeft(2, '0')}",
+                    ),
+                  ],
                 ),
+              ),
 
               const SizedBox(height: 40),
 
               // ---------- FUTURE FEATURES ----------
               _placeholder("Aici va fi cardul FIFA-style"),
               const SizedBox(height: 20),
-
               _placeholder("Aici vor apărea statisticile userului"),
               const SizedBox(height: 20),
-
               _placeholder("Aici va fi lista de prieteni"),
 
               const SizedBox(height: 50),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _infoTile(IconData icon, String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 22, color: Colors.grey.shade700),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    )),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
@@ -205,11 +272,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
       child: ElevatedButton(
         onPressed: () {
           if (isMyProfile) {
-            // Open edit profile
             print("Edit my profile");
           } else {
-            // Add friend or accept request
-            print("Friend action");
+            print("Friend request logic");
           }
         },
         style: ElevatedButton.styleFrom(

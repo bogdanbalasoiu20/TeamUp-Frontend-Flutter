@@ -40,4 +40,21 @@ class UserProfile {
       createdAt: DateTime.parse(json["createdAt"]),
     );
   }
+
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "username": username,
+      "email": email,
+      "phoneNumber": phoneNumber,
+      "position": position,
+      "city": city,
+      "description": description,
+      "rank": rank,
+      "photoUrl": photoUrl,
+      "birthday": birthday?.toIso8601String(),
+      "createdAt": createdAt.toIso8601String(),
+    };
+  }
 }
