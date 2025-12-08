@@ -1,5 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:team_up_fe_new/screens/edit_profile_page.dart';
 import '../models/user_profile.dart';
 import '../services/user_api.dart';
 
@@ -20,38 +22,34 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadProfile();
+    _load();
   }
 
-  Future<void> _loadProfile() async {
+  int computeAge(DateTime birthday) {
+    final now = DateTime.now();
+    int age = now.year - birthday.year;
+    if (now.month < birthday.month ||
+        (now.month == birthday.month && now.day < birthday.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final loggedUser = prefs.getString("username");
+    isMyProfile = (widget.username == loggedUser);
+
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final loggedUser = prefs.getString("username");
-
-      isMyProfile = (widget.username == loggedUser);
-
-      final result = await UserApi.fetchProfile(widget.username);
-
-      print("### PROFILE RAW = ${result.toJson()}");
-      print("### isMyProfile FE = $isMyProfile");
-      print("### loggedUser FE = $loggedUser");
-      print("### requestedProfile = ${widget.username}");
-
+      final res = await UserApi.fetchProfile(widget.username);
       setState(() {
-        profile = result;
+        profile = res;
         loading = false;
       });
     } catch (e) {
       setState(() => loading = false);
-
-      print("### PROFILE ERROR = $e");
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error while loading profile")),
-      );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -69,139 +67,211 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     final p = profile!;
 
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF003B2F),
+            Color(0xFF0A6F4A),
+            Color(0xFF062D24),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+
+        // ---------------- HEADER GLASS ----------------
+        appBar: AppBar(
+          backgroundColor: Colors.black.withOpacity(0.1),
+          elevation: 0,
+          centerTitle: true,
+          foregroundColor: Colors.white,
+          flexibleSpace: ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+          title: Text(
+            p.username,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  blurRadius: 8,
+                  color: Colors.black45,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
             children: [
 
-              // ---------- HEADER ----------
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new),
-                    onPressed: () => Navigator.pop(context),
+              // ---------------- PROFILE PHOTO ----------------
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  Text(
-                    p.username,
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  )
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // ---------- PROFILE PHOTO ----------
-              CircleAvatar(
-                radius: 55,
-                backgroundColor: Colors.grey.shade300,
-                child: p.photoUrl == null
-                    ? const Icon(Icons.person, size: 55, color: Colors.white)
-                    : ClipOval(
-                  child: Image.network(
-                    p.photoUrl!,
-                    width: 110,
-                    height: 110,
-                    fit: BoxFit.cover,
+                  child: CircleAvatar(
+                    radius: 58,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    backgroundImage:
+                    p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
+                    child: p.photoUrl == null
+                        ? const Icon(Icons.person, size: 60, color: Colors.white)
+                        : null,
                   ),
                 ),
               ),
 
               const SizedBox(height: 14),
 
-              // ---------- USERNAME ----------
+              // ---------------- NAME + POSITION ----------------
               Text(
                 p.username,
                 style: const TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w700),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
               ),
 
-              const SizedBox(height: 6),
-
-              // ---------- POSITION ----------
-              if (p.position != null)
+              if (p.position != null) ...[
+                const SizedBox(height: 6),
                 Text(
                   p.position!,
                   style: TextStyle(
-                      fontSize: 16, color: Colors.grey.shade700),
-                ),
-
-              // ---------- CITY ----------
-              if (p.city != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  p.city!,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey.shade600,
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.85),
                   ),
                 ),
               ],
 
-              const SizedBox(height: 25),
+              if (p.city != null && p.city!.trim().isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  p.city!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.75),
+                  ),
+                )
+              ],
 
-              // ---------- ACTION BUTTON ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _buildActionButton(),
-              ),
+              const SizedBox(height: 20),
 
-              const SizedBox(height: 35),
-
-              // ---------- ABOUT / USER INFO ----------
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "User Info",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
+              // ---------------- BUTTON ----------------
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (isMyProfile) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EditProfilePage(
+                            birthday: p.birthday,
+                            phone: p.phoneNumber,
+                            description: p.description,
+                            city: p.city,
+                            position: p.position,
+                          ),
+                        ),
+                      ).then((v) {
+                        if (v == true) _load();
+                      });
+                    } else {
+                      print("Friend request logic");
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF46C264),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
                     ),
-                    const SizedBox(height: 16),
-
-                    if (isMyProfile && p.email != null)
-                      _infoTile(Icons.email, "Email", p.email!),
-
-                    if (isMyProfile && p.phoneNumber != null)
-                      _infoTile(Icons.phone, "Phone", p.phoneNumber!),
-
-                    if (p.birthday != null)
-                      _infoTile(Icons.cake, "Birthday",
-                          "${p.birthday!.year}-${p.birthday!.month.toString().padLeft(2, '0')}-${p.birthday!.day.toString().padLeft(2, '0')}"),
-
-                    if (p.city != null)
-                      _infoTile(Icons.location_on, "City", p.city!),
-
-                    if (p.position != null)
-                      _infoTile(Icons.sports_soccer, "Position", p.position!),
-
-                    if (p.rank != null)
-                      _infoTile(Icons.star, "Rank", p.rank!),
-
-                    _infoTile(
-                      Icons.calendar_today,
-                      "Joined",
-                      "${p.createdAt.year}-${p.createdAt.month.toString().padLeft(2, '0')}-${p.createdAt.day.toString().padLeft(2, '0')}",
+                  ),
+                  child: Text(
+                    isMyProfile ? "Edit Profile" : "Add Friend",
+                    style: const TextStyle(
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
                     ),
-                  ],
+                  ),
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
-              // ---------- FUTURE FEATURES ----------
-              _placeholder("Aici va fi cardul FIFA-style"),
-              const SizedBox(height: 20),
-              _placeholder("Aici vor apărea statisticile userului"),
-              const SizedBox(height: 20),
-              _placeholder("Aici va fi lista de prieteni"),
+              // ---------------- USER INFO ----------------
+              _sectionTitle("User Info"),
+
+              const SizedBox(height: 14),
+
+              if (p.birthday != null)
+                _glassInfoTile(
+                  Icons.cake,
+                  "Age",
+                  "${computeAge(p.birthday!)} years old",
+                ),
+
+              if (p.position != null)
+                _glassInfoTile(Icons.sports_soccer, "Position", p.position!),
+
+              if (p.city != null && p.city!.trim().isNotEmpty)
+                _glassInfoTile(Icons.location_on, "City", p.city!),
+
+              if (p.description != null)
+                _glassInfoTile(Icons.description_outlined, "About me", p.description!),
+
+              _glassInfoTile(
+                Icons.calendar_today,
+                "Joined",
+                "${p.createdAt.year}-${p.createdAt.month}-${p.createdAt.day}",
+              ),
+
+              const SizedBox(height: 30),
+
+              // ---------------- PRIVATE INFO ----------------
+              if (isMyProfile) ...[
+                _sectionTitle("Private Info"),
+                const SizedBox(height: 14),
+
+                if (p.email != null)
+                  _glassInfoTile(Icons.email, "Email", p.email!),
+
+                if (p.phoneNumber != null)
+                  _glassInfoTile(Icons.phone, "Phone", p.phoneNumber!),
+
+                const SizedBox(height: 30),
+              ],
+
+              // ---------------- PLACEHOLDERS ----------------
+              _placeholder("FIFA-style card (coming soon)"),
+              const SizedBox(height: 16),
+              _placeholder("User statistics (coming soon)"),
+              const SizedBox(height: 16),
+              _placeholder("Friends list (coming soon)"),
 
               const SizedBox(height: 50),
             ],
@@ -211,82 +281,90 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _infoTile(IconData icon, String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: Colors.grey.shade700),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    )),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+  // ---------------- GLASS INFO TILE ----------------
+  Widget _glassInfoTile(IconData icon, String title, String value) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.10),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.18),
             ),
-          )
-        ],
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.white.withOpacity(0.85), size: 26),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.75),
+                          fontSize: 13,
+                        )),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
       ),
     );
   }
 
   Widget _placeholder(String text) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: TextStyle(color: Colors.grey.shade600),
-      ),
-    );
-  }
-
-  Widget _buildActionButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          if (isMyProfile) {
-            print("Edit my profile");
-          } else {
-            print("Friend request logic");
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2E8B57),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.07),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.15),
+            ),
           ),
-        ),
-        child: Text(
-          isMyProfile ? "Edit Profile" : "Add Friend",
-          style: const TextStyle(fontSize: 17, color: Colors.white),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.85),
+            ),
+          ),
         ),
       ),
     );

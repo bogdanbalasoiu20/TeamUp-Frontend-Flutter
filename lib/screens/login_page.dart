@@ -62,6 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         MaterialPageRoute(builder: (_) => UserProfilePage(username: username)),
       );
+
+      // Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(builder: (_) => const MatchesMapPage()));
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
