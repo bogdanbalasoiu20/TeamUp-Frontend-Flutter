@@ -3,12 +3,14 @@ import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/screens/map_page.dart';
 import 'package:team_up_fe_new/screens/notifications_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
+import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
 import '../exceptions/api_exception.dart';
 import '../exceptions/api_service.dart';
 import '../models/venue.dart';
 import '../widgets/mini_map_widget.dart';
 import '../widgets/top_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class CreateMatchPage extends StatefulWidget {
@@ -144,9 +146,22 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
           TopSheetBar(
             unseenCount: 3,
             onNotificationsTap: () {
-              Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const NotificationsPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
             },
+            onMenuTap: () async {
+              final prefs = await SharedPreferences.getInstance();
+              final loggedUser = prefs.getString("username");
+
+              if (loggedUser != null) {
+                showLeftMenuModal(context, loggedUser);
+              } else {
+                print("Eroare: username not stored in prefs");
+              }
+            },
+
           ),
 
           // TITLE

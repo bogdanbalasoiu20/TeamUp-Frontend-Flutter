@@ -143,41 +143,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 25),
 
-              // ---------------- NAME + POSITION ----------------
-              Text(
-                p.username,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
 
-              if (p.position != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  p.position!,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.85),
-                  ),
-                ),
-              ],
-
-              if (p.city != null && p.city!.trim().isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  p.city!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white.withOpacity(0.75),
-                  ),
-                )
-              ],
-
-              const SizedBox(height: 20),
 
               // ---------------- BUTTON ----------------
               SizedBox(

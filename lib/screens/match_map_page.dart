@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:team_up_fe_new/screens/notifications_page.dart';
+import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
 import '../utils/app_colors.dart';
@@ -10,6 +11,8 @@ import '../services/match_api.dart';
 import '../widgets/match_card_pin_widget.dart';
 import '../screens/create_match_page.dart';
 import 'package:team_up_fe_new/models/match.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class MatchesMapPage extends StatefulWidget {
   const MatchesMapPage({super.key});
@@ -164,10 +167,24 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                   TopSheetBar(
                     unseenCount: 3,
                     onNotificationsTap: () {
-                      Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const NotificationsPage()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                      );
                     },
+                    onMenuTap: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      final loggedUser = prefs.getString("username");
+
+                      if (loggedUser != null) {
+                        showLeftMenuModal(context, loggedUser);
+                      } else {
+                        print("Eroare: username not stored in prefs");
+                      }
+                    },
+
                   ),
+
 
                   // ------------------ HEADER TEXT ------------------
                   Padding(

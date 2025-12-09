@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class TopSheetBar extends StatelessWidget {
   final int unseenCount;
   final VoidCallback onNotificationsTap;
+  final VoidCallback onMenuTap;
   final String title;
 
   const TopSheetBar({
     super.key,
     required this.unseenCount,
     required this.onNotificationsTap,
+    required this.onMenuTap,
     this.title = "TeamUp",
   });
 
@@ -25,12 +27,23 @@ class TopSheetBar extends StatelessWidget {
           Padding(
             padding: EdgeInsets.fromLTRB(26, topPadding, 26, 14),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                GestureDetector(
+                  onTap: onMenuTap,
+                  child: const Icon(
+                    Icons.menu_rounded,
+                    size: 32,
+                    color: Colors.white,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 26,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
                     shadows: [
@@ -42,6 +55,8 @@ class TopSheetBar extends StatelessWidget {
                     ],
                   ),
                 ),
+
+                const Spacer(),
 
                 GestureDetector(
                   onTap: onNotificationsTap,
@@ -83,12 +98,11 @@ class TopSheetBar extends StatelessWidget {
                         ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
 
-          //linie de delimitare
           Container(
             height: 1,
             color: Colors.white.withOpacity(0.12),
