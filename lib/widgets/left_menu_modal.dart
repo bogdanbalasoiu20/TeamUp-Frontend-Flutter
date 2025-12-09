@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/friend_search_page.dart';
 import 'package:team_up_fe_new/screens/user_profile_page.dart';
 
 void showLeftMenuModal(BuildContext context, String username) {
@@ -54,7 +55,6 @@ void showLeftMenuModal(BuildContext context, String username) {
                     label: "Profile",
                     onTap: () {
                       Navigator.pop(context);
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -66,13 +66,17 @@ void showLeftMenuModal(BuildContext context, String username) {
 
                   // FRIENDS
                   _menuItem(
-                    icon: Icons.people_alt_rounded,
-                    label: "Friends",
+                    icon: Icons.search,
+                    label: "Find Friends",
                     onTap: () {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, "/friends");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const FriendSearchPage()),
+                      );
                     },
                   ),
+
 
                   // LOGOUT
                   _menuItem(
