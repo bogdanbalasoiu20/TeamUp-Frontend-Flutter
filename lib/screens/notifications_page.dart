@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../services/notifications_api.dart';
 import '../models/notification_item.dart';
@@ -29,108 +30,204 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 🔥 top section minimalist (no appbar)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_ios_new, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "Notifications",
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF003B2F),
+            Color(0xFF0A6F4A),
+            Color(0xFF062D24),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // HEADER
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          size: 22, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      "Notifications",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // BODY
+              Expanded(
+                child: loading
+                    ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+                    : notifications.isEmpty
+                    ? const Center(
+                  child: Text(
+                    "No notifications yet",
                     style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black87,
+                      color: Colors.white70,
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+                    : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                  itemCount: notifications.length,
+                  separatorBuilder: (_, __) =>
+                  const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final n = notifications[index];
+                    return _notificationCard(n);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Icon mapping based on notification type
+  IconData _iconFor(NotificationItem n) {
+    switch (n.type) {
+      case "FRIEND_REQUEST_RECEIVED":
+        return Icons.person_add_alt_1;
+      case "FRIEND_REQUEST_ACCEPTED":
+        return Icons.check_circle_outline;
+      case "MATCH_INVITE_RECEIVED":
+        return Icons.sports_soccer;
+      case "MATCH_INVITE_ACCEPTED":
+        return Icons.handshake;
+      case "MATCH_UPDATED":
+        return Icons.edit_note;
+      case "MATCH_CANCELLED":
+        return Icons.cancel_outlined;
+      case "MATCH_STARTING_SOON":
+        return Icons.access_time_filled_rounded;
+      default:
+        return Icons.notifications;
+    }
+  }
+
+  // CARD UI
+  Widget _notificationCard(NotificationItem n) {
+    final icon = _iconFor(n);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () async {
+        if (!n.isSeen) {
+          await NotificationsApi.markAsSeen(n.id);
+          setState(() {
+            n.isSeen = true;
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: n.isSeen
+              ? Colors.white.withOpacity(0.12)
+              : Colors.white.withOpacity(0.20),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: n.isSeen
+                ? Colors.white.withOpacity(0.25)
+                : const Color(0xFF46C264),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ICON
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.14),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            // TEXTS
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    n.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    n.body,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.85),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    n.timeAgo,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.55),
                     ),
                   ),
                 ],
               ),
             ),
 
-            // divider subtil
-            Container(
-              height: 1,
-              color: Colors.grey.shade300,
-            ),
-
-            // CONTENT
-            Expanded(
-              child: loading
-                  ? const Center(
-                child: CircularProgressIndicator(),
-              )
-                  : notifications.isEmpty
-                  ? const Center(
-                child: Text(
-                  "No notifications yet",
-                  style: TextStyle(
-                      color: Colors.grey, fontSize: 16),
+            // UNSEEN BADGE
+            if (!n.isSeen)
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF46C264),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              )
-                  : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-                itemCount: notifications.length,
-                separatorBuilder: (_, __) =>
-                const SizedBox(height: 14),
-                itemBuilder: (context, index) {
-                  final n = notifications[index];
-                  return _notificationCard(n);
-                },
+                child: const Text(
+                  "NEW",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _notificationCard(NotificationItem n) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: n.isSeen ? Colors.white : const Color(0xFFF0FFF5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: n.isSeen ? Colors.grey.shade200 : const Color(0xFF2E8B57),
-          width: n.isSeen ? 1 : 1.4,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            n.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            n.body,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            n.timeAgo,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade500,
-            ),
-          ),
-        ],
       ),
     );
   }

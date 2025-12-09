@@ -4,7 +4,7 @@ class NotificationItem {
   final String title;
   final String body;
   final String? payload;
-  final bool isSeen;
+  bool isSeen;
   final DateTime createdAt;
   final DateTime? seenAt;
 
