@@ -50,4 +50,11 @@ class FriendApi {
     );
     return res["data"]["content"];
   }
+
+  static Future<Map<String, dynamic>> relationStatus(String username) async {
+    final res = await ApiService.get(
+      "$baseUrl/api/friends/relation/$username",
+    );
+    return res["data"];
+  }
 }

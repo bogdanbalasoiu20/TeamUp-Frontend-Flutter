@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/screens/edit_profile_page.dart';
 import '../models/user_profile.dart';
 import '../services/user_api.dart';
+import '../services/friend_api.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String username;
@@ -18,6 +19,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
   UserProfile? profile;
   bool loading = true;
   bool isMyProfile = false;
+
+  // 🔥 friend status fields (no UserProfile changes)
+  bool isFriend = false;
+  bool pendingSent = false;
+  bool pendingReceived = false;
+  String? requestId;
 
   @override
   void initState() {
@@ -36,19 +43,44 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    final loggedUser = prefs.getString("username");
-    isMyProfile = (widget.username == loggedUser);
-
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final loggedUser = prefs.getString("username");
+      isMyProfile = (widget.username == loggedUser);
+
+      // 1) Load profile
       final res = await UserApi.fetchProfile(widget.username);
+
       setState(() {
         profile = res;
+      });
+
+      // 2) Load relationship status
+      final relation = await FriendApi.relationStatus(widget.username);
+
+      setState(() {
         loading = false;
+        isFriend = relation["isFriend"];
+        pendingSent = relation["pendingSent"];
+        pendingReceived = relation["pendingReceived"];
+        requestId = relation["requestId"];
       });
     } catch (e) {
       setState(() => loading = false);
     }
+  }
+
+  // 🔥 SEND friend request
+  Future<void> _sendRequest() async {
+    await FriendApi.sendRequest(profile!.id);
+    await _load();
+  }
+
+  // 🔥 ACCEPT or DECLINE request
+  Future<void> _respond(bool accept) async {
+    if (requestId == null) return;
+    await FriendApi.respond(requestId!, accept);
+    await _load();
   }
 
   @override
@@ -145,48 +177,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
               const SizedBox(height: 25),
 
-
-
               // ---------------- BUTTON ----------------
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (isMyProfile) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditProfilePage(
-                            birthday: p.birthday,
-                            phone: p.phoneNumber,
-                            description: p.description,
-                            city: p.city,
-                            position: p.position,
-                          ),
-                        ),
-                      ).then((v) {
-                        if (v == true) _load();
-                      });
-                    } else {
-                      print("Friend request logic");
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF46C264),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: Text(
-                    isMyProfile ? "Edit Profile" : "Add Friend",
-                    style: const TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: _buildFriendButton(p), // 🔥 all logic inside
               ),
 
               const SizedBox(height: 30),
@@ -249,7 +243,102 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  // ---------------- GLASS INFO TILE ----------------
+  // -------------------- FRIEND BUTTON LOGIC ONLY --------------------
+  Widget _buildFriendButton(UserProfile p) {
+    if (isMyProfile) {
+      return _greenButton("Edit Profile", () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditProfilePage(
+              birthday: p.birthday,
+              phone: p.phoneNumber,
+              description: p.description,
+              city: p.city,
+              position: p.position,
+            ),
+          ),
+        ).then((v) {
+          if (v == true) _load();
+        });
+      });
+    }
+
+    if (isFriend) return _disabledButton("Friends");
+    if (pendingSent) return _disabledButton("Pending Request");
+
+    if (pendingReceived) {
+      return Row(
+        children: [
+          Expanded(child: _greenButton("Accept", () => _respond(true))),
+          const SizedBox(width: 10),
+          Expanded(child: _redButton("Decline", () => _respond(false))),
+        ],
+      );
+    }
+
+    return _greenButton("Add Friend", _sendRequest);
+  }
+
+  // -------------------- BUTTON HELPERS --------------------
+  Widget _greenButton(String text, VoidCallback onTap) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF46C264),
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 17,
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _redButton(String text, VoidCallback onTap) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 17,
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _disabledButton(String text) {
+    return ElevatedButton(
+      onPressed: null,
+      style: ElevatedButton.styleFrom(
+        disabledBackgroundColor: Colors.grey.shade600,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 17,
+          color: Colors.white70,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  // ---------------- GLASS INFO TILE (UI unchanged) ----------------
   Widget _glassInfoTile(IconData icon, String title, String value) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
