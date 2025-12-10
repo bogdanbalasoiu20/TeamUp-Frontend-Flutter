@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/friend_api.dart';
 import '../../models/friend_request.dart';
+import '../user_profile_page.dart';
 
 class IncomingRequestsTab extends StatefulWidget {
   const IncomingRequestsTab({super.key});
@@ -21,66 +22,108 @@ class _IncomingRequestsTabState extends State<IncomingRequestsTab> {
 
   Future<void> _load() async {
     final r = await FriendApi.getIncoming();
-
-    print("Loaded incoming requests:");
-    for (var rr in r) {
-      print(" → ${rr.id} from ${rr.requesterUsername}");
-    }
-
     setState(() {
       requests = r;
       loading = false;
     });
   }
 
-
-
   Future<void> _respond(String id, bool accept) async {
-    print("Responding to request id = $id");
-
-    if (id == null || id.isEmpty) {
-      print("ERROR: requestId IS NULL");
-      return;
-    }
-
     await FriendApi.respond(id, accept);
     _load();
   }
 
-
   @override
   Widget build(BuildContext context) {
-    if (loading) return const Center(child: CircularProgressIndicator());
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF003B2F),
+            Color(0xFF0A6F4A),
+            Color(0xFF062D24),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: loading
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : requests.isEmpty
+          ? const Center(
+        child: Text(
+          "No incoming requests",
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+      )
+          : ListView.builder(
+        padding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        itemCount: requests.length,
+        itemBuilder: (_, i) =>
+            _requestTile(context, requests[i]),
+      ),
+    );
+  }
 
-    if (requests.isEmpty) {
-      return const Center(child: Text("No incoming requests"));
-    }
+  Widget _requestTile(BuildContext context, FriendRequest r) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.white.withOpacity(0.35),
+            child: const Icon(Icons.person, size: 36, color: Colors.white),
+          ),
 
-    return ListView.builder(
-      itemCount: requests.length,
-      itemBuilder: (_, i) {
-        final r = requests[i];
+          const SizedBox(width: 16),
 
-        return Card(
-          child: ListTile(
-            title: Text(r.requesterUsername),
-            subtitle: Text("Sent at: ${r.createdAt}"),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.check, color: Colors.green),
-                  onPressed: () => _respond(r.id, true),
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => UserProfilePage(username: r.requesterUsername),
+                  ),
+                );
+              },
+              child: Text(
+                r.requesterUsername,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red),
-                  onPressed: () => _respond(r.id, false),
-                ),
-              ],
+              ),
             ),
           ),
-        );
-      },
+
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.check, color: Colors.greenAccent),
+                onPressed: () => _respond(r.id, true),
+              ),
+
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.redAccent),
+                onPressed: () => _respond(r.id, false),
+              )
+            ],
+          )
+        ],
+      ),
     );
   }
 }

@@ -59,20 +59,6 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
         extendBody: true,
         backgroundColor: Colors.transparent,
 
-        appBar: AppBar(
-          title: const Text(
-            "Add Friends",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 24,
-            ),
-          ),
-          backgroundColor: Colors.black.withOpacity(0.15),
-          elevation: 0,
-          centerTitle: true,
-          foregroundColor: Colors.white,
-        ),
 
         body: Column(
           children: [
