@@ -1,33 +1,23 @@
 import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/models/friend_request.dart';
+import 'package:team_up_fe_new/models/friendship.dart';
 import '../models/user_search_result.dart';
 
 const String baseUrl = "https://teamup-backend-omi4.onrender.com";
 
 class FriendApi {
   static Future<List<UserSearchResult>> searchUsers(String query) async {
-    print("Searching '$query'");
+    final res = await ApiService.get("$baseUrl/api/friends/requests/search?query=$query");
+    final page = res["data"];
+    final List items = page["content"];
 
-    try {
-      final res = await ApiService.get(
-        "$baseUrl/api/friends/requests/search?query=$query",
-      );
-      print("Result: $res");
-
-      final page = res["data"];
-      final List content = page["content"];
-
-      return content.map((u) => UserSearchResult.fromJson(u)).toList();
-    } catch (e, st) {
-      print("ERROR SEARCHING USERS: $e");
-      print(st);
-      rethrow;
-    }
+    return items.map((e) => UserSearchResult.fromJson(e)).toList();
   }
 
-  static Future<void> sendRequest(String addresseeId, {String? message}) async {
+  static Future<void> sendRequest(String addresseeId) async {
     await ApiService.post("/api/friends/requests", {
       "addresseeId": addresseeId,
-      "message": message ?? ""
+      "message": ""
     });
   }
 
@@ -37,19 +27,20 @@ class FriendApi {
     });
   }
 
-  static Future<List<dynamic>> getIncoming() async {
-    final res = await ApiService.get(
-      "$baseUrl/api/friends/requests/incoming",
-    );
-    return res["data"]["content"];
+  static Future<List<FriendRequest>> getIncoming() async {
+    final res = await ApiService.get("$baseUrl/api/friends/requests/incoming");
+    final List items = res["data"]["content"];
+
+    return items.map((e) => FriendRequest.fromJson(e)).toList();
   }
 
-  static Future<List<dynamic>> getOutgoing() async {
-    final res = await ApiService.get(
-      "$baseUrl/api/friends/requests/outgoing",
-    );
-    return res["data"]["content"];
+  static Future<List<FriendRequest>> getOutgoing() async {
+    final res = await ApiService.get("$baseUrl/api/friends/requests/outgoing");
+    final list = res["data"]["content"] as List;
+
+    return list.map((e) => FriendRequest.fromJson(e)).toList();
   }
+
 
   static Future<Map<String, dynamic>> relationStatus(String username) async {
     final res = await ApiService.get(
@@ -57,4 +48,14 @@ class FriendApi {
     );
     return res["data"];
   }
+
+  static Future<List<Friendship>> getFriends() async {
+    final res = await ApiService.get(
+      "$baseUrl/api/friends",
+    );
+
+    final List content = res["data"]["content"];
+    return content.map((e) => Friendship.fromJson(e)).toList();
+  }
+
 }

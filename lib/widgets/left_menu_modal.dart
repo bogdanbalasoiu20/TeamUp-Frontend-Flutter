@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/friend_search_page.dart';
+import 'package:team_up_fe_new/screens/friends/friend_search_page.dart';
+import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
 import 'package:team_up_fe_new/screens/user_profile_page.dart';
 
 void showLeftMenuModal(BuildContext context, String username) {
@@ -72,7 +73,7 @@ void showLeftMenuModal(BuildContext context, String username) {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const FriendSearchPage()),
+                        MaterialPageRoute(builder: (_) => const FriendsHomePage()),
                       );
                     },
                   ),

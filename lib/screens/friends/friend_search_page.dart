@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/user_profile_page.dart';
-import '../models/user_search_result.dart';
-import '../services/friend_api.dart';
+import '../../models/user_search_result.dart';
+import '../../services/friend_api.dart';
 
 class FriendSearchPage extends StatefulWidget {
   const FriendSearchPage({super.key});
