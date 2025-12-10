@@ -22,17 +22,28 @@ class FriendApi {
   }
 
   static Future<void> respond(String requestId, bool accept) async {
-    await ApiService.patch("/api/friends/requests/$requestId/respond", {
+    await ApiService.post("/api/friends/requests/$requestId/respond", {
       "accept": accept
     });
   }
 
   static Future<List<FriendRequest>> getIncoming() async {
     final res = await ApiService.get("$baseUrl/api/friends/requests/incoming");
-    final List items = res["data"]["content"];
+    final List raw = res["data"]["content"];
 
-    return items.map((e) => FriendRequest.fromJson(e)).toList();
+    print("INCOMING RAW: $raw");
+
+    return raw.map<FriendRequest>((item) {
+      if (item is Map<String, dynamic>) {
+        return FriendRequest.fromJson(item);
+      }
+
+      final mapped = Map<String, dynamic>.from(item);
+      return FriendRequest.fromJson(mapped);
+    }).toList();
   }
+
+
 
   static Future<List<FriendRequest>> getOutgoing() async {
     final res = await ApiService.get("$baseUrl/api/friends/requests/outgoing");

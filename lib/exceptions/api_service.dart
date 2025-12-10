@@ -109,6 +109,9 @@ class ApiService {
 
     final url = Uri.parse("$baseUrl$path");
 
+    print("PATCH URL: $url");
+    print("PATCH BODY: ${jsonEncode(body)}");
+
     final response = await http.patch(
       url,
       headers: {
@@ -117,6 +120,9 @@ class ApiService {
       },
       body: jsonEncode(body),
     );
+
+    print("PATCH STATUS: ${response.statusCode}");
+    print("PATCH RESPONSE: ${response.body}");
 
     dynamic decoded;
     try {

@@ -22,17 +22,31 @@ class _IncomingRequestsTabState extends State<IncomingRequestsTab> {
   Future<void> _load() async {
     final r = await FriendApi.getIncoming();
 
+    print("Loaded incoming requests:");
+    for (var rr in r) {
+      print(" → ${rr.id} from ${rr.requesterUsername}");
+    }
+
     setState(() {
-      requests = List<FriendRequest>.from(r);
+      requests = r;
       loading = false;
     });
   }
 
 
+
   Future<void> _respond(String id, bool accept) async {
+    print("Responding to request id = $id");
+
+    if (id == null || id.isEmpty) {
+      print("ERROR: requestId IS NULL");
+      return;
+    }
+
     await FriendApi.respond(id, accept);
     _load();
   }
+
 
   @override
   Widget build(BuildContext context) {

@@ -6,8 +6,8 @@ class FriendRequest {
   final String addresseeUsername;
   final String status;
   final String? message;
-  final DateTime createdAt;
-  final DateTime? respondedAt;
+  final String createdAt;
+  final String? respondedAt;
 
   FriendRequest({
     required this.id,
@@ -16,14 +16,10 @@ class FriendRequest {
     required this.addresseeId,
     required this.addresseeUsername,
     required this.status,
-    required this.message,
+    this.message,
     required this.createdAt,
-    required this.respondedAt,
+    this.respondedAt,
   });
-
-  String otherUsername(String myUserId) {
-    return myUserId == requesterId ? addresseeUsername : requesterUsername;
-  }
 
   factory FriendRequest.fromJson(Map<String, dynamic> json) {
     return FriendRequest(
@@ -34,10 +30,8 @@ class FriendRequest {
       addresseeUsername: json["addresseeUsername"],
       status: json["status"],
       message: json["message"],
-      createdAt: DateTime.parse(json["createdAt"]),
-      respondedAt: json["respondedAt"] != null
-          ? DateTime.parse(json["respondedAt"])
-          : null,
+      createdAt: json["createdAt"],
+      respondedAt: json["respondedAt"],
     );
   }
 }
