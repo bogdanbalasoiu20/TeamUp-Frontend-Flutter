@@ -19,8 +19,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   UserProfile? profile;
   bool loading = true;
   bool isMyProfile = false;
-
-  // 🔥 friend status fields (no UserProfile changes)
   bool isFriend = false;
   bool pendingSent = false;
   bool pendingReceived = false;
@@ -70,13 +68,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  // 🔥 SEND friend request
   Future<void> _sendRequest() async {
     await FriendApi.sendRequest(profile!.id);
     await _load();
   }
 
-  // 🔥 ACCEPT or DECLINE request
   Future<void> _respond(bool accept) async {
     if (requestId == null) return;
     await FriendApi.respond(requestId!, accept);
@@ -180,7 +176,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               // ---------------- BUTTON ----------------
               SizedBox(
                 width: double.infinity,
-                child: _buildFriendButton(p), // 🔥 all logic inside
+                child: _buildFriendButton(p),
               ),
 
               const SizedBox(height: 30),
@@ -243,29 +239,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  // -------------------- FRIEND BUTTON LOGIC ONLY --------------------
   Widget _buildFriendButton(UserProfile p) {
+
     if (isMyProfile) {
-      return _greenButton("Edit Profile", () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => EditProfilePage(
-              birthday: p.birthday,
-              phone: p.phoneNumber,
-              description: p.description,
-              city: p.city,
-              position: p.position,
-            ),
-          ),
-        ).then((v) {
-          if (v == true) _load();
-        });
+      return _greenButton("Edit Profile", () {});
+    }
+
+    if (isFriend) {
+      return _redButton("Unfriend", () async {
+        await FriendApi.unfriend(p.id);
+        await _load();
       });
     }
 
-    if (isFriend) return _disabledButton("Friends");
-    if (pendingSent) return _disabledButton("Pending Request");
+    if (pendingSent) {
+      return _greenButton("Pending Request", () {});
+    }
 
     if (pendingReceived) {
       return Row(
@@ -277,8 +266,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
     }
 
-    return _greenButton("Add Friend", _sendRequest);
+    return _greenButton("Add Friend", () async {
+      await _sendRequest();
+      await _load();
+    });
   }
+
+
+
+
 
   // -------------------- BUTTON HELPERS --------------------
   Widget _greenButton(String text, VoidCallback onTap) {

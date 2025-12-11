@@ -42,7 +42,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
 
     switch (n.type) {
-    // 🔵 FRIEND REQUEST RECEIVED → Go to incoming tab
+    //FRIEND REQUEST RECEIVED → Go to incoming tab
       case "FRIEND_REQUEST_RECEIVED":
         Navigator.push(
           context,
@@ -52,7 +52,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         );
         break;
 
-    // 🟢 FRIEND REQUEST ACCEPTED → Go to friends list
+    // FRIEND REQUEST ACCEPTED → Go to friends list
       case "FRIEND_REQUEST_ACCEPTED":
         Navigator.push(
           context,

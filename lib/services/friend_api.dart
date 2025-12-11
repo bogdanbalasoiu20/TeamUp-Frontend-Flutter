@@ -69,4 +69,15 @@ class FriendApi {
     return content.map((e) => Friendship.fromJson(e)).toList();
   }
 
+  static Future<void> unfriend(String friendId) async {
+    final res = await ApiService.delete("/api/friends/$friendId");
+    return;
+  }
+
+  static Future<void> cancelRequest(String requestId) async {
+    return ApiService.delete("/api/friends/request/$requestId");
+  }
+
+
+
 }
