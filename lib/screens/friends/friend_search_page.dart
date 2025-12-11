@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/user_profile_page.dart';
+import 'package:team_up_fe_new/widgets/friend_button_small.dart';
 import '../../models/user_search_result.dart';
 import '../../services/friend_api.dart';
 
@@ -164,55 +165,38 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
   // BUTTON LOGIC
   Widget _friendActionButton(UserSearchResult u) {
     if (u.isFriend) {
-      return _statusChip("Friends", Colors.greenAccent);
+      return statusTag("Friends", Colors.greenAccent);
     }
 
     if (u.pendingSent) {
-      return _statusChip("Pending", Colors.orangeAccent);
+      return statusTag("Pending", Colors.orangeAccent);
     }
 
     if (u.pendingReceived) {
       return Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.check, color: Colors.greenAccent),
-            onPressed: () async {
-              await FriendApi.respond(u.id, true);
-              _search(_searchController.text);
-            },
+          SmallActionButton(
+            icon: Icons.check,
+            color: Colors.greenAccent,
+            onTap: () async => await FriendApi.respond(u.id, true),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.redAccent),
-            onPressed: () async {
-              await FriendApi.respond(u.id, false);
-              _search(_searchController.text);
-            },
-          )
+          const SizedBox(width: 10),
+          SmallActionButton(
+            icon: Icons.close,
+            color: Colors.redAccent,
+            onTap: () async => await FriendApi.respond(u.id, false),
+          ),
         ],
       );
     }
 
-    return ElevatedButton(
-      onPressed: () async {
-        await FriendApi.sendRequest(u.id);
-        _search(_searchController.text);
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF46C264),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-      ),
-      child: const Text(
-        "Add",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+    return addFriendButton(() async {
+      await FriendApi.sendRequest(u.id);
+      _search(_searchController.text);
+    });
   }
+
+
 
   // STATUS CHIP
   Widget _statusChip(String label, Color color) {
