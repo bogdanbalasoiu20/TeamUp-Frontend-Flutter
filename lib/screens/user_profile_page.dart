@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/screens/edit_profile_page.dart';
+import 'package:team_up_fe_new/widgets/friend_button.dart';
 import '../models/user_profile.dart';
 import '../services/user_api.dart';
 import '../services/friend_api.dart';
@@ -240,37 +241,105 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildFriendButton(UserProfile p) {
-
     if (isMyProfile) {
-      return _greenButton("Edit Profile", () {});
+      return FriendButton(
+        text: "Edit Profile",
+        icon: Icons.edit,
+        colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditProfilePage(
+                birthday: p.birthday,
+                phone: p.phoneNumber,
+                description: p.description,
+                city: p.city,
+                position: p.position,
+              ),
+            ),
+          ).then((v) {
+            if (v == true) _load();
+          });
+        },
+      );
+
     }
 
     if (isFriend) {
-      return _redButton("Unfriend", () async {
-        await FriendApi.unfriend(p.id);
-        await _load();
-      });
+      return FriendButton(
+        text: "Unfriend",
+        icon: Icons.person_remove,
+        colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+        onTap: () async {
+          await FriendApi.unfriend(p.id);
+          await _load();
+        },
+      );
+
     }
 
     if (pendingSent) {
-      return _greenButton("Pending Request", () {});
+      return FriendButton(
+        text: "Friend Request Sent",
+        icon: Icons.hourglass_top,
+        colors: const [Colors.grey, Colors.grey],
+        disabled: true,
+        onTap: null,
+      );
+
     }
 
     if (pendingReceived) {
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Expanded(child: _greenButton("Accept", () => _respond(true))),
-          const SizedBox(width: 10),
-          Expanded(child: _redButton("Decline", () => _respond(false))),
+          const Text(
+            "Accept Friend Request?",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FriendButton(
+                text: "Accept",
+                icon: Icons.check,
+                colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+                onTap: () => _respond(true),
+              ),
+              const SizedBox(width: 12),
+              FriendButton(
+                text: "Decline",
+                icon: Icons.close,
+                colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+                onTap: () => _respond(false),
+              ),
+            ],
+          ),
         ],
       );
     }
 
-    return _greenButton("Add Friend", () async {
-      await _sendRequest();
-      await _load();
-    });
+
+    // NOT FRIEND → ADD FRIEND
+    return FriendButton(
+      text: "Add Friend",
+      icon: Icons.person_add,
+      colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+      onTap: () async {
+        await _sendRequest();
+        await _load();
+      },
+    );
+
   }
+
 
 
 

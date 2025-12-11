@@ -57,44 +57,131 @@ class _IncomingRequestsTabState extends State<IncomingRequestsTab> {
         ),
       )
           : ListView.builder(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(16),
         itemCount: requests.length,
         itemBuilder: (_, i) =>
-            _requestTile(context, requests[i]),
+            _swipeableTile(context, requests[i]),
       ),
     );
   }
 
-  Widget _requestTile(BuildContext context, FriendRequest r) {
+  Widget _swipeableTile(BuildContext context, FriendRequest r) {
+    return Column(
+      children: [
+        // --- Hint text ---
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            "Swipe right to accept · Swipe left to decline",
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.75),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+
+        Dismissible(
+          key: Key(r.id),
+
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              await _respond(r.id, true);
+            } else {
+              await _respond(r.id, false);
+            }
+            return true;
+          },
+
+          // ---- ACCEPT BACKGROUND (SWIPE RIGHT) ----
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: const Color(0xFF2ECC71).withOpacity(0.25),
+            ),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 26),
+            child: Row(
+              children: const [
+                Icon(Icons.check_circle, color: Colors.white, size: 34),
+                SizedBox(width: 10),
+                Text(
+                  "Accept",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ---- DECLINE BACKGROUND (SWIPE LEFT) ----
+          secondaryBackground: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.red,
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 26),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: const [
+                Text(
+                  "Decline",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 10),
+                Icon(Icons.cancel, color: Colors.white, size: 34),
+              ],
+            ),
+          ),
+
+          child: _requestCard(context, r),
+        ),
+      ],
+    );
+  }
+
+
+  Widget _requestCard(BuildContext context, FriendRequest r) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
+        color: Colors.white.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.35),
+          color: Colors.white.withOpacity(0.20),
         ),
       ),
       child: Row(
         children: [
-          // Avatar
+          // avatar
           CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.white.withOpacity(0.35),
-            child: const Icon(Icons.person, size: 36, color: Colors.white),
+            radius: 30,
+            backgroundColor: Colors.white.withOpacity(0.28),
+            child: const Icon(Icons.person, size: 32, color: Colors.white),
           ),
 
           const SizedBox(width: 16),
 
+          // username + click
           Expanded(
-            child: InkWell(
+            child: GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => UserProfilePage(username: r.requesterUsername),
+                    builder: (_) =>
+                        UserProfilePage(username: r.requesterUsername),
                   ),
                 );
               },
@@ -109,19 +196,8 @@ class _IncomingRequestsTabState extends State<IncomingRequestsTab> {
             ),
           ),
 
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.check, color: Colors.greenAccent),
-                onPressed: () => _respond(r.id, true),
-              ),
-
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.redAccent),
-                onPressed: () => _respond(r.id, false),
-              )
-            ],
-          )
+          // hint icon
+          Icon(Icons.swipe, color: Colors.white70, size: 22),
         ],
       ),
     );

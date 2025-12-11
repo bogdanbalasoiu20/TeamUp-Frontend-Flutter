@@ -67,8 +67,8 @@ void showLeftMenuModal(BuildContext context, String username) {
 
                   // FRIENDS
                   _menuItem(
-                    icon: Icons.search,
-                    label: "Find Friends",
+                    icon: Icons.people,
+                    label: "Friends",
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
