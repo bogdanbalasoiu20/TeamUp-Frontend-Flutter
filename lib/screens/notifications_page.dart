@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
+import 'package:team_up_fe_new/screens/match_participants_page.dart';
 import '../services/notifications_api.dart';
 import '../models/notification_item.dart';
+
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -26,6 +29,82 @@ class _NotificationsPageState extends State<NotificationsPage> {
       notifications = list;
       loading = false;
     });
+  }
+
+  // -------------------------------
+  // REDIRECT FUNCTION
+  // -------------------------------
+  void _handleNotificationTap(NotificationItem n) async {
+    // mark as seen
+    if (!n.isSeen) {
+      await NotificationsApi.markAsSeen(n.id);
+      setState(() => n.isSeen = true);
+    }
+
+    switch (n.type) {
+    // 🔵 FRIEND REQUEST RECEIVED → Go to incoming tab
+      case "FRIEND_REQUEST_RECEIVED":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const FriendsHomePage(initialTab: 2),
+          ),
+        );
+        break;
+
+    // 🟢 FRIEND REQUEST ACCEPTED → Go to friends list
+      case "FRIEND_REQUEST_ACCEPTED":
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const FriendsHomePage(initialTab: 0),
+          ),
+        );
+        break;
+
+
+      // case "MATCH_INVITE_RECEIVED":
+      // case "MATCH_INVITE_ACCEPTED":
+      // case "MATCH_UPDATED":
+      // case "MATCH_STARTING_SOON":
+      // case "MATCH_CANCELLED":
+      //   if (n.matchId != null) {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (_) => MatchOverviewPage(matchId: n.matchId!),
+      //       ),
+      //     );
+      //   }
+      //   break;
+      //
+      // default:
+      //   print("Unhandled notification type: ${n.type}");
+    }
+  }
+
+  // -------------------------------
+  // ICONS BASED ON TYPE
+  // -------------------------------
+  IconData _iconFor(NotificationItem n) {
+    switch (n.type) {
+      case "FRIEND_REQUEST_RECEIVED":
+        return Icons.person_add_alt_1;
+      case "FRIEND_REQUEST_ACCEPTED":
+        return Icons.check_circle_outline;
+      case "MATCH_INVITE_RECEIVED":
+        return Icons.sports_soccer;
+      case "MATCH_INVITE_ACCEPTED":
+        return Icons.handshake;
+      case "MATCH_UPDATED":
+        return Icons.edit_note;
+      case "MATCH_CANCELLED":
+        return Icons.cancel_outlined;
+      case "MATCH_STARTING_SOON":
+        return Icons.access_time_filled_rounded;
+      default:
+        return Icons.notifications;
+    }
   }
 
   @override
@@ -106,42 +185,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
     );
   }
 
-  // Icon mapping based on notification type
-  IconData _iconFor(NotificationItem n) {
-    switch (n.type) {
-      case "FRIEND_REQUEST_RECEIVED":
-        return Icons.person_add_alt_1;
-      case "FRIEND_REQUEST_ACCEPTED":
-        return Icons.check_circle_outline;
-      case "MATCH_INVITE_RECEIVED":
-        return Icons.sports_soccer;
-      case "MATCH_INVITE_ACCEPTED":
-        return Icons.handshake;
-      case "MATCH_UPDATED":
-        return Icons.edit_note;
-      case "MATCH_CANCELLED":
-        return Icons.cancel_outlined;
-      case "MATCH_STARTING_SOON":
-        return Icons.access_time_filled_rounded;
-      default:
-        return Icons.notifications;
-    }
-  }
-
-  // CARD UI
+  // -------------------------------
+  // NOTIFICATION CARD UI
+  // -------------------------------
   Widget _notificationCard(NotificationItem n) {
     final icon = _iconFor(n);
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () async {
-        if (!n.isSeen) {
-          await NotificationsApi.markAsSeen(n.id);
-          setState(() {
-            n.isSeen = true;
-          });
-        }
-      },
+      onTap: () => _handleNotificationTap(n),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -166,11 +218,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 color: Colors.white.withOpacity(0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 24,
-              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
 
             const SizedBox(width: 14),
@@ -208,7 +256,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
             ),
 
-            // UNSEEN BADGE
             if (!n.isSeen)
               Container(
                 padding:

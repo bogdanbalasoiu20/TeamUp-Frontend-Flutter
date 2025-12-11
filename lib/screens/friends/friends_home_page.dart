@@ -7,7 +7,12 @@ import '../friends/outgoing_requests_tab.dart';
 import 'friend_search_page.dart';
 
 class FriendsHomePage extends StatefulWidget {
-  const FriendsHomePage({super.key});
+  final int initialTab;
+
+  const FriendsHomePage({
+    super.key,
+    this.initialTab = 0,
+  });
 
   @override
   State<FriendsHomePage> createState() => _FriendsHomePageState();
@@ -16,7 +21,13 @@ class FriendsHomePage extends StatefulWidget {
 class _FriendsHomePageState extends State<FriendsHomePage>
     with TickerProviderStateMixin {
 
-  int tabIndex = 0;
+  late int tabIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    tabIndex = widget.initialTab;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +71,7 @@ class _FriendsHomePageState extends State<FriendsHomePage>
 
         body: Column(
           children: [
+            // ⭐ NAVBAR
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
               child: ClipRRect(
@@ -71,8 +83,7 @@ class _FriendsHomePageState extends State<FriendsHomePage>
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.16),
                       borderRadius: BorderRadius.circular(16),
-                      border:
-                      Border.all(color: Colors.white.withOpacity(0.25)),
+                      border: Border.all(color: Colors.white.withOpacity(0.25)),
                     ),
                     child: Row(
                       children: [
@@ -96,7 +107,7 @@ class _FriendsHomePageState extends State<FriendsHomePage>
     );
   }
 
-
+  //NAV BUTTON
   Widget _navButton(String label, int idx) {
     bool selected = tabIndex == idx;
 
@@ -107,9 +118,7 @@ class _FriendsHomePageState extends State<FriendsHomePage>
           duration: const Duration(milliseconds: 180),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected
-                ? Colors.white.withOpacity(0.34)
-                : Colors.transparent,
+            color: selected ? Colors.white.withOpacity(0.34) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -125,7 +134,7 @@ class _FriendsHomePageState extends State<FriendsHomePage>
     );
   }
 
-
+  //TAB CONTENT
   Widget _buildTabContent() {
     switch (tabIndex) {
       case 0:
