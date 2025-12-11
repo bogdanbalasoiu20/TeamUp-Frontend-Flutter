@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/screens/map_page.dart';
 import 'package:team_up_fe_new/screens/notifications_page.dart';
+import 'package:team_up_fe_new/services/notifications_api.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
@@ -30,11 +31,24 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   DateTime? startsAt;
   DateTime? joinDeadline;
-
   Venue? selectedVenue;
   bool creating = false;
-
   String visibility = "PUBLIC";
+  int unseenCount = 0;
+
+  Future<void> _loadUnseen() async {
+    try {
+      final all = await NotificationsApi.fetchAll();
+      final count = all.where((n) => !n.isSeen).length;
+      setState(() => unseenCount = count);
+    } catch (_) {}
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnseen();
+  }
 
   // PICK DATE
   Future<void> _pickDate({required bool isStart}) async {
@@ -144,12 +158,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
           //TOPBAR
           TopSheetBar(
-            unseenCount: 3,
-            onNotificationsTap: () {
-              Navigator.push(
+            unseenCount: unseenCount,
+            onNotificationsTap: () async {
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const NotificationsPage()),
               );
+
+              _loadUnseen();
             },
             onMenuTap: () async {
               final prefs = await SharedPreferences.getInstance();
@@ -161,8 +177,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 print("Eroare: username not stored in prefs");
               }
             },
-
           ),
+
 
           // TITLE
           Padding(

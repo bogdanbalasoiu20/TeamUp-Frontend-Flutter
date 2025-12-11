@@ -26,5 +26,11 @@ class NotificationsApi {
     );
     return response["data"] as int;
   }
+
+  static Future<int> getUnseenCount() async {
+    final list = await fetchAll();
+    return list.where((n) => !n.isSeen).length;
+  }
+
 }
 

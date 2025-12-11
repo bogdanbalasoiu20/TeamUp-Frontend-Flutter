@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:team_up_fe_new/screens/notifications_page.dart';
+import 'package:team_up_fe_new/services/notifications_api.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
@@ -27,11 +28,13 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
   List<MatchPin> pins = [];
   MatchPin? selectedPin;
   bool loading = false;
+  int unseenCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchMatchesOnInit();
+    _loadUnseen();
   }
 
   Future<void> _fetchMatchesOnInit() async {
@@ -48,6 +51,14 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
       pins = results;
       loading = false;
     });
+  }
+
+  Future<void> _loadUnseen() async {
+    try {
+      final all = await NotificationsApi.fetchAll();
+      final count = all.where((n) => !n.isSeen).length;
+      setState(() => unseenCount = count);
+    } catch (_) {}
   }
 
   void _openClusterModal(List<Marker> clusterMarkers) {
@@ -165,12 +176,14 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
 
 
                   TopSheetBar(
-                    unseenCount: 3,
-                    onNotificationsTap: () {
-                      Navigator.push(
+                    unseenCount: unseenCount,
+                    onNotificationsTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const NotificationsPage()),
                       );
+
+                      _loadUnseen();
                     },
                     onMenuTap: () async {
                       final prefs = await SharedPreferences.getInstance();
@@ -182,7 +195,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> {
                         print("Eroare: username not stored in prefs");
                       }
                     },
-
                   ),
 
 
