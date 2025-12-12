@@ -1,4 +1,5 @@
 import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/models/invitable_friend.dart';
 import 'package:team_up_fe_new/models/match_participants_response.dart';
 import '../models/participant.dart';
 
@@ -26,12 +27,25 @@ class MatchParticipantApi{
 
   static Future<void> acceptInvite(String matchId) async {
     await ApiService.post(
-      "/api/matches/$matchId/participants/accept-invite",
+      "/api/matches/$matchId/participants/accept",
+      {},
+    );
+  }
+
+  static Future<void> declineInvite(String matchId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/decline",
       {},
     );
   }
 
 
+  static Future<void> inviteUser(String matchId, String userId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/participants/$userId/invite",
+      {},
+    );
+  }
 
   static Future<void> approveRequest(String matchId, String userId) async {
     await ApiService.post(
@@ -76,6 +90,20 @@ class MatchParticipantApi{
     );
   }
 
+  static Future<List<InvitableFriend>> fetchInvitableFriends(
+      String matchId, {
+        String? search,
+      }) async {
+    final query = search != null && search.isNotEmpty
+        ? "?search=$search"
+        : "";
 
+    final data = await ApiService.get(
+      "$baseUrl/api/matches/$matchId/invitable-friends$query",
+    );
+
+    final List list = data["data"];
+    return list.map((e) => InvitableFriend.fromJson(e)).toList();
+  }
 
 }

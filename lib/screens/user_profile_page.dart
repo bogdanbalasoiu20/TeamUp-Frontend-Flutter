@@ -229,8 +229,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               _placeholder("FIFA-style card (coming soon)"),
               const SizedBox(height: 16),
               _placeholder("User statistics (coming soon)"),
-              const SizedBox(height: 16),
-              _placeholder("Friends list (coming soon)"),
+
 
               const SizedBox(height: 50),
             ],

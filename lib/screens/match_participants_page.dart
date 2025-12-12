@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/models/invitable_friend.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
 import 'package:team_up_fe_new/screens/match_chat_page.dart';
 import 'package:team_up_fe_new/screens/match_details_page.dart';
@@ -32,6 +33,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   List<Participant> participants = [];
   bool loading = true;
 
+  List<InvitableFriend> invitableFriends = [];
+  bool loadingInvitable = false;
+  String inviteSearch = "";
+
+
   late AnimationController barController;
   late Animation<Offset> barOffset;
 
@@ -52,9 +58,13 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       curve: Curves.easeOutBack,
     ));
 
+    _loadCurrentUser();
     _loadMatchInfo();
     _loadParticipants();
-    _loadCurrentUser();
+    if (isCreator()) {
+      _loadInvitableFriends();
+    }
+
 
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,6 +102,23 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       matchInfo = info;
     });
   }
+
+  Future<void> _loadInvitableFriends({String? search}) async {
+    if (!isCreator()) return;
+
+    setState(() => loadingInvitable = true);
+
+    final result = await MatchParticipantApi.fetchInvitableFriends(
+      widget.matchId,
+      search: search,
+    );
+
+    setState(() {
+      invitableFriends = result;
+      loadingInvitable = false;
+    });
+  }
+
 
 
 
@@ -377,7 +404,9 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       case "REQUESTED":
         return _cancelRequestButton();
       case "INVITED":
-        return _acceptInviteButton();
+        return _inviteDecisionBlock();
+
+
       case "WAITLIST":
         return _leaveWaitlistButton();
       case "ACCEPTED":
@@ -387,41 +416,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     }
   }
 
-
-
-  // ---------------- BUTTON WIDGET TEMPLATES ----------------
-
-  Widget _actionButton({required List<Color> colors, required String text}) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 28),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.20),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
 
 
 
@@ -465,24 +459,60 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     );
   }
 
+  // ---------------- ACCEPT/DECLINE INVITE ----------------
 
-  // ---------------- ACCEPT INVITE ----------------
+  Widget _inviteDecisionBlock() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          "You have been invited to this match",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 12),
 
-  Widget _acceptInviteButton() {
-    return ActionButtonAnimated(
-      colors: const [Colors.blue, Colors.lightBlue],
-      text: "Accept Invite",
-      onTap: () async {
-        try {
-          await MatchParticipantApi.acceptInvite(widget.matchId);
-          await _loadParticipants();
-          showTopBanner(context,"Invite accepted");
-        } catch (e) {
-          showTopBanner(context,"Accept invite error", error: true);
-        }
-      },
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ActionButtonAnimated(
+              colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+              text: "Accept",
+              onTap: () async {
+                try {
+                  await MatchParticipantApi.acceptInvite(widget.matchId);
+                  await _loadParticipants();
+                  showTopBanner(context, "Invite accepted");
+                } catch (e) {
+                  showTopBanner(context, "Accept invite error", error: true);
+                }
+              },
+            ),
+            const SizedBox(width: 14),
+            ActionButtonAnimated(
+              colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+              text: "Decline",
+              onTap: () async {
+                try {
+                  await MatchParticipantApi.declineInvite(widget.matchId);
+                  await _loadParticipants();
+                  showTopBanner(context, "Invite declined");
+                } catch (e) {
+                  showTopBanner(context, "Decline invite error", error: true);
+                }
+              },
+            ),
+          ],
+        ),
+      ],
     );
   }
+
+
 
 
   // ---------------- LEAVE WAITLIST ----------------
@@ -566,6 +596,15 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       requests,
       waitlist,
     ];
+
+    if (statusTab == 1) {
+      if (isCreator()) {
+        return _buildInvitedFriendsSection(invited);
+      } else {
+        return _buildUserList(invited);
+      }
+    }
+
 
     if (statusTab == 3) {
       return _buildWaitlistContent(waitlist);
@@ -792,7 +831,6 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     return Column(
       children: [
         if (showMoveButton) ...[
-          // --- Minimal Info Text ---
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
@@ -810,7 +848,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
             ),
           ),
 
-          // --- Action Button ---
+
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
             child: ActionButtonAnimated(
@@ -835,6 +873,107 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       ],
     );
   }
+
+  Widget _buildInvitedFriendsSection(List<Participant> invitedParticipants) {
+    return Column(
+      children: [
+        // 🔍 Search friends
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: "Search friends to invite",
+              prefixIcon: const Icon(Icons.search),
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.9),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onChanged: (value) {
+              inviteSearch = value;
+              _loadInvitableFriends(search: value);
+            },
+          ),
+        ),
+
+        Expanded(
+          child: loadingInvitable
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+            padding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            itemCount: invitableFriends.length,
+            itemBuilder: (_, i) {
+              final f = invitableFriends[i];
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      child: Text(f.username[0].toUpperCase()),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        f.username,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    f.invited
+                        ? const Text(
+                      "Invited",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                        : ElevatedButton(
+                      onPressed: () async {
+                        await MatchParticipantApi.inviteUser(
+                            widget.matchId, f.userId);
+                        await _loadInvitableFriends(
+                            search: inviteSearch);
+                        await _loadParticipants();
+                        showTopBanner(
+                            context, "Invite sent to ${f.username}");
+                      },
+                      child: const Text("Invite"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        if (invitedParticipants.isNotEmpty) ...[
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Text(
+              "Already invited",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(child: _buildUserList(invitedParticipants)),
+        ],
+      ],
+    );
+  }
+
 
 
 
