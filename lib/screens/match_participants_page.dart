@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/models/invitable_friend.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
+import 'package:team_up_fe_new/screens/invited_tab_creator.dart';
 import 'package:team_up_fe_new/screens/match_chat_page.dart';
 import 'package:team_up_fe_new/screens/match_details_page.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
@@ -36,6 +37,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
   List<InvitableFriend> invitableFriends = [];
   bool loadingInvitable = false;
   String inviteSearch = "";
+
+  int invitedSubTab = 0;
+// 0 = Invite friends
+// 1 = Invited players
+
 
 
   late AnimationController barController;
@@ -598,12 +604,21 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
     ];
 
     if (statusTab == 1) {
-      if (isCreator()) {
-        return _buildInvitedFriendsSection(invited);
-      } else {
+      if (!isCreator()) {
         return _buildUserList(invited);
       }
+
+      return InvitedTabCreator(
+        matchId: widget.matchId,
+        invitedParticipants: invited,
+        onInviteSent: () async {
+          await _loadParticipants();
+        },
+      );
+
     }
+
+
 
 
     if (statusTab == 3) {
