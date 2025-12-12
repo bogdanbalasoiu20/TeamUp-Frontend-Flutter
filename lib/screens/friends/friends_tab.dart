@@ -103,7 +103,6 @@ class _FriendsTabState extends State<FriendsTab> {
         ),
         child: Row(
           children: [
-            // Avatar simplu
             CircleAvatar(
               radius: 32,
               backgroundColor: Colors.white.withOpacity(0.35),

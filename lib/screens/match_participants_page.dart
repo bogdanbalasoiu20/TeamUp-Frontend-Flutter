@@ -5,6 +5,7 @@ import 'package:team_up_fe_new/models/match_info.dart';
 import 'package:team_up_fe_new/screens/invited_tab_creator.dart';
 import 'package:team_up_fe_new/screens/match_chat_page.dart';
 import 'package:team_up_fe_new/screens/match_details_page.dart';
+import 'package:team_up_fe_new/screens/user_profile_page.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:team_up_fe_new/utils/mini_action_button.dart';
 import '../models/participant.dart';
@@ -271,13 +272,13 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                                   "Confirmed", 0, Colors.green),
                               const SizedBox(width: 10),
                               _reactionPill(
-                                  "Invited", 1, Colors.orange),
+                                  "Invited", 1, Colors.green),
                               const SizedBox(width: 10),
                               _reactionPill(
-                                  "Requests", 2, Colors.blue),
+                                  "Requests", 2, Colors.green),
                               const SizedBox(width: 10),
                               _reactionPill(
-                                  "Waitlist", 3, Colors.grey),
+                                  "Waitlist", 3, Colors.green),
                             ],
                           ),
                         ),
@@ -525,7 +526,8 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   Widget _leaveWaitlistButton() {
     return ActionButtonAnimated(
-      colors: const [Colors.grey, Colors.black45],
+      colors: const [Color(0xFFEB5757),
+        Color(0xFFF2994A),],
       text: "Leave Waitlist",
       onTap: () async {
         try {
@@ -541,7 +543,10 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   Widget _joinWaitlistButton() {
     return ActionButtonAnimated(
-      colors: const [Colors.grey, Colors.black54],
+      colors: const [
+        Color(0xFF2F80ED),
+        Color(0xFF56CCF2),
+      ],
       text: "Join Waitlist",
       onTap: () async {
         try {
@@ -657,87 +662,86 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   Widget _userCard(Participant p) {
     final bool creator = isCreator();
-    final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
+    final confirmed =
+    participants.where((p) => p.status == "ACCEPTED").toList();
     final maxPlayers = matchInfo?.maxPlayers;
     final isFull = maxPlayers != null && confirmed.length >= maxPlayers;
+
     final bool canPromote = creator && p.status == "WAITLIST" && !isFull;
-    final bool canApproveRequest = creator && p.status == "REQUESTED" && !isFull;
+    final bool canApproveRequest =
+        creator && p.status == "REQUESTED" && !isFull;
 
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.90),
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => UserProfilePage(username: p.username),
           ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xFF0A6F4A),
-            child: Text(
-              p.username[0].toUpperCase(),
-              style: const TextStyle(
-                fontSize: 22,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.18),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.35),
+          ),
+        ),
+        child: Row(
+          children: [
+            // AVATAR – IDENTIC CU FRIENDS TAB
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: Colors.white.withOpacity(0.35),
+              child: const Icon(
+                Icons.person,
+                size: 36,
                 color: Colors.white,
-                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
 
-          const SizedBox(width: 16),
+            const SizedBox(width: 16),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  p.username,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black87,
-                  ),
+            // USERNAME ONLY
+            Expanded(
+              child: Text(
+                p.username,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  p.status,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
 
-          //approve/decline a join request button
-          if (canApproveRequest)
-            Row(
-              children: [
-                _approveButton(p),
-                const SizedBox(width: 10),
-                _rejectButton(p),
-              ],
-            )
-          else if (canPromote)
-            _promoteButton(p)
-          else
-            const Icon(Icons.chevron_right, color: Colors.black45)
-
-        ],
+            // ACTIONS / ARROW
+            if (canApproveRequest)
+              Row(
+                children: [
+                  _approveButton(p),
+                  const SizedBox(width: 10),
+                  _rejectButton(p),
+                ],
+              )
+            else if (canPromote)
+              _promoteButton(p)
+            else
+              Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white.withOpacity(0.5),
+                size: 18,
+              ),
+          ],
+        ),
       ),
     );
   }
+
+
 
 
   Widget _approveButton(Participant p) {

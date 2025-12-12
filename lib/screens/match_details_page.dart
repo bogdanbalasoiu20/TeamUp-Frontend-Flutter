@@ -122,7 +122,7 @@ class MatchDetailsTab extends StatelessWidget {
     final bool userIsCreator = isCreator;
     final bool isAccepted = me?.status == "ACCEPTED";
 
-    // CREATOR → Invite + Cancel Match + Edit
+    // CREATOR →  Cancel Match + Edit
     if (userIsCreator) {
       return Container(
         padding: const EdgeInsets.all(18),
@@ -134,7 +134,10 @@ class MatchDetailsTab extends StatelessWidget {
         child: Column(
           children: [
             ActionButtonAnimated(
-              colors: const [Colors.green, Colors.lightGreenAccent],
+              colors: const [
+                Color(0xFF0A6F4A),
+                Color(0xFF46C264),
+              ],
               text: "Edit Match",
               onTap: () async {
                 final updated = await Navigator.push(
@@ -145,7 +148,7 @@ class MatchDetailsTab extends StatelessWidget {
                 );
 
                 if (updated == true) {
-                  await onRefreshRequest();   // <--- REFRESH AUTOMAT
+                  await onRefreshRequest();
                 }
               },
             ),
@@ -153,16 +156,10 @@ class MatchDetailsTab extends StatelessWidget {
             const SizedBox(height: 14),
 
             ActionButtonAnimated(
-              colors: const [Colors.blue, Colors.lightBlueAccent],
-              text: "Invite Players",
-              onTap: () async {
-                await onInvitePlayers();
-                showTopBanner(context, "Invite menu opened");
-              },
-            ),
-            const SizedBox(height: 14),
-            ActionButtonAnimated(
-              colors: const [Color(0xFF6A0000), Color(0xFFDA1E28)],
+              colors: const [
+                Color(0xFFA30000),
+                Color(0xFFE53935),
+              ],
               text: "Cancel Match",
               onTap: () async {
                 await onCancelMatch();
