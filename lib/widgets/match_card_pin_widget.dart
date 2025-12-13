@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/match_api.dart';
 import '../screens/match_participants_page.dart';
 import 'package:team_up_fe_new/models/match.dart';
 
@@ -11,36 +10,41 @@ class MatchCardPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateFormat("EEEE, dd MMM • HH:mm")
+    final date = DateFormat("EEE, dd MMM • HH:mm")
         .format(DateTime.parse(match.startsAt));
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
           colors: [
-            const Color(0xFF003B2F),
-            const Color(0xFF0A5444),
-            const Color(0xFF2E8B57).withOpacity(0.85),
+            Color(0xFF062D24),
+            Color(0xFF0A6F4A),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+
+        // 🔥 SHADOWS (DEPTH + EDGE)
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.45),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------------- TITLE ----------------
+          // ---------------- HEADER ----------------
           Row(
             children: [
               Expanded(
@@ -50,70 +54,28 @@ class MatchCardPin extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.white70),
+              _playersBadge(),
             ],
           ),
 
           const SizedBox(height: 6),
 
-          // ---------------- DATE & TIME ----------------
+          // ---------------- DATE ----------------
           Row(
             children: [
-              Icon(Icons.access_time, size: 17, color: Colors.white70),
+              const Icon(
+                Icons.schedule,
+                size: 15,
+                color: Colors.white70,
+              ),
               const SizedBox(width: 6),
               Text(
                 date,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // ---------------- PLAYERS & DURATION ----------------
-          Row(
-            children: [
-              Icon(Icons.people, size: 18, color: Colors.white70),
-              const SizedBox(width: 6),
-              Text(
-                "${match.joinedPlayers}/${match.maxPlayers} players",
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-
-              const SizedBox(width: 18),
-
-              Icon(Icons.timer, size: 18, color: Colors.white70),
-              const SizedBox(width: 6),
-              Text(
-                "${match.durationMinutes} min",
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-
-          // ---------------- PRICE ----------------
-          Row(
-            children: [
-              Icon(Icons.payments, size: 18, color: Colors.white70),
-              const SizedBox(width: 6),
-              Text(
-                "${match.totalPrice.toStringAsFixed(0)} lei",
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
@@ -124,23 +86,28 @@ class MatchCardPin extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // ---------------- VIEW MATCH BUTTON ----------------
+          // ---------------- STATS ----------------
+          Row(
+            children: [
+              _statChip(
+                icon: Icons.timer,
+                label: "${match.durationMinutes} min",
+              ),
+              const SizedBox(width: 10),
+              _statChip(
+                icon: Icons.payments,
+                label: "${match.totalPrice.toStringAsFixed(0)} lei",
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 22),
+
+          // ---------------- CTA ----------------
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white.withOpacity(0.22),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              icon: const Icon(Icons.open_in_new, color: Colors.white),
-              label: const Text(
-                "View Match",
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
+            child: GestureDetector(
+              onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -149,6 +116,94 @@ class MatchCardPin extends StatelessWidget {
                   ),
                 );
               },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.35),
+                    width: 1.2,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      "View match",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- PLAYERS BADGE ----------------
+  Widget _playersBadge() {
+    return Container(
+      padding:
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.people,
+            size: 14,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            "${match.joinedPlayers}/${match.maxPlayers}",
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------- STAT CHIP ----------------
+  Widget _statChip({
+    required IconData icon,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
             ),
           ),
         ],
