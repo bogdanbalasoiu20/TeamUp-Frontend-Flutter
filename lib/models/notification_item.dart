@@ -39,4 +39,9 @@ class NotificationItem {
     if (diff.inDays < 1) return "${diff.inHours}h ago";
     return "${diff.inDays}d ago";
   }
+
+  String? get matchId {
+    final value = payload?['matchId'];
+    return value?.toString();
+  }
 }

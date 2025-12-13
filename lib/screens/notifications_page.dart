@@ -42,7 +42,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
 
     switch (n.type) {
-    //FRIEND REQUEST RECEIVED → Go to incoming tab
       case "FRIEND_REQUEST_RECEIVED":
         Navigator.push(
           context,
@@ -52,7 +51,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
         );
         break;
 
-    // FRIEND REQUEST ACCEPTED → Go to friends list
       case "FRIEND_REQUEST_ACCEPTED":
         Navigator.push(
           context,
@@ -63,23 +61,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
         break;
 
 
-      // case "MATCH_INVITE_RECEIVED":
-      // case "MATCH_INVITE_ACCEPTED":
-      // case "MATCH_UPDATED":
-      // case "MATCH_STARTING_SOON":
-      // case "MATCH_CANCELLED":
-      //   if (n.matchId != null) {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //         builder: (_) => MatchOverviewPage(matchId: n.matchId!),
-      //       ),
-      //     );
-      //   }
-      //   break;
-      //
-      // default:
-      //   print("Unhandled notification type: ${n.type}");
+      case "MATCH_INVITE_RECEIVED":
+      case "MATCH_INVITE_ACCEPTED":
+      case "MATCH_UPDATED":
+      case "MATCH_STARTING_SOON":
+      case "MATCH_CANCELLED":
+         if (n.matchId != null) {
+           Navigator.push(
+             context,
+             MaterialPageRoute(
+               builder: (_) => MatchOverviewPage(matchId: n.matchId!),
+             ),
+           );
+         }
+         break;
+
+       default:
+         print("Unhandled notification type: ${n.type}");
     }
   }
 
