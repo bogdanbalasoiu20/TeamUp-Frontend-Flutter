@@ -1,22 +1,21 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatefulWidget{
-  const HomePage({super.key});
+class IdkPage extends StatefulWidget {
+  const IdkPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<IdkPage> createState() => _IdkPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _IdkPageState extends State<IdkPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Text(
-          "Home page coming soon",
+          "Something cool is coming 👀\n\nThis feature is still a mystery\nComing soon",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.black54,
           ),

@@ -1,22 +1,21 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatefulWidget{
-  const HomePage({super.key});
+class TeamsPage extends StatefulWidget {
+  const TeamsPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<TeamsPage> createState() => _TeamsPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _TeamsPageState extends State<TeamsPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Text(
-          "Home page coming soon",
+          "Your teams will appear here soon 👥\nComing soon",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.black54,
           ),

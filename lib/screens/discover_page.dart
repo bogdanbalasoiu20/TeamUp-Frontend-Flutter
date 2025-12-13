@@ -1,22 +1,21 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class HomePage extends StatefulWidget{
-  const HomePage({super.key});
+class DiscoverPage extends StatefulWidget {
+  const DiscoverPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<DiscoverPage> createState() => _DiscoverPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _DiscoverPageState extends State<DiscoverPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Text(
-          "Home page coming soon",
+          "Discover 🔍✨\n\nPlayer & team recommendations\nComing soon",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.black54,
           ),

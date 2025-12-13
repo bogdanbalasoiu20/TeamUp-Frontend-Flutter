@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/create_match_page.dart';
+import 'package:team_up_fe_new/screens/discover_page.dart';
 import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
 import 'package:team_up_fe_new/screens/home_page.dart';
+import 'package:team_up_fe_new/screens/idk_page.dart';
 import 'package:team_up_fe_new/screens/match_map_page.dart';
+import 'package:team_up_fe_new/screens/teams_page.dart';
 import 'package:team_up_fe_new/screens/user_profile_page.dart';
 
 class TeamUpNavBar extends StatelessWidget {
@@ -34,9 +37,11 @@ class TeamUpNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _navIcon(index: 0, icon: Icons.home_rounded),
-          _navIcon(index: 1, icon: Icons.search_rounded),
+          _navIcon(index: 1, icon: Icons.stadium),
           _centerCreateButton(),
-          _navIcon(index: 3, icon: Icons.people_alt_rounded),
+          _navIcon(index: 3, icon: Icons.auto_awesome_rounded),
+          _navIcon(index: 4, icon: Icons.pending_rounded
+          ),
         ],
       ),
     );
@@ -72,7 +77,7 @@ class TeamUpNavBar extends StatelessWidget {
             ],
           ),
         ),
-        child: const Icon(Icons.add, color: Colors.white, size: 22),
+        child: const Icon(Icons.groups_rounded , color: Colors.white, size: 22),
       ),
     );
   }
@@ -93,8 +98,9 @@ class _HomeShellState extends State<HomeShell> {
   final pages = const [
     HomePage(),
     MatchesMapPage(),
-    CreateMatchPage(),
-    FriendsHomePage(),
+    TeamsPage(),
+    DiscoverPage(),
+    IdkPage()
   ];
 
   void _onTabSelected(int index) {
