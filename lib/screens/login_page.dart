@@ -8,6 +8,7 @@ import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:team_up_fe_new/widgets/navbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,14 +59,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
       print("####USERNAME: "+ username);
 
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (_) => UserProfilePage(username: username)),
-      // );
-
       Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const MatchesMapPage()));
+          MaterialPageRoute(builder: (_) => const HomeShell()));
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)

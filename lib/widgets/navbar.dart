@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/create_match_page.dart';
+import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
+import 'package:team_up_fe_new/screens/home_page.dart';
+import 'package:team_up_fe_new/screens/match_map_page.dart';
+import 'package:team_up_fe_new/screens/user_profile_page.dart';
 
 class TeamUpNavBar extends StatelessWidget {
   final int currentIndex;
@@ -12,33 +17,27 @@ class TeamUpNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: 0,
-      right: 0,
-      bottom: 0,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        height: 58,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _navIcon(index: 0, icon: Icons.home_rounded),
-            _navIcon(index: 1, icon: Icons.search_rounded),
-            _centerCreateButton(),
-            _navIcon(index: 3, icon: Icons.people_alt_rounded),
-            _navIcon(index: 4, icon: Icons.person_rounded),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      height: 58,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _navIcon(index: 0, icon: Icons.home_rounded),
+          _navIcon(index: 1, icon: Icons.search_rounded),
+          _centerCreateButton(),
+          _navIcon(index: 3, icon: Icons.people_alt_rounded),
+        ],
       ),
     );
   }
@@ -48,6 +47,7 @@ class TeamUpNavBar extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => onTabSelected(index),
+      behavior: HitTestBehavior.opaque,
       child: Icon(
         icon,
         size: 24,
@@ -59,6 +59,7 @@ class TeamUpNavBar extends StatelessWidget {
   Widget _centerCreateButton() {
     return GestureDetector(
       onTap: () => onTabSelected(2),
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: const BoxDecoration(
@@ -69,23 +70,51 @@ class TeamUpNavBar extends StatelessWidget {
               Color(0xFF0A6F4A),
               Color(0xFF46C264),
             ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.greenAccent,
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            )
-          ],
         ),
-        child: const Icon(
-          Icons.add,
-          color: Colors.white,
-          size: 22,
-        ),
+        child: const Icon(Icons.add, color: Colors.white, size: 22),
       ),
     );
   }
 }
+
+
+
+class HomeShell extends StatefulWidget {
+  const HomeShell({super.key});
+
+  @override
+  State<HomeShell> createState() => _HomeShellState();
+}
+
+class _HomeShellState extends State<HomeShell> {
+  int currentIndex = 0;
+
+  final pages = const [
+    HomePage(),
+    MatchesMapPage(),
+    CreateMatchPage(),
+    FriendsHomePage(),
+  ];
+
+  void _onTabSelected(int index) {
+    setState(() => currentIndex = index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: currentIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: TeamUpNavBar(
+        currentIndex: currentIndex,
+        onTabSelected: _onTabSelected,
+      ),
+    );
+  }
+}
+
+
+

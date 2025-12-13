@@ -372,12 +372,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ),
           ),
 
-          TeamUpNavBar(
-            currentIndex: 2,
-            onTabSelected: (index) {
-              // TODO: navigate către alte pagini
-            },
-          ),
+
         ],
       ),
     );
