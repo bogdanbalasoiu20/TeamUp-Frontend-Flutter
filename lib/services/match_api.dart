@@ -58,6 +58,7 @@ class MatchApi {
     required double maxLat,
     required double maxLng,
   }) async {
+    final now = DateTime.now().toUtc();
     final uri = Uri.parse(
         "https://teamup-backend-omi4.onrender.com/api/matches/nearby-bbox")
         .replace(queryParameters: {
@@ -65,6 +66,7 @@ class MatchApi {
       "minLng": minLng.toString(),
       "maxLat": maxLat.toString(),
       "maxLng": maxLng.toString(),
+      "dateFrom": now.toIso8601String(),
     });
 
     print("### FETCH PINS URI = $uri");

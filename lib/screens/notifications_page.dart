@@ -61,6 +61,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
         break;
 
 
+      case "JOIN_REQUEST_RECEIVED":
+      case "JOIN_REQUEST_ACCEPTED":
+      case "JOIN_WAITLIST":
+      case "PROMOTED_FROM_WAITLIST":
+      case "MOVED_TO_WAITLIST":
+      case "MATCH_LEFT":
       case "MATCH_INVITE_RECEIVED":
       case "MATCH_INVITE_ACCEPTED":
       case "MATCH_UPDATED":
