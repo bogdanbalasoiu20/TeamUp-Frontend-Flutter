@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/screens/edit_profile_page.dart';
 import 'package:team_up_fe_new/widgets/friend_button.dart';
+import 'package:team_up_fe_new/widgets/player_card/fifa_card.dart';
+import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
 import '../models/user_profile.dart';
 import '../services/user_api.dart';
 import '../services/friend_api.dart';
@@ -96,6 +98,25 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     final p = profile!;
 
+
+    //Test card
+    final testCard = PlayerCardUi(
+      name: p.username,
+      rating: 84,
+      position: p.position ?? "CM",
+      imageUrl: p.photoUrl ??
+          "https://i.imgur.com/BoN9kdC.png",
+      stats: const {
+        "PAC": 85,
+        "SHO": 80,
+        "PAS": 86,
+        "DRI": 83,
+        "DEF": 72,
+        "PHY": 78,
+      },
+    );
+
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -144,35 +165,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
             children: [
-
-              // ---------------- PROFILE PHOTO ----------------
+              // ---------------- FIFA CARD (TEST MODE) ----------------
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: CircleAvatar(
-                    radius: 58,
-                    backgroundColor: Colors.white.withOpacity(0.3),
-                    backgroundImage:
-                    p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
-                    child: p.photoUrl == null
-                        ? const Icon(Icons.person, size: 60, color: Colors.white)
-                        : null,
-                  ),
+                child: Transform.scale(
+                  scale: 0.75,
+                  child: FifaPlayerCard(data: testCard),
                 ),
               ),
 
-              const SizedBox(height: 25),
+
+              const SizedBox(height: 20),
 
               // ---------------- BUTTON ----------------
               SizedBox(

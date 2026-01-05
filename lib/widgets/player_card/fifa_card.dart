@@ -11,99 +11,142 @@ class FifaPlayerCard extends StatelessWidget {
     return SizedBox(
       width: 260,
       height: 380,
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            // ✅ EXACT ca înainte (varianta care știi că a mers)
-            image: AssetImage("assets/images/cards/gold_card.png"),
+      child: Stack(
+        children: [
+          // ---------------- BACKGROUND ----------------
+          Image.asset(
+            "assets/images/cards/gold_card.png",
+            width: 260,
+            height: 380,
             fit: BoxFit.contain,
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-          child: Column(
-            children: [
 
-              // 🔝 RATING + POSITION
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        data.rating.toString(),
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
-                        ),
-                      ),
-                      Text(
-                        data.position,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black.withOpacity(0.7),
-                        ),
+          // ---------------- RATING + POSITION ----------------
+          Positioned(
+            top: 50,
+            left: 30,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.rating.toString(),
+                  style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 6,
+                        color: Colors.white70,
+                        offset: Offset(0, 1),
                       ),
                     ],
                   ),
-                  const Icon(Icons.sports_soccer, size: 26),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // 👤 AVATAR
-              CircleAvatar(
-                radius: 50,
-                backgroundImage: NetworkImage(data.imageUrl),
-              ),
-
-              const SizedBox(height: 12),
-
-              // 👑 NAME
-              Text(
-                data.name.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
                 ),
-              ),
-
-              const Spacer(),
-
-              // 📊 STATS
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                childAspectRatio: 3.2,
-                children: data.stats.entries.map((e) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "${e.value}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        e.key,
-                        style: const TextStyle(fontSize: 12),
+                Text(
+                  data.position,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 4,
+                        color: Colors.white70,
+                        offset: Offset(0, 1),
                       ),
                     ],
-                  );
-                }).toList(),
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+
+
+          // ---------------- AVATAR ----------------
+
+
+          // workaround pentru NetworkImage (Flutter nu permite empty string)
+          Positioned(
+            top: 90,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: CircleAvatar(
+                radius: 55,
+                backgroundImage: NetworkImage(data.imageUrl),
+              ),
+            ),
+          ),
+
+          // ---------------- NAME ----------------
+          Positioned(
+            top: 215,
+            left: 20,
+            right: 20,
+            child: Text(
+              data.name.toUpperCase(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: Colors.black,
+                shadows: [
+                  Shadow(
+                    blurRadius: 6,
+                    color: Colors.white70,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ---------------- STATS ----------------
+          Positioned(
+            bottom: 45,
+            left: 24,
+            right: 24,
+            child: GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 3.8,
+              children: data.stats.entries.map((e) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "${e.value}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.black,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 4,
+                            color: Colors.white70,
+                            offset: Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      e.key,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
