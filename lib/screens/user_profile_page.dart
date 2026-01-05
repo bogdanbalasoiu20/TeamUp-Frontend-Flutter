@@ -5,6 +5,7 @@ import 'package:team_up_fe_new/screens/edit_profile_page.dart';
 import 'package:team_up_fe_new/widgets/friend_button.dart';
 import 'package:team_up_fe_new/widgets/player_card/fifa_card.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
+import 'package:team_up_fe_new/widgets/stats_modal.dart';
 import '../models/user_profile.dart';
 import '../services/user_api.dart';
 import '../services/friend_api.dart';
@@ -167,11 +168,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
             children: [
               // ---------------- FIFA CARD (TEST MODE) ----------------
               Center(
-                child: Transform.scale(
-                  scale: 0.75,
-                  child: FifaPlayerCard(data: testCard),
+                child: GestureDetector(
+                  onTap: () => _openPlayerStatsModal(context),
+                  child: Transform.scale(
+                    scale: 0.75,
+                    child: FifaPlayerCard(data: testCard),
+                  ),
                 ),
               ),
+
 
 
               const SizedBox(height: 20),
@@ -228,8 +233,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ],
 
               // ---------------- PLACEHOLDERS ----------------
-              _placeholder("FIFA-style card (coming soon)"),
-              const SizedBox(height: 16),
               _placeholder("User statistics (coming soon)"),
 
 
@@ -343,67 +346,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
 
 
-
-
-
-  // -------------------- BUTTON HELPERS --------------------
-  Widget _greenButton(String text, VoidCallback onTap) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF46C264),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 17,
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  Widget _redButton(String text, VoidCallback onTap) {
-    return ElevatedButton(
-      onPressed: onTap,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 17,
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  Widget _disabledButton(String text) {
-    return ElevatedButton(
-      onPressed: null,
-      style: ElevatedButton.styleFrom(
-        disabledBackgroundColor: Colors.grey.shade600,
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 17,
-          color: Colors.white70,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
   // ---------------- GLASS INFO TILE (UI unchanged) ----------------
   Widget _glassInfoTile(IconData icon, String title, String value) {
     return ClipRRect(
@@ -492,4 +434,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
     );
   }
+
+
+  void _openPlayerStatsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.75,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (_, controller) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFF0E1B16),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
+              ),
+              child: SingleChildScrollView(
+                controller: controller,
+                padding: const EdgeInsets.all(20),
+                child: const PlayerStatsModalContent(),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
 }

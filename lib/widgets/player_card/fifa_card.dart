@@ -6,6 +6,29 @@ class FifaPlayerCard extends StatelessWidget {
 
   const FifaPlayerCard({super.key, required this.data});
 
+
+  String _mapPosition(String? position) {
+    if (position == null) return "MID";
+
+    switch (position.toLowerCase()) {
+      case "goalkeeper":
+        return "GK";
+
+      case "midfielder":
+        return "MID";
+
+      case "defender":
+        return "DEF";
+
+      case "forward":
+        return "FWD";
+
+      default:
+        return position.toUpperCase();
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -14,12 +37,31 @@ class FifaPlayerCard extends StatelessWidget {
       child: Stack(
         children: [
           // ---------------- BACKGROUND ----------------
-          Image.asset(
-            "assets/images/cards/gold_card.png",
-            width: 260,
-            height: 380,
-            fit: BoxFit.contain,
+          Positioned.fill(
+            child: Center(
+              child: Container(
+                width: 260,
+                height: 380,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(28),
+                  image: const DecorationImage(
+                    image: AssetImage("assets/images/cards/gold_card.png"),
+                    fit: BoxFit.contain,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.25),
+                      blurRadius: 30,
+                      spreadRadius: -8,
+                      offset: const Offset(0, 18),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
+
+
 
           // ---------------- RATING + POSITION ----------------
           Positioned(
@@ -44,7 +86,7 @@ class FifaPlayerCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  data.position,
+                  _mapPosition(data.position),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -58,6 +100,7 @@ class FifaPlayerCard extends StatelessWidget {
                     ],
                   ),
                 ),
+
               ],
             ),
           ),
@@ -73,12 +116,25 @@ class FifaPlayerCard extends StatelessWidget {
             left: 0,
             right: 0,
             child: Center(
-              child: CircleAvatar(
-                radius: 55,
-                backgroundImage: NetworkImage(data.imageUrl),
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundImage: NetworkImage(data.imageUrl),
+                ),
               ),
             ),
           ),
+
 
           // ---------------- NAME ----------------
           Positioned(
