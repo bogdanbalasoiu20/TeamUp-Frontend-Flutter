@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/screens/finish_match_screen.dart';
 import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
 import 'package:team_up_fe_new/screens/match_participants_page.dart';
 import '../services/notifications_api.dart';
@@ -82,7 +83,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
          }
          break;
 
-       default:
+      case "MATCH_FINISH_CONFIRMATION":
+        if (n.matchId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FinishMatchScreen(matchId: n.matchId!),
+            ),
+          );
+        }
+        break;
+
+
+      default:
          print("Unhandled notification type: ${n.type}");
     }
   }

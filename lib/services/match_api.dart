@@ -96,6 +96,13 @@ class MatchApi {
     return MatchInfo.fromJson(json["data"]);
   }
 
+  static Future<void> finishMatch(String matchId) async {
+    await ApiService.post(
+      "/api/matches/$matchId/finish",
+      {},
+    );
+  }
+
 }
 
 

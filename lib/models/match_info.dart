@@ -9,7 +9,7 @@ class MatchInfo {
   final double lng;
 
   final DateTime startsAt;
-  final DateTime? endsAt;      // <-- nullable aici!
+  final DateTime? endsAt;
   final int durationMinutes;
 
   final int maxPlayers;
@@ -34,7 +34,7 @@ class MatchInfo {
     required this.lat,
     required this.lng,
     required this.startsAt,
-    required this.endsAt,          // <-- nullable
+    required this.endsAt,
     required this.durationMinutes,
     required this.maxPlayers,
     required this.currentPlayers,
