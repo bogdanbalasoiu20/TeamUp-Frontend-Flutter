@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
-import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:team_up_fe_new/screens/finish_match_screen.dart';
-import 'package:team_up_fe_new/models/match.dart';
+import 'package:team_up_fe_new/services/match_api.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,53 +10,66 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with WidgetsBindingObserver {
+
+  bool _finishScreenOpened = false;
+  bool _checkingFinishMatch = false;
 
   @override
   void initState() {
     super.initState();
-    _checkFinishMatchPrompt();
+    WidgetsBinding.instance.addObserver(this);
+
+    // mic delay pentru context stabil
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _checkFinishMatchPrompt();
+    });
   }
 
-  Future<void> _checkFinishMatchPrompt() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
-    final prefs = await SharedPreferences.getInstance();
-    final loggedUserId = prefs.getString("user_id");
-    if (loggedUserId == null) return;
-
-    final matches = await MatchApi.getAllMatches();
-    final now = DateTime.now().toUtc();
-
-    for (final m in matches) {
-      // ⚠️ cerem DIRECT MatchInfo
-      final MatchInfo info = await MatchApi.fetchMatchDetails(m.id);
-
-      if (info.creatorId != loggedUserId) continue;
-      if (info.status == "DONE") continue;
-
-      final end = info.startsAt
-          .toUtc()
-          .add(Duration(minutes: info.durationMinutes));
-
-      if (!now.isAfter(end)) continue;
-
-      if (!mounted) return;
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => FinishMatchScreen(matchId: info.id),
-        ),
-      );
-
-      return;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkFinishMatchPrompt();
     }
   }
 
+  Future<void> _checkFinishMatchPrompt() async {
+    if (_finishScreenOpened || _checkingFinishMatch) return;
 
+    _checkingFinishMatch = true;
 
+    try {
+      final match = await MatchApi.getOldestFinishPendingMatch();
+      if (match == null) return;
+
+      _finishScreenOpened = true;
+
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FinishMatchScreen(matchId: match.id),
+        ),
+      );
+
+      // daca a finalizat un meci, verificam dacă mai exista altele
+      if (result == true) {
+        _finishScreenOpened = false;
+        _checkFinishMatchPrompt();
+      }
+
+    } catch (e) {
+      debugPrint("Finish match check failed: $e");
+    } finally {
+      _checkingFinishMatch = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

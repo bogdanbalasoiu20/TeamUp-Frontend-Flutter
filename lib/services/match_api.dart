@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/models/finish_match_confirmation.dart';
 import 'package:team_up_fe_new/models/match.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
 
@@ -102,6 +103,19 @@ class MatchApi {
       {},
     );
   }
+
+  static Future<FinishPendingMatch?> getOldestFinishPendingMatch() async {
+    final json = await ApiService.get(
+      "$baseUrl/finish-pending/oldest",
+    );
+
+    final data = json["data"];
+    if (data == null) return null;
+
+    return FinishPendingMatch.fromJson(data);
+  }
+
+
 
 }
 
