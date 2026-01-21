@@ -89,6 +89,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
           try {
             final match = await MatchApi.fetchMatchDetails(n.matchId!);
 
+            if (match.status == "DONE") {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("You already finished this match")),
+              );
+              return;
+            }
+
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -96,14 +103,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ),
             );
           } catch (e) {
-            debugPrint("Failed to open finish match from notification: $e");
-
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Could not load match details")),
             );
           }
         }
         break;
+
 
 
 
