@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
 import 'package:team_up_fe_new/screens/finish_match_screen.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,8 +23,7 @@ class _HomePageState extends State<HomePage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // mic delay pentru context stabil
-    Future.delayed(const Duration(milliseconds: 300), () {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkFinishMatchPrompt();
     });
   }
@@ -46,21 +47,34 @@ class _HomePageState extends State<HomePage>
     _checkingFinishMatch = true;
 
     try {
-      final match = await MatchApi.getOldestFinishPendingMatch();
-      if (match == null) return;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("access_token");
+      if (token == null) return;
+
+      // 1️⃣ ia meciul pending (DOAR id)
+      final pending = await MatchApi.getOldestFinishPendingMatch();
+      if (pending == null) return;
+
+      // 2️⃣ ia detaliile COMPLETE
+      final match = await MatchApi.fetchMatchDetails(pending.id);
+
+      debugPrint("AUTO FINISH MATCH:");
+      debugPrint("id=${match.id}");
+      debugPrint("creator=${match.creatorId}");
+      debugPrint("status=${match.status}");
 
       _finishScreenOpened = true;
 
       final result = await Navigator.push<bool>(
         context,
         MaterialPageRoute(
-          builder: (_) => FinishMatchScreen(matchId: match.id),
+          builder: (_) => FinishMatchScreen(match: match),
         ),
       );
 
-      // daca a finalizat un meci, verificam dacă mai exista altele
+      _finishScreenOpened = false;
+
       if (result == true) {
-        _finishScreenOpened = false;
         _checkFinishMatchPrompt();
       }
 
@@ -70,6 +84,8 @@ class _HomePageState extends State<HomePage>
       _checkingFinishMatch = false;
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

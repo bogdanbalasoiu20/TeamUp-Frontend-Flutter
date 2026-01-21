@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/models/match_info.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 
 class FinishMatchScreen extends StatefulWidget {
-  final String matchId;
+  final MatchInfo match;
 
-  const FinishMatchScreen({super.key, required this.matchId});
+  const FinishMatchScreen({super.key, required this.match});
 
   @override
   State<FinishMatchScreen> createState() => _FinishMatchScreenState();
@@ -18,7 +19,9 @@ class _FinishMatchScreenState extends State<FinishMatchScreen> {
     setState(() => isLoading = true);
 
     try {
-      await MatchApi.finishMatch(widget.matchId);
+      debugPrint("Finishing match ${widget.match.id}");
+
+      await MatchApi.finishMatch(widget.match.id);
 
       if (!mounted) return;
 
@@ -26,14 +29,12 @@ class _FinishMatchScreenState extends State<FinishMatchScreen> {
         const SnackBar(content: Text("Match finished successfully")),
       );
 
-      Navigator.pop(context, true); // returnează success
-    } on ApiException catch (e) {
+      Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint("Finish match error: $e");
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.error.message)),
-      );
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unexpected error")),
+        const SnackBar(content: Text("Finish failed")),
       );
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -42,26 +43,34 @@ class _FinishMatchScreenState extends State<FinishMatchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final m = widget.match;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Finish match"),
-      ),
+      appBar: AppBar(title: const Text("Finish match")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Confirm match completion",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
 
-            const SizedBox(height: 12),
+            /// 🔍 DEBUG INFO
+            Text("MATCH DEBUG", style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+
+            _row("Match ID", m.id),
+            _row("Creator ID", m.creatorId),
+            _row("Title", m.title),
+            _row("Venue", m.venueName),
+            _row("Address", m.venueAddress),
+            _row("Status", m.status),
+            _row("Starts at", m.startsAt.toString()),
+            _row("Duration", "${m.durationMinutes} min"),
+            _row("Players", "${m.currentPlayers}/${m.maxPlayers}"),
+
+            const Divider(height: 32),
 
             const Text(
-              "After finishing the match, the rating period will open for 24 hours. "
-                  "Players will be able to rate each other.",
-              style: TextStyle(fontSize: 15),
+              "After finishing the match, the rating period will open for 24 hours.",
             ),
 
             const Spacer(),
@@ -71,11 +80,7 @@ class _FinishMatchScreenState extends State<FinishMatchScreen> {
               child: ElevatedButton(
                 onPressed: isLoading ? null : _finishMatch,
                 child: isLoading
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
+                    ? const CircularProgressIndicator(strokeWidth: 2)
                     : const Text("Finish match"),
               ),
             ),
@@ -84,4 +89,15 @@ class _FinishMatchScreenState extends State<FinishMatchScreen> {
       ),
     );
   }
+
+  Widget _row(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Text(
+        "$label: $value",
+        style: const TextStyle(fontSize: 14),
+      ),
+    );
+  }
 }
+
