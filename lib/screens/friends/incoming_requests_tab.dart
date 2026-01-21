@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/friend_api.dart';
 import '../../models/friend_request.dart';
-import '../user_profile_page.dart';
+import '../profile/user_profile_page.dart';
 
 class IncomingRequestsTab extends StatefulWidget {
   const IncomingRequestsTab({super.key});

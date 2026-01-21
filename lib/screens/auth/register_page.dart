@@ -1,67 +1,63 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/create_match_page.dart';
-import 'package:team_up_fe_new/screens/match_map_page.dart';
-import 'package:team_up_fe_new/screens/register_page.dart';
-import 'package:team_up_fe_new/screens/user_profile_page.dart';
+import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
+import 'package:team_up_fe_new/screens/auth/login_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:team_up_fe_new/widgets/navbar.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  // Controllers
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController birthdayController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
+  String? selectedPosition;
 
   bool _isLoading = false;
 
-  Future<void> login() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
-      );
-      return;
-    }
-
+  // --------------------------
+  // SEND REGISTER REQUEST
+  // --------------------------
+  Future<void> register() async {
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.post("/api/auth/login", {
-        "emailOrUsername": email,
-        "password": password,
+      final response = await ApiService.post("/api/auth/register", {
+        "email": emailController.text.trim(),
+        "username": usernameController.text.trim(),
+        "password": passwordController.text.trim(),
+        "phoneNumber": phoneController.text.trim(),
+        "birthday": birthdayController.text.trim(),
+        "position": selectedPosition,
+        "city": cityController.text.trim(),
+        "description": descriptionController.text.trim(),
       });
 
-      print("### LOGIN RAW RESPONSE = $response");
-
       final token = response["data"]["token"];
-      final username = response["data"]["userDto"]["username"];
-      final userId = response["data"]["userDto"]["id"];
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", token);
-      await prefs.setString("username", username);
-      await prefs.setString("user_id", userId);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login successful")),
+        const SnackBar(content: Text("Account created successfully")),
       );
 
-      print("####USERNAME: "+ username);
-
       Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const HomeShell()));
+        context,
+        MaterialPageRoute(builder: (_) => const CreateMatchPage()),
+      );
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
@@ -72,11 +68,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
 
-
     setState(() => _isLoading = false);
   }
 
-
+  // --------------------------
+  // UI BUILD
+  // --------------------------
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -85,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // BACKGROUND GRADIENT PREMIUM
+          // ------------------ BACKGROUND ------------------
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -100,30 +97,30 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // TITLU
+          // ------------------ TITLE -----------------------
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Welcome Back",
+                  "Create Account",
                   style: TextStyle(
-                    fontSize: 40,
+                    fontSize: 42,
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
                     shadows: [
                       Shadow(
                         blurRadius: 14,
                         color: Colors.black54,
-                        offset: Offset(0, 3),
+                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Sign in to continue",
+                  "Join the TeamUp community",
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white70,
@@ -133,9 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          // WHITE SHEET
+          // ------------------ WHITE SHEET ------------------
           Positioned(
-            top: size.height * 0.32,
+            top: size.height * 0.30,
             left: 0,
             right: 0,
             bottom: 0,
@@ -150,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 25,
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.15),
                     offset: const Offset(0, -3),
                   ),
                 ],
@@ -163,40 +160,69 @@ class _LoginScreenState extends State<LoginScreen> {
 
                     const SizedBox(height: 8),
 
-                    // INPUT CARD: EMAIL
-                    _inputCard(
-                      label: "Username or Email",
-                      controller: emailController,
-                      icon: Icons.person_outline,
+                    // INPUTS (CARD STYLE)
+                    _inputCard("Email", emailController, Icons.mail),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Username", usernameController, Icons.person),
+                    const SizedBox(height: 20),
+
+                    _passwordCard("Password", passwordController),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Phone Number", phoneController, Icons.phone),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Birthday (yyyy-MM-dd)", birthdayController, Icons.calendar_today),
+                    const SizedBox(height: 20),
+
+                    // POSITION DROPDOWN RE-DESIGNED
+                    const Text(
+                      "Preferred Position",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF003B2F),
+                      ),
                     ),
+                    const SizedBox(height: 6),
 
-                    const SizedBox(height: 24),
-
-                    // INPUT CARD: PASSWORD
-                    _passwordCard(
-                      label: "Password",
-                      controller: passwordController,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Forgot password?",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF0A6F4A),
-                          fontWeight: FontWeight.w600,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.black12),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedPosition,
+                          isExpanded: true,
+                          icon: Icon(Icons.arrow_drop_down,
+                              color: Colors.grey.shade700),
+                          items: [
+                            "GOALKEEPER",
+                            "DEFENDER",
+                            "MIDFIELDER",
+                            "FORWARD"
+                          ].map((e) =>
+                              DropdownMenuItem(value: e, child: Text(e))).toList(),
+                          onChanged: (v) => setState(() => selectedPosition = v),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 20),
 
-                    // BUTTON LOGIN
+                    _inputCard("City", cityController, Icons.location_city),
+                    const SizedBox(height: 20),
+
+                    _inputCard("Description", descriptionController, Icons.info),
+                    const SizedBox(height: 40),
+
+                    // ------------------ REGISTER BUTTON ---------------
                     GestureDetector(
-                      onTap: _isLoading ? null : login,
+                      onTap: _isLoading ? null : register,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         height: 55,
@@ -212,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           boxShadow: [
                             BoxShadow(
                               blurRadius: 12,
-                              color: Colors.greenAccent.withOpacity(0.4),
+                              color: Colors.green.withOpacity(0.35),
                               offset: const Offset(0, 6),
                             )
                           ],
@@ -221,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : const Text(
-                            "SIGN IN",
+                            "CREATE ACCOUNT",
                             style: TextStyle(
                               fontSize: 19,
                               color: Colors.white,
@@ -241,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
 
-      // FOOTER
+      // ------------------ FOOTER ------------------
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(right: 26, bottom: 24),
         child: Column(
@@ -249,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "Don't have an account?",
+              "Already have an account?",
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.grey.shade700,
@@ -260,34 +286,33 @@ class _LoginScreenState extends State<LoginScreen> {
             GestureDetector(
               onTap: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen())
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
                 );
               },
               child: const Text(
-                "Sign up",
+                "Sign in",
                 style: TextStyle(
                   fontSize: 15,
                   color: Color(0xFF0A6F4A),
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
     );
   }
 
-  // --------------------
-  // BEAUTIFUL INPUT CARDS
-  // --------------------
-
-  Widget _inputCard({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-  }) {
+  // -------------------------------------------------------
+  // ⭐️ REUSABLE PREMIUM INPUT CARD
+  // -------------------------------------------------------
+  Widget _inputCard(
+      String label,
+      TextEditingController controller,
+      IconData icon,
+      ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -295,11 +320,11 @@ class _LoginScreenState extends State<LoginScreen> {
           label,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -320,10 +345,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _passwordCard({
-    required String label,
-    required TextEditingController controller,
-  }) {
+  // ------------------ PASSWORD FIELD ------------------
+  Widget _passwordCard(String label, TextEditingController controller) {
     return PasswordInputCard(
       label: label,
       controller: controller,
@@ -331,9 +354,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// --------------------
-// CUSTOM PASSWORD FIELD
-// --------------------
+// -------------------------------------------------------
+// PASSWORD CARD WIDGET
+// -------------------------------------------------------
 class PasswordInputCard extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -360,11 +383,11 @@ class _PasswordInputCardState extends State<PasswordInputCard> {
           widget.label,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -381,9 +404,8 @@ class _PasswordInputCardState extends State<PasswordInputCard> {
               icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscure ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey.shade600,
-                ),
+                    _obscure ? Icons.visibility_off : Icons.visibility,
+                    color: Colors.grey.shade600),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),

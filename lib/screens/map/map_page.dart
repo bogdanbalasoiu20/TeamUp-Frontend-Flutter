@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
-import '../services/map_api.dart';
-import '../models/venue.dart';
+import '../../services/map_api.dart';
+import '../../models/venue.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});

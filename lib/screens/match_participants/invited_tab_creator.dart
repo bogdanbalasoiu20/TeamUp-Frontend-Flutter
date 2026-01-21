@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/user_profile_page.dart';
-import '../../models/invitable_friend.dart';
-import '../../models/participant.dart';
-import '../../services/match_participant_api.dart';
-import '../../utils/top_banner.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import '../../../models/invitable_friend.dart';
+import '../../../models/participant.dart';
+import '../../../services/match_participant_api.dart';
+import '../../../utils/top_banner.dart';
 
 class InvitedTabCreator extends StatefulWidget {
   final String matchId;

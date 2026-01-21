@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../widgets/player_card/fifa_card.dart';
-import '../widgets/player_card/player_card_ui.dart';
+import '../../widgets/player_card/fifa_card.dart';
+import '../../widgets/player_card/player_card_ui.dart';
 
 
 class IdkPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/user_profile_page.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import '../../services/friend_api.dart';
 import '../../models/friend_request.dart';
 

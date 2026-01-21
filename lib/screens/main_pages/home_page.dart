@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
-import 'package:team_up_fe_new/screens/finish_match_screen.dart';
+import 'package:team_up_fe_new/screens/matches/finish_match_screen.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,11 +51,9 @@ class _HomePageState extends State<HomePage>
       final token = prefs.getString("access_token");
       if (token == null) return;
 
-      // 1️⃣ ia meciul pending (DOAR id)
       final pending = await MatchApi.getOldestFinishPendingMatch();
       if (pending == null) return;
 
-      // 2️⃣ ia detaliile COMPLETE
       final match = await MatchApi.fetchMatchDetails(pending.id);
 
       debugPrint("AUTO FINISH MATCH:");

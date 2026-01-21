@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/create_match_page.dart';
-import 'package:team_up_fe_new/screens/discover_page.dart';
+import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
+import 'package:team_up_fe_new/screens/main_pages/discover_page.dart';
 import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
-import 'package:team_up_fe_new/screens/home_page.dart';
-import 'package:team_up_fe_new/screens/idk_page.dart';
-import 'package:team_up_fe_new/screens/match_map_page.dart';
-import 'package:team_up_fe_new/screens/teams_page.dart';
-import 'package:team_up_fe_new/screens/user_profile_page.dart';
+import 'package:team_up_fe_new/screens/main_pages/home_page.dart';
+import 'package:team_up_fe_new/screens/main_pages/idk_page.dart';
+import 'package:team_up_fe_new/screens/map/match_map_page.dart';
+import 'package:team_up_fe_new/screens/main_pages/teams_page.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 
 class TeamUpNavBar extends StatelessWidget {
   final int currentIndex;

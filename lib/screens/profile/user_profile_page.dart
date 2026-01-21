@@ -1,14 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:team_up_fe_new/screens/edit_profile_page.dart';
+import 'package:team_up_fe_new/screens/profile/edit_profile_page.dart';
 import 'package:team_up_fe_new/widgets/friend_button.dart';
 import 'package:team_up_fe_new/widgets/player_card/fifa_card.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
 import 'package:team_up_fe_new/widgets/stats_modal.dart';
-import '../models/user_profile.dart';
-import '../services/user_api.dart';
-import '../services/friend_api.dart';
+import '../../models/user_profile.dart';
+import '../../services/user_api.dart';
+import '../../services/friend_api.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String username;

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:team_up_fe_new/screens/edit_match_page.dart';
+import 'package:team_up_fe_new/screens/matches/edit_match_page.dart';
 import 'package:team_up_fe_new/utils/data_formator.dart';
 
-import '../models/participant.dart';
-import '../models/match_info.dart';
+import '../../models/participant.dart';
+import '../../models/match_info.dart';
 import 'package:team_up_fe_new/utils/action_button_animated.dart';
 import 'package:team_up_fe_new/utils/top_banner.dart';
 

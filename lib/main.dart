@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/welcome_page.dart';
+import 'package:team_up_fe_new/screens/main_pages/welcome_page.dart';
 
 void main() {
   runApp(const FitnessClubApp());

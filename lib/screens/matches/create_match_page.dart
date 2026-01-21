@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:team_up_fe_new/screens/map_page.dart';
-import 'package:team_up_fe_new/screens/notifications_page.dart';
+import 'package:team_up_fe_new/screens/map/map_page.dart';
+import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
 import 'package:team_up_fe_new/services/notifications_api.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/navbar.dart';
-import '../exceptions/api_exception.dart';
-import '../exceptions/api_service.dart';
-import '../models/venue.dart';
-import '../widgets/mini_map_widget.dart';
-import '../widgets/top_bar.dart';
+import '../../exceptions/api_exception.dart';
+import '../../exceptions/api_service.dart';
+import '../../models/venue.dart';
+import '../../widgets/mini_map_widget.dart';
+import '../../widgets/top_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 

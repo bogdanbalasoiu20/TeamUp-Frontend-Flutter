@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/friends/friend_search_page.dart';
 import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
-import 'package:team_up_fe_new/screens/user_profile_page.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 
 void showLeftMenuModal(BuildContext context, String username) {
   showGeneralDialog(

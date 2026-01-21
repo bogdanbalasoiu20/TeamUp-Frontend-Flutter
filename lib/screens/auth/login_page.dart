@@ -1,63 +1,67 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/create_match_page.dart';
-import 'package:team_up_fe_new/screens/login_page.dart';
+import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
+import 'package:team_up_fe_new/screens/map/match_map_page.dart';
+import 'package:team_up_fe_new/screens/auth/register_page.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:team_up_fe_new/widgets/navbar.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
-  // Controllers
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController birthdayController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-
-  String? selectedPosition;
 
   bool _isLoading = false;
 
-  // --------------------------
-  // SEND REGISTER REQUEST
-  // --------------------------
-  Future<void> register() async {
+  Future<void> login() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("All fields are required")),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
-      final response = await ApiService.post("/api/auth/register", {
-        "email": emailController.text.trim(),
-        "username": usernameController.text.trim(),
-        "password": passwordController.text.trim(),
-        "phoneNumber": phoneController.text.trim(),
-        "birthday": birthdayController.text.trim(),
-        "position": selectedPosition,
-        "city": cityController.text.trim(),
-        "description": descriptionController.text.trim(),
+      final response = await ApiService.post("/api/auth/login", {
+        "emailOrUsername": email,
+        "password": password,
       });
 
+      print("### LOGIN RAW RESPONSE = $response");
+
       final token = response["data"]["token"];
+      final username = response["data"]["userDto"]["username"];
+      final userId = response["data"]["userDto"]["id"];
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", token);
+      await prefs.setString("username", username);
+      await prefs.setString("user_id", userId);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Account created successfully")),
+        const SnackBar(content: Text("Login successful")),
       );
 
+      print("####USERNAME: "+ username);
+
       Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const CreateMatchPage()),
-      );
+          context,
+          MaterialPageRoute(builder: (_) => const HomeShell()));
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
@@ -68,12 +72,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     }
 
+
     setState(() => _isLoading = false);
   }
 
-  // --------------------------
-  // UI BUILD
-  // --------------------------
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -82,7 +85,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // ------------------ BACKGROUND ------------------
+          // BACKGROUND GRADIENT PREMIUM
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -97,30 +100,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
 
-          // ------------------ TITLE -----------------------
+          // TITLU
           Padding(
             padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Create Account",
+                  "Welcome Back",
                   style: TextStyle(
-                    fontSize: 42,
+                    fontSize: 40,
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
                     shadows: [
                       Shadow(
                         blurRadius: 14,
                         color: Colors.black54,
-                        offset: Offset(0, 4),
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Join the TeamUp community",
+                  "Sign in to continue",
                   style: TextStyle(
                     fontSize: 18,
                     color: Colors.white70,
@@ -130,9 +133,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
 
-          // ------------------ WHITE SHEET ------------------
+          // WHITE SHEET
           Positioned(
-            top: size.height * 0.30,
+            top: size.height * 0.32,
             left: 0,
             right: 0,
             bottom: 0,
@@ -147,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 boxShadow: [
                   BoxShadow(
                     blurRadius: 25,
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withOpacity(0.1),
                     offset: const Offset(0, -3),
                   ),
                 ],
@@ -160,69 +163,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                     const SizedBox(height: 8),
 
-                    // INPUTS (CARD STYLE)
-                    _inputCard("Email", emailController, Icons.mail),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Username", usernameController, Icons.person),
-                    const SizedBox(height: 20),
-
-                    _passwordCard("Password", passwordController),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Phone Number", phoneController, Icons.phone),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Birthday (yyyy-MM-dd)", birthdayController, Icons.calendar_today),
-                    const SizedBox(height: 20),
-
-                    // POSITION DROPDOWN RE-DESIGNED
-                    const Text(
-                      "Preferred Position",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF003B2F),
-                      ),
+                    // INPUT CARD: EMAIL
+                    _inputCard(
+                      label: "Username or Email",
+                      controller: emailController,
+                      icon: Icons.person_outline,
                     ),
-                    const SizedBox(height: 6),
 
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.black12),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedPosition,
-                          isExpanded: true,
-                          icon: Icon(Icons.arrow_drop_down,
-                              color: Colors.grey.shade700),
-                          items: [
-                            "GOALKEEPER",
-                            "DEFENDER",
-                            "MIDFIELDER",
-                            "FORWARD"
-                          ].map((e) =>
-                              DropdownMenuItem(value: e, child: Text(e))).toList(),
-                          onChanged: (v) => setState(() => selectedPosition = v),
+                    const SizedBox(height: 24),
+
+                    // INPUT CARD: PASSWORD
+                    _passwordCard(
+                      label: "Password",
+                      controller: passwordController,
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        "Forgot password?",
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF0A6F4A),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 60),
 
-                    _inputCard("City", cityController, Icons.location_city),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Description", descriptionController, Icons.info),
-                    const SizedBox(height: 40),
-
-                    // ------------------ REGISTER BUTTON ---------------
+                    // BUTTON LOGIN
                     GestureDetector(
-                      onTap: _isLoading ? null : register,
+                      onTap: _isLoading ? null : login,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         height: 55,
@@ -238,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           boxShadow: [
                             BoxShadow(
                               blurRadius: 12,
-                              color: Colors.green.withOpacity(0.35),
+                              color: Colors.greenAccent.withOpacity(0.4),
                               offset: const Offset(0, 6),
                             )
                           ],
@@ -247,7 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : const Text(
-                            "CREATE ACCOUNT",
+                            "SIGN IN",
                             style: TextStyle(
                               fontSize: 19,
                               color: Colors.white,
@@ -267,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ],
       ),
 
-      // ------------------ FOOTER ------------------
+      // FOOTER
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(right: 26, bottom: 24),
         child: Column(
@@ -275,7 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              "Already have an account?",
+              "Don't have an account?",
               style: TextStyle(
                 fontSize: 15,
                 color: Colors.grey.shade700,
@@ -286,33 +260,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
             GestureDetector(
               onTap: () {
                 Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen())
                 );
               },
               child: const Text(
-                "Sign in",
+                "Sign up",
                 style: TextStyle(
                   fontSize: 15,
                   color: Color(0xFF0A6F4A),
                   fontWeight: FontWeight.w700,
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
     );
   }
 
-  // -------------------------------------------------------
-  // ⭐️ REUSABLE PREMIUM INPUT CARD
-  // -------------------------------------------------------
-  Widget _inputCard(
-      String label,
-      TextEditingController controller,
-      IconData icon,
-      ) {
+  // --------------------
+  // BEAUTIFUL INPUT CARDS
+  // --------------------
+
+  Widget _inputCard({
+    required String label,
+    required TextEditingController controller,
+    required IconData icon,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -320,11 +295,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           label,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -345,8 +320,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ------------------ PASSWORD FIELD ------------------
-  Widget _passwordCard(String label, TextEditingController controller) {
+  Widget _passwordCard({
+    required String label,
+    required TextEditingController controller,
+  }) {
     return PasswordInputCard(
       label: label,
       controller: controller,
@@ -354,9 +331,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 
-// -------------------------------------------------------
-// PASSWORD CARD WIDGET
-// -------------------------------------------------------
+// --------------------
+// CUSTOM PASSWORD FIELD
+// --------------------
 class PasswordInputCard extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -383,11 +360,11 @@ class _PasswordInputCardState extends State<PasswordInputCard> {
           widget.label,
           style: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Color(0xFF003B2F),
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -404,8 +381,9 @@ class _PasswordInputCardState extends State<PasswordInputCard> {
               icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
               suffixIcon: IconButton(
                 icon: Icon(
-                    _obscure ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey.shade600),
+                  _obscure ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey.shade600,
+                ),
                 onPressed: () => setState(() => _obscure = !_obscure),
               ),
             ),

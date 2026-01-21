@@ -6,8 +6,8 @@ import 'package:stomp_dart_client/stomp.dart';
 import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
-import '../models/message.dart';
-import '../services/match_chat_api.dart';
+import '../../models/message.dart';
+import '../../services/match_chat_api.dart';
 
 class MatchChatTab extends StatefulWidget {
   final String matchId;

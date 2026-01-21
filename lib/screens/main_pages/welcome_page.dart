@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/register_page.dart';
+import 'package:team_up_fe_new/screens/auth/register_page.dart';
 import 'package:team_up_fe_new/utils/app_colors.dart';
-import 'package:team_up_fe_new/screens/login_page.dart';
+import 'package:team_up_fe_new/screens/auth/login_page.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

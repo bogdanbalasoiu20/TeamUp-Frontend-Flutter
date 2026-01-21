@@ -1,72 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:team_up_fe_new/exceptions/api_exception.dart';
-import 'package:team_up_fe_new/exceptions/api_service.dart';
-import 'package:team_up_fe_new/models/match_info.dart';
-import '../utils/app_colors.dart';
+import '../../exceptions/api_exception.dart';
+import '../../exceptions/api_service.dart';
+import '../../utils/app_colors.dart';
 
-class EditMatchPage extends StatefulWidget {
-  final MatchInfo match;
+class EditProfilePage extends StatefulWidget {
+  final DateTime? birthday;
+  final String? phone;
+  final String? city;
+  final String? description;
+  final String? position;
 
-  const EditMatchPage({super.key, required this.match});
+  const EditProfilePage({
+    super.key,
+    this.birthday,
+    this.phone,
+    this.city,
+    this.description,
+    this.position,
+  });
 
   @override
-  State<EditMatchPage> createState() => _EditMatchPageState();
+  State<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditMatchPageState extends State<EditMatchPage> {
-  late TextEditingController titleController;
-  late TextEditingController notesController;
-  late TextEditingController durationController;
-  late TextEditingController maxPlayersController;
-  late TextEditingController priceController;
+class _EditProfilePageState extends State<EditProfilePage> {
+  late TextEditingController phoneController;
+  late TextEditingController cityController;
+  late TextEditingController descriptionController;
 
-  DateTime? startsAt;
-  DateTime? joinDeadline;
+  DateTime? birthday;
+  String? position;
 
   bool updating = false;
-  String visibility = "PUBLIC";
+
+  final List<String> positions = [
+    "GOALKEEPER",
+    "DEFENDER",
+    "MIDFIELDER",
+    "FORWARD"
+  ];
 
   @override
   void initState() {
     super.initState();
+    birthday = widget.birthday;
+    position = widget.position;
 
-    final m = widget.match;
-
-    titleController = TextEditingController(text: m.title);
-    notesController = TextEditingController(text: m.notes);
-    durationController = TextEditingController(text: "${m.durationMinutes}");
-    maxPlayersController = TextEditingController(text: "${m.maxPlayers}");
-    priceController = TextEditingController(text: "${m.totalPrice}");
-
-    startsAt = m.startsAt;
-    joinDeadline = m.joinDeadline;
-    visibility = m.visibility;
+    phoneController = TextEditingController(text: widget.phone ?? "");
+    cityController = TextEditingController(text: widget.city ?? "");
+    descriptionController = TextEditingController(text: widget.description ?? "");
   }
 
-  Future<void> _pickDate({required bool isStart}) async {
+  Future<void> _pickBirthday() async {
     final now = DateTime.now();
-
     final date = await showDatePicker(
       context: context,
-      initialDate: isStart ? (startsAt ?? now) : (joinDeadline ?? now),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      initialDate: birthday ?? DateTime(now.year - 18),
+      firstDate: DateTime(1950),
+      lastDate: now,
     );
     if (date == null) return;
 
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(isStart ? (startsAt ?? now) : (joinDeadline ?? now)),
-    );
-    if (time == null) return;
-
-    final dt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-
-    setState(() {
-      if (isStart) startsAt = dt;
-      else joinDeadline = dt;
-    });
+    setState(() => birthday = date);
   }
 
   void showError(String msg) {
@@ -75,25 +71,24 @@ class _EditMatchPageState extends State<EditMatchPage> {
     );
   }
 
-  Future<void> _updateMatch() async {
+  Future<void> _saveChanges() async {
     setState(() => updating = true);
 
     final payload = {
-      "title": titleController.text,
-      "notes": notesController.text,
-      "startsAt": startsAt?.toUtc().toIso8601String(),
-      "durationMinutes": int.tryParse(durationController.text),
-      "maxPlayers": int.tryParse(maxPlayersController.text),
-      "joinDeadline": joinDeadline?.toUtc().toIso8601String(),
-      "totalPrice": double.tryParse(priceController.text),
-      "visibility": visibility
+      "birthday": birthday?.toIso8601String(),
+      "phoneNumber": phoneController.text.trim().isEmpty
+          ? null
+          : phoneController.text.trim(),
+      "position": position,
+      "city": cityController.text.trim(),
+      "description": descriptionController.text.trim(),
     };
 
     try {
-      await ApiService.patch("/api/matches/${widget.match.id}", payload);
+      await ApiService.patch("/api/users/me", payload);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Match updated successfully")),
+        const SnackBar(content: Text("Profile updated successfully!")),
       );
 
       Navigator.pop(context, true);
@@ -108,7 +103,6 @@ class _EditMatchPageState extends State<EditMatchPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final m = widget.match;
 
     return Scaffold(
       body: Stack(
@@ -135,7 +129,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
-                  "Edit Match",
+                  "Edit Profile",
                   style: TextStyle(
                     fontSize: 42,
                     color: Colors.white,
@@ -151,7 +145,7 @@ class _EditMatchPageState extends State<EditMatchPage> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  "Adjust details • Save",
+                  "Update your info • Save",
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 17,
@@ -182,85 +176,87 @@ class _EditMatchPageState extends State<EditMatchPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    // FIELD (DISABLED) WITH ICONS
+                    // ------------------- BIRTHDAY -------------------
+                    _iconPickerBox(
+                      icon: Icons.cake_outlined,
+                      label: "Birthday",
+                      text: birthday == null
+                          ? "Select birthday"
+                          : DateFormat("yyyy-MM-dd").format(birthday!),
+                      onTap: _pickBirthday,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ------------------- PHONE -------------------
+                    _iconTextField(
+                      "Phone Number",
+                      phoneController,
+                      Icons.phone_outlined,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ------------------- CITY -------------------
+                    _iconTextField(
+                      "City",
+                      cityController,
+                      Icons.location_on_outlined,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ------------------- DESCRIPTION -------------------
+                    _iconTextField(
+                      "Description",
+                      descriptionController,
+                      Icons.description_outlined,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ------------------- POSITION -------------------
                     const Text(
-                      "Field (cannot be changed)",
+                      "Position",
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                         color: Color(0xFF003B2F),
                       ),
                     ),
                     const SizedBox(height: 6),
 
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.black26),
+                        border: Border.all(color: Colors.black12),
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 22, color: Colors.black54),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              m.venueName,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
-                                fontStyle: FontStyle.italic,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: position,
+                          icon: const Icon(Icons.arrow_drop_down),
+                          items: positions.map((p) {
+                            return DropdownMenuItem(
+                              value: p,
+                              child: Text(
+                                p,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                          ),
-                          const Icon(Icons.lock, size: 20, color: Colors.black45),
-                        ],
+                            );
+                          }).toList(),
+                          onChanged: (v) => setState(() => position = v),
+                        ),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // START TIME
-                    _iconPickerBox(
-                      icon: Icons.schedule,
-                      label: "Start Time",
-                      text: startsAt == null
-                          ? "Select date & time"
-                          : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
-                      onTap: () => _pickDate(isStart: true),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // DEADLINE
-                    _iconPickerBox(
-                      icon: Icons.lock_clock,
-                      label: "Join Deadline (optional)",
-                      text: joinDeadline == null
-                          ? "Select deadline"
-                          : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
-                      onTap: () => _pickDate(isStart: false),
-                    ),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Duration (minutes)", durationController, Icons.timer),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Maximum players", maxPlayersController, Icons.people),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Total price", priceController, Icons.payments),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Title", titleController, Icons.sports_soccer),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Notes", notesController, Icons.note_alt, maxLines: 3),
 
                     const SizedBox(height: 40),
 
+                    // ------------------- SAVE BUTTON -------------------
                     GestureDetector(
-                      onTap: updating ? null : _updateMatch,
+                      onTap: updating ? null : _saveChanges,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         height: 55,
@@ -300,6 +296,9 @@ class _EditMatchPageState extends State<EditMatchPage> {
     );
   }
 
+  // ---------------------------------------
+  // GENERIC UI COMPONENTS (same style)
+  // ---------------------------------------
 
   Widget _iconPickerBox({
     required IconData icon,
@@ -333,7 +332,12 @@ class _EditMatchPageState extends State<EditMatchPage> {
                 Icon(icon, color: Colors.black87),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(text, style: const TextStyle(fontSize: 15)),
+                  child: Text(
+                    text,
+                    style: const TextStyle(
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -343,8 +347,12 @@ class _EditMatchPageState extends State<EditMatchPage> {
     );
   }
 
-
-  Widget _iconTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
+  Widget _iconTextField(
+      String label,
+      TextEditingController controller,
+      IconData icon, {
+        int maxLines = 1,
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
