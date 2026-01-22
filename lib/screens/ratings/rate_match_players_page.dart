@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/models/player_rating_draft.dart';
 import 'package:team_up_fe_new/models/player_to_rate.dart';
 import 'package:team_up_fe_new/services/player_rating_api.dart';
+import 'package:team_up_fe_new/widgets/rating_form_sheet.dart';
 
 class RateMatchPlayersPage extends StatefulWidget {
   final String matchId;
@@ -72,36 +73,19 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
       context: context,
       isScrollControlled: true,
       builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Rate ${player.username}",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // TEMPORAR – doar ca să nu fie gol
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _drafts[player.userId] = PlayerRatingDraft();
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text("Save (temporary)"),
-              ),
-            ],
-          ),
+        return RatingFormSheet(
+          player: player,
+          draft: _drafts[player.userId],
+          onSave: (draft) {
+            setState(() {
+              _drafts[player.userId] = draft;
+            });
+          },
         );
       },
     );
   }
+
 
 
   Future<void> _submit() async {

@@ -13,8 +13,6 @@ class PlayerRatingDraft {
   int? gkSpeed;
   int? gkPositioning;
 
-  String? comment;
-
   Map<String, dynamic> toJson(String ratedUserId) {
     return {
       "ratedUserId": ratedUserId,
@@ -29,8 +27,7 @@ class PlayerRatingDraft {
       "gkKicking": gkKicking,
       "gkReflexes": gkReflexes,
       "gkSpeed": gkSpeed,
-      "gkPositioning": gkPositioning,
-      "comment": comment,
+      "gkPositioning": gkPositioning
     };
   }
 }
