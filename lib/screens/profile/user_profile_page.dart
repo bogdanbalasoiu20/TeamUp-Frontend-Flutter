@@ -9,6 +9,8 @@ import 'package:team_up_fe_new/widgets/stats_modal.dart';
 import '../../models/user_profile.dart';
 import '../../services/user_api.dart';
 import '../../services/friend_api.dart';
+import '../../services/player_card_api.dart';
+
 
 class UserProfilePage extends StatefulWidget {
   final String username;
@@ -27,6 +29,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool pendingSent = false;
   bool pendingReceived = false;
   String? requestId;
+  Future<PlayerCardUi>? _playerCardFuture;
+
 
   @override
   void initState() {
@@ -55,7 +59,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
       setState(() {
         profile = res;
-      });
+
+      _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
+    });
 
       // 2) Load relationship status
       final relation = await FriendApi.relationStatus(widget.username);
@@ -100,22 +106,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final p = profile!;
 
 
-    //Test card
-    final testCard = PlayerCardUi(
-      name: p.username,
-      rating: 84,
-      position: p.position ?? "CM",
-      imageUrl: p.photoUrl ??
-          "https://i.imgur.com/BoN9kdC.png",
-      stats: const {
-        "PAC": 85,
-        "SHO": 80,
-        "PAS": 86,
-        "DRI": 83,
-        "DEF": 72,
-        "PHY": 78,
-      },
-    );
+
 
 
     return Container(
@@ -166,13 +157,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Column(
             children: [
-              // ---------------- FIFA CARD (TEST MODE) ----------------
               Center(
                 child: GestureDetector(
                   onTap: () => _openPlayerStatsModal(context),
                   child: Transform.scale(
                     scale: 0.75,
-                    child: FifaPlayerCard(data: testCard),
+                    child: FutureBuilder<PlayerCardUi>(
+                      future: _playerCardFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+
+                        if (snapshot.hasError || !snapshot.hasData) {
+                          return const Text(
+                            "Failed to load player card",
+                            style: TextStyle(color: Colors.white),
+                          );
+                        }
+
+                        return FifaPlayerCard(data: snapshot.data!);
+                      },
+                    ),
+
                   ),
                 ),
               ),

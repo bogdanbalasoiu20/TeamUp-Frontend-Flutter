@@ -44,10 +44,13 @@ class FifaPlayerCard extends StatelessWidget {
                 height: 380,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(28),
-                  image: const DecorationImage(
-                    image: AssetImage("assets/images/cards/gold_card.png"),
+                  image: DecorationImage(
+                    image: AssetImage(
+                      _cardBackgroundByRating(data.rating),
+                    ),
                     fit: BoxFit.contain,
                   ),
+
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.25),
@@ -207,3 +210,15 @@ class FifaPlayerCard extends StatelessWidget {
     );
   }
 }
+
+
+String _cardBackgroundByRating(int rating) {
+  if (rating >= 75) {
+    return "assets/images/cards/gold_card.png";
+  } else if (rating >= 65) {
+    return "assets/images/cards/silver_card.png";
+  } else {
+    return "assets/images/cards/bronze_card.png";
+  }
+}
+
