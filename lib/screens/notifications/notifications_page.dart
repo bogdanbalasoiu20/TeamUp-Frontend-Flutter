@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/matches/finish_match_screen.dart';
 import 'package:team_up_fe_new/screens/friends/friends_home_page.dart';
 import 'package:team_up_fe_new/screens/match_participants/match_participants_page.dart';
+import 'package:team_up_fe_new/screens/ratings/rate_match_players_page.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import '../../services/notifications_api.dart';
 import '../../models/notification_item.dart';
@@ -111,6 +112,21 @@ class _NotificationsPageState extends State<NotificationsPage> {
         break;
 
 
+      case "MATCH_RATING":
+        if (n.matchId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RateMatchPlayersPage(
+                matchId: n.matchId!,
+              ),
+            ),
+          );
+        }
+        break;
+
+
+
 
 
       default:
@@ -137,6 +153,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
         return Icons.cancel_outlined;
       case "MATCH_STARTING_SOON":
         return Icons.access_time_filled_rounded;
+      case "MATCH_RATING":
+        return Icons.star_rate_rounded;
       default:
         return Icons.notifications;
     }

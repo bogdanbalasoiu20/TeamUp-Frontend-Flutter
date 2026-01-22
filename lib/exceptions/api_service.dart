@@ -12,7 +12,7 @@ class ApiService {
   static const String baseUrl = "https://teamup-backend-omi4.onrender.com";
 
   /// POST generic
-  static Future<dynamic> post(String path, Map<String, dynamic> body) async {
+  static Future<dynamic> post(String path, dynamic body) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("access_token");
 
