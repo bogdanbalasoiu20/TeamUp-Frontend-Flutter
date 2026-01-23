@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/screens/profile/edit_profile_page.dart';
-import 'package:team_up_fe_new/widgets/friend_button.dart';
 import 'package:team_up_fe_new/widgets/player_card/fifa_card.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
 import 'package:team_up_fe_new/widgets/stats_modal.dart';
@@ -10,7 +9,6 @@ import '../../models/user_profile.dart';
 import '../../services/user_api.dart';
 import '../../services/friend_api.dart';
 import '../../services/player_card_api.dart';
-
 
 class UserProfilePage extends StatefulWidget {
   final String username;
@@ -31,6 +29,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
   String? requestId;
   Future<PlayerCardUi>? _playerCardFuture;
 
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+  final Color _dangerRed = const Color(0xFFCF6679);
 
   @override
   void initState() {
@@ -59,9 +62,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
       setState(() {
         profile = res;
-
-      _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
-    });
+        _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
+      });
 
       // 2) Load relationship status
       final relation = await FriendApi.relationStatus(widget.username);
@@ -92,171 +94,245 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: _bgDark,
+        body: Center(child: CircularProgressIndicator(color: _accentGreen)),
       );
     }
 
     if (profile == null) {
-      return const Scaffold(
-        body: Center(child: Text("User not found")),
+      return Scaffold(
+        backgroundColor: _bgDark,
+        body: const Center(child: Text("User not found", style: TextStyle(color: Colors.white))),
       );
     }
 
     final p = profile!;
 
-
-
-
-
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF003B2F),
-            Color(0xFF0A6F4A),
-            Color(0xFF062D24),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    return Scaffold(
+      backgroundColor: _bgDark,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "PROFILE",
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: 1.0,
+          ),
         ),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-
-        // ---------------- HEADER GLASS ----------------
-        appBar: AppBar(
-          backgroundColor: Colors.black.withOpacity(0.1),
-          elevation: 0,
-          centerTitle: true,
-          foregroundColor: Colors.white,
-          flexibleSpace: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(color: Colors.transparent),
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0A6F4A).withOpacity(0.4),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                child: Container(color: Colors.transparent),
+              ),
             ),
           ),
-          title: Text(
-            p.username,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  blurRadius: 8,
-                  color: Colors.black45,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ),
 
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            children: [
-              Center(
-                child: GestureDetector(
-                  onTap: () => _openPlayerStatsModal(context),
-                  child: Transform.scale(
-                    scale: 0.75,
-                    child: FutureBuilder<PlayerCardUi>(
-                      future: _playerCardFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const CircularProgressIndicator();
-                        }
-
-                        if (snapshot.hasError || !snapshot.hasData) {
-                          return const Text(
-                            "Failed to load player card",
-                            style: TextStyle(color: Colors.white),
+          SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- PLAYER CARD ---
+                Center(
+                  child: GestureDetector(
+                    onTap: () => _openPlayerStatsModal(context),
+                    child: Hero(
+                      tag: 'player_card_${p.id}',
+                      child: FutureBuilder<PlayerCardUi>(
+                        future: _playerCardFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return SizedBox(
+                                height: 250,
+                                child: Center(child: CircularProgressIndicator(color: _accentGreen))
+                            );
+                          }
+                          if (snapshot.hasError || !snapshot.hasData) {
+                            return const SizedBox(height: 200, child: Center(child: Text("Card Error", style: TextStyle(color: Colors.white))));
+                          }
+                          return Transform.scale(
+                            scale: 0.9,
+                            child: FifaPlayerCard(data: snapshot.data!),
                           );
-                        }
-
-                        return FifaPlayerCard(data: snapshot.data!);
-                      },
+                        },
+                      ),
                     ),
-
                   ),
                 ),
-              ),
 
+                const SizedBox(height: 24),
 
+                _buildActionButtons(p),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 32),
 
-              // ---------------- BUTTON ----------------
-              SizedBox(
-                width: double.infinity,
-                child: _buildFriendButton(p),
-              ),
+                _buildSectionHeader("User Info"),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 30),
+                if (p.birthday != null)
+                  _buildModernInfoTile(Icons.cake, "Age", "${computeAge(p.birthday!)} years old"),
+                if (p.position != null)
+                  _buildModernInfoTile(Icons.sports_soccer, "Position", p.position!),
+                if (p.city != null && p.city!.trim().isNotEmpty)
+                  _buildModernInfoTile(Icons.location_on, "City", p.city!),
+                if (p.description != null && p.description!.isNotEmpty)
+                  _buildModernInfoTile(Icons.description_outlined, "About me", p.description!),
 
-              // ---------------- USER INFO ----------------
-              _sectionTitle("User Info"),
-
-              const SizedBox(height: 14),
-
-              if (p.birthday != null)
-                _glassInfoTile(
-                  Icons.cake,
-                  "Age",
-                  "${computeAge(p.birthday!)} years old",
+                _buildModernInfoTile(
+                  Icons.calendar_today,
+                  "Joined TeamUp",
+                  "${p.createdAt.year}-${p.createdAt.month.toString().padLeft(2, '0')}-${p.createdAt.day.toString().padLeft(2, '0')}",
                 ),
 
-              if (p.position != null)
-                _glassInfoTile(Icons.sports_soccer, "Position", p.position!),
+                const SizedBox(height: 32),
 
-              if (p.city != null && p.city!.trim().isNotEmpty)
-                _glassInfoTile(Icons.location_on, "City", p.city!),
+                // --- PRIVATE INFO SECTION ---
+                if (isMyProfile) ...[
+                  _buildSectionHeader("Private Details"),
+                  const SizedBox(height: 12),
+                  if (p.email != null)
+                    _buildModernInfoTile(Icons.email, "Email", p.email!),
+                  if (p.phoneNumber != null)
+                    _buildModernInfoTile(Icons.phone, "Phone", p.phoneNumber!),
+                  const SizedBox(height: 32),
+                ],
 
-              if (p.description != null)
-                _glassInfoTile(Icons.description_outlined, "About me", p.description!),
-
-              _glassInfoTile(
-                Icons.calendar_today,
-                "Joined",
-                "${p.createdAt.year}-${p.createdAt.month}-${p.createdAt.day}",
-              ),
-
-              const SizedBox(height: 30),
-
-              // ---------------- PRIVATE INFO ----------------
-              if (isMyProfile) ...[
-                _sectionTitle("Private Info"),
-                const SizedBox(height: 14),
-
-                if (p.email != null)
-                  _glassInfoTile(Icons.email, "Email", p.email!),
-
-                if (p.phoneNumber != null)
-                  _glassInfoTile(Icons.phone, "Phone", p.phoneNumber!),
-
-                const SizedBox(height: 30),
+                // --- PLACEHOLDER ---
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: _cardSurface.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withOpacity(0.05), width: 1),
+                    backgroundBlendMode: BlendMode.overlay,
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(Icons.bar_chart_rounded, color: _textSecondary, size: 32),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Detailed Statistics Coming Soon",
+                        style: TextStyle(color: _textSecondary, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
               ],
-
-              // ---------------- PLACEHOLDERS ----------------
-              _placeholder("User statistics (coming soon)"),
-
-
-              const SizedBox(height: 50),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildFriendButton(UserProfile p) {
+  // --- WIDGETS ---
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w800,
+        color: Colors.white,
+        letterSpacing: -0.5,
+      ),
+    );
+  }
+
+  Widget _buildModernInfoTile(IconData icon, String title, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.02)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: _accentGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: _accentGreen, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: _textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(UserProfile p) {
     if (isMyProfile) {
-      return FriendButton(
+      return _buildModernButton(
         text: "Edit Profile",
         icon: Icons.edit,
-        colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+        bgColor: _accentGreen,
+        textColor: Colors.black,
         onTap: () {
           Navigator.push(
             context,
@@ -274,174 +350,114 @@ class _UserProfilePageState extends State<UserProfilePage> {
           });
         },
       );
-
     }
 
     if (isFriend) {
-      return FriendButton(
+      return _buildModernButton(
         text: "Unfriend",
         icon: Icons.person_remove,
-        colors: const [Color(0xFFA30000), Color(0xFFE53935)],
+        bgColor: _cardSurface,
+        textColor: _dangerRed,
+        borderColor: _dangerRed.withOpacity(0.3),
         onTap: () async {
           await FriendApi.unfriend(p.id);
           await _load();
         },
       );
-
     }
 
     if (pendingSent) {
-      return FriendButton(
-        text: "Friend Request Sent",
+      return _buildModernButton(
+        text: "Request Sent",
         icon: Icons.hourglass_top,
-        colors: const [Colors.grey, Colors.grey],
-        disabled: true,
+        bgColor: _cardSurface,
+        textColor: _textSecondary,
         onTap: null,
       );
-
     }
 
     if (pendingReceived) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      return Row(
         children: [
-          const Text(
-            "Accept Friend Request?",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: _buildModernButton(
+              text: "Accept",
+              icon: Icons.check,
+              bgColor: _accentGreen,
+              textColor: Colors.black,
+              onTap: () => _respond(true),
             ),
           ),
-          const SizedBox(height: 10),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FriendButton(
-                text: "Accept",
-                icon: Icons.check,
-                colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
-                onTap: () => _respond(true),
-              ),
-              const SizedBox(width: 12),
-              FriendButton(
-                text: "Decline",
-                icon: Icons.close,
-                colors: const [Color(0xFFA30000), Color(0xFFE53935)],
-                onTap: () => _respond(false),
-              ),
-            ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildModernButton(
+              text: "Decline",
+              icon: Icons.close,
+              bgColor: _cardSurface,
+              textColor: Colors.white,
+              borderColor: Colors.white24,
+              onTap: () => _respond(false),
+            ),
           ),
         ],
       );
     }
 
-
-    // NOT FRIEND → ADD FRIEND
-    return FriendButton(
+    // Add Friend
+    return _buildModernButton(
       text: "Add Friend",
       icon: Icons.person_add,
-      colors: const [Color(0xFF0A6F4A), Color(0xFF46C264)],
+      bgColor: _accentGreen,
+      textColor: Colors.black,
       onTap: () async {
         await _sendRequest();
         await _load();
       },
     );
-
   }
 
-
-
-  // ---------------- GLASS INFO TILE (UI unchanged) ----------------
-  Widget _glassInfoTile(IconData icon, String title, String value) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.only(bottom: 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.18),
+  Widget _buildModernButton({
+    required String text,
+    required IconData icon,
+    required Color bgColor,
+    required Color textColor,
+    Color? borderColor,
+    VoidCallback? onTap,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: bgColor,
+          foregroundColor: textColor,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          side: borderColor != null ? BorderSide(color: borderColor) : null,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          disabledBackgroundColor: _cardSurface,
+          disabledForegroundColor: Colors.white30,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.white.withOpacity(0.85), size: 26),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
-                          fontSize: 13,
-                        )),
-                    const SizedBox(height: 4),
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
-
-  Widget _sectionTitle(String title) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholder(String text) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.07),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.15),
-            ),
-          ),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.85),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
 
   void _openPlayerStatsModal(BuildContext context) {
     showModalBottomSheet(
@@ -457,9 +473,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             return Container(
               decoration: const BoxDecoration(
                 color: Color(0xFF0E1B16),
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: SingleChildScrollView(
                 controller: controller,
@@ -472,5 +486,4 @@ class _UserProfilePageState extends State<UserProfilePage> {
       },
     );
   }
-
 }

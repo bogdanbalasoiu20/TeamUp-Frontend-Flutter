@@ -141,7 +141,7 @@ class _MapPageState extends State<MapPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.pop(context, v); // returnăm pinul selectat
+                Navigator.pop(context, v);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green.shade700,
