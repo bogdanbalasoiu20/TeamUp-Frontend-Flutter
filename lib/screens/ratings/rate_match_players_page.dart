@@ -17,6 +17,7 @@ class RateMatchPlayersPage extends StatefulWidget {
 class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
   late Future<List<PlayerToRateModel>> _playersFuture;
   final Map<String, PlayerRatingDraft> _drafts = {};
+  List<PlayerToRateModel> _players = [];
   bool isSubmitting = false;
 
   final Color _bgDark = const Color(0xFF091210);
@@ -46,6 +47,7 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
           }
 
           final players = snapshot.data!;
+          _players = players;
           final ratedCount = _drafts.length;
           final totalPlayers = players.length;
           final progress = totalPlayers > 0 ? ratedCount / totalPlayers : 0.0;
@@ -419,18 +421,34 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
 
   Future<void> _submit() async {
     if (_drafts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Rate at least one player")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Rate at least one player")),
+      );
       return;
     }
+
     setState(() => isSubmitting = true);
+
     try {
-      await PlayerRatingService.submitRatings(widget.matchId, _drafts);
+      final Map<String, String> userPositions = {
+        for (final p in _players) p.userId: p.position,
+      };
+
+      await PlayerRatingService.submitRatings(
+        widget.matchId,
+        _drafts,
+        userPositions,
+      );
+
       if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error")),
+      );
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
   }
+
 }

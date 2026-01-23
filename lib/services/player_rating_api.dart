@@ -28,9 +28,13 @@ class PlayerRatingService {
   static Future<void> submitRatings(
       String matchId,
       Map<String, PlayerRatingDraft> drafts,
+      Map<String, String> userPositions,
       ) async {
     final body = drafts.entries
-        .map((e) => e.value.toJson(e.key))
+        .map((e) => e.value.toJson(
+      e.key,
+      userPositions[e.key]!,
+    ))
         .toList();
 
     await ApiService.post(
@@ -38,4 +42,5 @@ class PlayerRatingService {
       body,
     );
   }
+
 }

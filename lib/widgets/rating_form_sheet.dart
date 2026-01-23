@@ -21,15 +21,40 @@ class RatingFormSheet extends StatefulWidget {
 class _RatingFormSheetState extends State<RatingFormSheet> {
   late PlayerRatingDraft _draft;
 
-  // Culorile temei
   final Color _activeColor = const Color(0xFF46C264);
   final Color _inactiveColor = Colors.white24;
 
   @override
   void initState() {
     super.initState();
-    _draft = widget.draft ?? PlayerRatingDraft();
+
+    if (widget.draft != null) {
+      _draft = widget.draft!.copy();
+    } else {
+      _draft = PlayerRatingDraft();
+
+      if (widget.player.position == "GOALKEEPER") {
+        _draft
+          ..gkDiving = 50
+          ..gkHandling = 50
+          ..gkKicking = 50
+          ..gkReflexes = 50
+          ..gkSpeed = 50
+          ..gkPositioning = 50;
+      } else {
+        _draft
+          ..pace = 50
+          ..shooting = 50
+          ..passing = 50
+          ..defending = 50
+          ..dribbling = 50
+          ..physical = 50;
+      }
+    }
+
   }
+
+
 
   // --------------------------------------------------
   //SLIDER
@@ -45,9 +70,9 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
     if (v < 50) {
       valueColor = Colors.white70;
     } else if (v < 80) {
-      valueColor = const Color(0xFF81C784); // Light Green
+      valueColor = const Color(0xFF81C784);
     } else {
-      valueColor = const Color(0xFF46C264); // Brand Green
+      valueColor = const Color(0xFF46C264);
     }
 
     return Padding(
@@ -164,7 +189,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle Bar (linia mică de sus)
             Center(
               child: Container(
                 width: 40,
