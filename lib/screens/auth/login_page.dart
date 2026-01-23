@@ -1,14 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
-import 'package:team_up_fe_new/screens/map/match_map_page.dart';
 import 'package:team_up_fe_new/screens/auth/register_page.dart';
-import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
-import 'package:team_up_fe_new/utils/app_colors.dart';
+import 'package:team_up_fe_new/widgets/navbar.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:team_up_fe_new/widgets/navbar.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,8 +16,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
 
   Future<void> login() async {
     final email = emailController.text.trim();
@@ -42,8 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
         "password": password,
       });
 
-      print("### LOGIN RAW RESPONSE = $response");
-
       final token = response["data"]["token"];
       final username = response["data"]["userDto"]["username"];
       final userId = response["data"]["userDto"]["id"];
@@ -53,15 +52,12 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("username", username);
       await prefs.setString("user_id", userId);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login successful")),
-      );
-
-      print("####USERNAME: "+ username);
+      if (!mounted) return;
 
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeShell()));
+
     } catch (e) {
       if (e is ApiException) {
         ScaffoldMessenger.of(context)
@@ -70,169 +66,195 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Unexpected error")));
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-
-    setState(() => _isLoading = false);
   }
-
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      backgroundColor: _bgDark,
       body: Stack(
         children: [
-          // BACKGROUND GRADIENT PREMIUM
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF003B2F),
-                  AppColors.primaryGreenDark,
-                  AppColors.primaryGreenLight,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-            ),
-          ),
-
-          // TITLU
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Welcome Back",
-                  style: TextStyle(
-                    fontSize: 40,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 14,
-                        color: Colors.black54,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  "Sign in to continue",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // WHITE SHEET
           Positioned(
-            top: size.height * 0.32,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: -100,
+            left: -100,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 25,
-                    color: Colors.black.withOpacity(0.1),
-                    offset: const Offset(0, -3),
-                  ),
-                ],
+                shape: BoxShape.circle,
+                color: const Color(0xFF0A6F4A).withOpacity(0.4),
               ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
 
+          Positioned(
+            bottom: -50,
+            right: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _accentGreen.withOpacity(0.15),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Center(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-
-                    const SizedBox(height: 8),
-
-                    // INPUT CARD: EMAIL
-                    _inputCard(
-                      label: "Username or Email",
-                      controller: emailController,
-                      icon: Icons.person_outline,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // INPUT CARD: PASSWORD
-                    _passwordCard(
-                      label: "Password",
-                      controller: passwordController,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Forgot password?",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF0A6F4A),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 60),
-
-                    // BUTTON LOGIN
-                    GestureDetector(
-                      onTap: _isLoading ? null : login,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        height: 55,
+                    // LOGO / ICON AREA
+                    Center(
+                      child: Container(
+                        width: 80,
+                        height: 80,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF003B2F),
-                              Color(0xFF0A6F4A),
-                              Color(0xFF46C264),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
+                          shape: BoxShape.circle,
+                          color: _cardSurface,
+                          border: Border.all(color: _accentGreen.withOpacity(0.3)),
                           boxShadow: [
                             BoxShadow(
-                              blurRadius: 12,
-                              color: Colors.greenAccent.withOpacity(0.4),
-                              offset: const Offset(0, 6),
+                              color: _accentGreen.withOpacity(0.2),
+                              blurRadius: 20,
+                              spreadRadius: 2,
                             )
                           ],
                         ),
-                        child: Center(
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                            "SIGN IN",
-                            style: TextStyle(
-                              fontSize: 19,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        child: Icon(Icons.sports_soccer, size: 40, color: _accentGreen),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    const Text(
+                      "Welcome Back!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Sign in to continue your streak",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    _buildModernInput(
+                      controller: emailController,
+                      hint: "Email or Username",
+                      icon: Icons.person_outline_rounded,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    _buildModernInput(
+                      controller: passwordController,
+                      hint: "Password",
+                      icon: Icons.lock_outline_rounded,
+                      isPassword: true,
+                    ),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          // TODO: Forgot password logic
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: _textSecondary,
+                        ),
+                        child: const Text("Forgot Password?"),
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    SizedBox(
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _accentGreen,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          disabledBackgroundColor: _cardSurface,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                        )
+                            : const Text(
+                          "SIGN IN",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 120),
+                    const SizedBox(height: 40),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "New to TeamUp? ",
+                          style: TextStyle(color: _textSecondary),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const RegisterScreen())
+                            );
+                          },
+                          child: Text(
+                            "Create Account",
+                            style: TextStyle(
+                              color: _accentGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -240,156 +262,43 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
+    );
+  }
 
-      // FOOTER
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(right: 26, bottom: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              "Don't have an account?",
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade700,
-              ),
+  Widget _buildModernInput({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword && !_isPasswordVisible,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+          prefixIcon: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+          suffixIcon: isPassword
+              ? IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: _textSecondary,
+              size: 20,
             ),
-            const SizedBox(height: 6),
-
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const RegisterScreen())
-                );
-              },
-              child: const Text(
-                "Sign up",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF0A6F4A),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
+            onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+          )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
       ),
-    );
-  }
-
-  // --------------------
-  // BEAUTIFUL INPUT CARDS
-  // --------------------
-
-  Widget _inputCard({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF003B2F),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              icon: Icon(icon, color: Colors.grey.shade700),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _passwordCard({
-    required String label,
-    required TextEditingController controller,
-  }) {
-    return PasswordInputCard(
-      label: label,
-      controller: controller,
-    );
-  }
-}
-
-// --------------------
-// CUSTOM PASSWORD FIELD
-// --------------------
-class PasswordInputCard extends StatefulWidget {
-  final String label;
-  final TextEditingController controller;
-
-  const PasswordInputCard({
-    super.key,
-    required this.label,
-    required this.controller,
-  });
-
-  @override
-  State<PasswordInputCard> createState() => _PasswordInputCardState();
-}
-
-class _PasswordInputCardState extends State<PasswordInputCard> {
-  bool _obscure = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF003B2F),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: TextField(
-            controller: widget.controller,
-            obscureText: _obscure,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscure ? Icons.visibility_off : Icons.visibility,
-                  color: Colors.grey.shade600,
-                ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

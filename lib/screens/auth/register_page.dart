@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
 import 'package:team_up_fe_new/screens/auth/login_page.dart';
-import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,8 +24,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController descriptionController = TextEditingController();
 
   String? selectedPosition;
-
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
+
+  // --- THEME COLORS ---
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
 
   // --------------------------
   // SEND REGISTER REQUEST
@@ -50,6 +55,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString("access_token", token);
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Account created successfully")),
       );
@@ -66,9 +73,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text("Unexpected error")));
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    setState(() => _isLoading = false);
   }
 
   // --------------------------
@@ -76,342 +83,289 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // --------------------------
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      backgroundColor: _bgDark,
       body: Stack(
         children: [
-          // ------------------ BACKGROUND ------------------
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF003B2F),
-                  AppColors.primaryGreenDark,
-                  AppColors.primaryGreenLight,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-            ),
-          ),
-
-          // ------------------ TITLE -----------------------
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 90, 28, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Create Account",
-                  style: TextStyle(
-                    fontSize: 42,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 14,
-                        color: Colors.black54,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 6),
-                Text(
-                  "Join the TeamUp community",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ------------------ WHITE SHEET ------------------
+          // 1. AMBIENT BACKGROUND GLOW (Top Right)
           Positioned(
-            top: size.height * 0.30,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: -80,
+            right: -80,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 32),
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 25,
-                    color: Colors.black.withOpacity(0.15),
-                    offset: const Offset(0, -3),
-                  ),
-                ],
+                shape: BoxShape.circle,
+                color: const Color(0xFF0A6F4A).withOpacity(0.3),
               ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
 
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          // 2. AMBIENT BACKGROUND GLOW (Bottom Left)
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _accentGreen.withOpacity(0.1),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
 
-                    const SizedBox(height: 8),
-
-                    // INPUTS (CARD STYLE)
-                    _inputCard("Email", emailController, Icons.mail),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Username", usernameController, Icons.person),
-                    const SizedBox(height: 20),
-
-                    _passwordCard("Password", passwordController),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Phone Number", phoneController, Icons.phone),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Birthday (yyyy-MM-dd)", birthdayController, Icons.calendar_today),
-                    const SizedBox(height: 20),
-
-                    // POSITION DROPDOWN RE-DESIGNED
-                    const Text(
-                      "Preferred Position",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF003B2F),
-                      ),
+          // 3. CONTENT
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // BACK BUTTON
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                      padding: const EdgeInsets.all(12),
                     ),
-                    const SizedBox(height: 6),
+                  ),
 
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.black12),
+                  const SizedBox(height: 24),
+
+                  // HEADER
+                  const Text(
+                    "Create Account",
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Join the ultimate football community.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: _textSecondary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // FORM SECTION
+                  _buildSectionHeader("Credentials"),
+                  _buildModernInput(emailController, "Email Address", Icons.email_outlined),
+                  const SizedBox(height: 16),
+                  _buildModernInput(usernameController, "Username", Icons.person_outline),
+                  const SizedBox(height: 16),
+                  _buildModernInput(
+                      passwordController,
+                      "Password",
+                      Icons.lock_outline,
+                      isPassword: true
+                  ),
+
+                  const SizedBox(height: 32),
+                  _buildSectionHeader("Player Profile"),
+
+                  // POSITION DROPDOWN
+                  _buildModernDropdown(),
+
+                  const SizedBox(height: 16),
+                  _buildModernInput(birthdayController, "Birthday (yyyy-MM-dd)", Icons.calendar_today_outlined),
+                  const SizedBox(height: 16),
+                  _buildModernInput(phoneController, "Phone Number", Icons.phone_outlined, keyboardType: TextInputType.phone),
+                  const SizedBox(height: 16),
+                  _buildModernInput(cityController, "City", Icons.location_city_outlined),
+                  const SizedBox(height: 16),
+                  _buildModernInput(
+                      descriptionController,
+                      "Short Bio / Description",
+                      Icons.description_outlined,
+                      maxLines: 3
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // SUBMIT BUTTON
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : register,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accentGreen,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        disabledBackgroundColor: _cardSurface,
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: selectedPosition,
-                          isExpanded: true,
-                          icon: Icon(Icons.arrow_drop_down,
-                              color: Colors.grey.shade700),
-                          items: [
-                            "GOALKEEPER",
-                            "DEFENDER",
-                            "MIDFIELDER",
-                            "FORWARD"
-                          ].map((e) =>
-                              DropdownMenuItem(value: e, child: Text(e))).toList(),
-                          onChanged: (v) => setState(() => selectedPosition = v),
+                      child: _isLoading
+                          ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
+                      )
+                          : const Text(
+                        "CREATE ACCOUNT",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 30),
 
-                    _inputCard("City", cityController, Icons.location_city),
-                    const SizedBox(height: 20),
-
-                    _inputCard("Description", descriptionController, Icons.info),
-                    const SizedBox(height: 40),
-
-                    // ------------------ REGISTER BUTTON ---------------
-                    GestureDetector(
-                      onTap: _isLoading ? null : register,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        height: 55,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF003B2F),
-                              Color(0xFF0A6F4A),
-                              Color(0xFF46C264),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 12,
-                              color: Colors.green.withOpacity(0.35),
-                              offset: const Offset(0, 6),
-                            )
-                          ],
+                  // FOOTER
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: TextStyle(color: _textSecondary),
                         ),
-                        child: Center(
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                            "CREATE ACCOUNT",
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            );
+                          },
+                          child: Text(
+                            "Sign In",
                             style: TextStyle(
-                              fontSize: 19,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
+                              color: _accentGreen,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-
-                    const SizedBox(height: 120),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
 
-      // ------------------ FOOTER ------------------
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(right: 26, bottom: 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              "Already have an account?",
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 6),
+  // --- WIDGET HELPER METHODS ---
 
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              child: const Text(
-                "Sign in",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF0A6F4A),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            )
-          ],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: _textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
         ),
       ),
     );
   }
 
-  // -------------------------------------------------------
-  // ⭐️ REUSABLE PREMIUM INPUT CARD
-  // -------------------------------------------------------
-  Widget _inputCard(
-      String label,
+  Widget _buildModernInput(
       TextEditingController controller,
+      String hint,
       IconData icon,
+      {
+        bool isPassword = false,
+        TextInputType keyboardType = TextInputType.text,
+        int maxLines = 1,
+      }
       ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF003B2F),
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword && !_isPasswordVisible,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+          prefixIcon: Padding(
+            padding: EdgeInsets.only(bottom: maxLines > 1 ? 40 : 0), // Align icon top if multiline
+            child: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
           ),
-        ),
-        const SizedBox(height: 6),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              icon: Icon(icon, color: Colors.grey.shade700),
+          suffixIcon: isPassword
+              ? IconButton(
+            icon: Icon(
+              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              color: _textSecondary,
+              size: 20,
             ),
-          ),
+            onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+          )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
-      ],
+      ),
     );
   }
 
-  // ------------------ PASSWORD FIELD ------------------
-  Widget _passwordCard(String label, TextEditingController controller) {
-    return PasswordInputCard(
-      label: label,
-      controller: controller,
-    );
-  }
-}
-
-// -------------------------------------------------------
-// PASSWORD CARD WIDGET
-// -------------------------------------------------------
-class PasswordInputCard extends StatefulWidget {
-  final String label;
-  final TextEditingController controller;
-
-  const PasswordInputCard({
-    super.key,
-    required this.label,
-    required this.controller,
-  });
-
-  @override
-  State<PasswordInputCard> createState() => _PasswordInputCardState();
-}
-
-class _PasswordInputCardState extends State<PasswordInputCard> {
-  bool _obscure = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF003B2F),
+  Widget _buildModernDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedPosition,
+          hint: Text(
+            "Preferred Position",
+            style: TextStyle(color: _textSecondary.withOpacity(0.7)),
           ),
-        ),
-        const SizedBox(height: 6),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: TextField(
-            controller: widget.controller,
-            obscureText: _obscure,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              icon: Icon(Icons.lock_outline, color: Colors.grey.shade700),
-              suffixIcon: IconButton(
-                icon: Icon(
-                    _obscure ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey.shade600),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
+          isExpanded: true,
+          dropdownColor: _cardSurface, // Matches the dark card color
+          icon: Icon(Icons.arrow_drop_down, color: _accentGreen),
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          items: ["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"]
+              .map((e) => DropdownMenuItem(
+            value: e,
+            child: Row(
+              children: [
+                Icon(Icons.sports_soccer, size: 18, color: _accentGreen.withOpacity(0.7)),
+                const SizedBox(width: 12),
+                Text(e),
+              ],
             ),
-          ),
+          ))
+              .toList(),
+          onChanged: (v) => setState(() => selectedPosition = v),
         ),
-      ],
+      ),
     );
   }
 }
