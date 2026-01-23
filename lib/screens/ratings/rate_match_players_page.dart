@@ -19,6 +19,11 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
   final Map<String, PlayerRatingDraft> _drafts = {};
   bool isSubmitting = false;
 
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+
   @override
   void initState() {
     super.initState();
@@ -27,354 +32,405 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
 
   @override
   Widget build(BuildContext context) {
-    int ratedCount = _drafts.length;
+    return Scaffold(
+      backgroundColor: _bgDark,
+      body: FutureBuilder<List<PlayerToRateModel>>(
+        future: _playersFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(color: _accentGreen));
+          }
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF003B2F),
-            Color(0xFF0A6F4A),
-            Color(0xFF062D24),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBodyBehindAppBar: true,
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return _buildEmptyState();
+          }
 
-        appBar: AppBar(
-          backgroundColor: Colors.black.withOpacity(0.1),
-          elevation: 0,
-          centerTitle: true,
-          foregroundColor: Colors.white,
-          flexibleSpace: ClipRRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Container(color: Colors.transparent),
-            ),
-          ),
-          title: const Text(
-            "Rate Players",
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(blurRadius: 8, color: Colors.black45, offset: Offset(0, 2)),
-              ],
-            ),
-          ),
-        ),
+          final players = snapshot.data!;
+          final ratedCount = _drafts.length;
+          final totalPlayers = players.length;
+          final progress = totalPlayers > 0 ? ratedCount / totalPlayers : 0.0;
 
-        body: Column(
-          children: [
-            // ---------------- LISTA JUCĂTORI ----------------
-            Expanded(
-              child: FutureBuilder<List<PlayerToRateModel>>(
-                future: _playersFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: Colors.white),
-                    );
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return _buildEmptyState();
-                  }
-
-                  final players = snapshot.data!;
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 110, 20, 20),
-                    itemCount: players.length,
-                    itemBuilder: (_, i) {
-                      final p = players[i];
-                      final isRated = _drafts.containsKey(p.userId);
-
-                      return _buildPlayerCard(p, isRated);
-                    },
-                  );
-                },
+          return Stack(
+            children: [
+              // Background Ambient Gradient
+              Positioned(
+                top: -100,
+                right: -100,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0A6F4A).withOpacity(0.4)
+                  ),
+                ),
               ),
-            ),
 
-            _buildBottomBar(ratedCount),
-          ],
-        ),
+              Column(
+                children: [
+                  // CUSTOM HEADER & PROGRESS
+                  _buildHeader(ratedCount, totalPlayers, progress),
+
+                  // PLAYERS LIST
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      itemCount: players.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (_, i) {
+                        final p = players[i];
+                        final isRated = _drafts.containsKey(p.userId);
+                        return _buildModernPlayerCard(p, isRated);
+                      },
+                    ),
+                  ),
+
+                  //SUBMIT BUTTON AREA
+                  _buildBottomDock(ratedCount),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildPlayerCard(PlayerToRateModel p, bool isRated) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: InkWell(
-            onTap: () => _openRatingSheet(p),
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isRated
-                    ? const Color(0xFF46C264).withOpacity(0.15)
-                    : Colors.white.withOpacity(0.10),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isRated
-                      ? const Color(0xFF46C264).withOpacity(0.6)
-                      : Colors.white.withOpacity(0.15),
-                  width: isRated ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      p.username.isNotEmpty ? p.username[0].toUpperCase() : "?",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+  Widget _buildHeader(int rated, int total, double progress) {
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Match Ratings",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
                         color: Colors.white,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(width: 16),
-
-                  // Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          p.username,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(Icons.sports_soccer,
-                                size: 14, color: Colors.white.withOpacity(0.6)),
-                            const SizedBox(width: 4),
-                            Text(
-                              p.position,
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.6),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Status Icon
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isRated
-                          ? const Color(0xFF46C264)
-                          : Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isRated ? Icons.check : Icons.edit,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.people_outline, size: 50, color: Colors.white.withOpacity(0.5)),
-                const SizedBox(height: 16),
-                Text(
-                  "No players to rate found.",
-                  style: TextStyle(color: Colors.white.withOpacity(0.8)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Zona de jos cu butonul de submit
-  Widget _buildBottomBar(int ratedCount) {
-    return ClipRRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            border: Border(
-              top: BorderSide(color: Colors.white.withOpacity(0.1)),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Container(
-              height: 55,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0A6F4A), Color(0xFF46C264)],
-                ),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: isSubmitting
-                    ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                )
-                    : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.send_rounded, color: Colors.white),
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 4),
                     Text(
-                      "Submit ($ratedCount) Ratings",
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      "Who was the MVP today?",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: _textSecondary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
+                // Close button icon
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 20),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Progress Bar Container
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: _cardSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),
+              child: Row(
+                children: [
+                  // Circular Percent
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: CircularProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          color: _accentGreen,
+                          strokeWidth: 4,
+                        ),
+                      ),
+                      Text(
+                        "${(progress * 100).toInt()}%",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "$rated of $total Players Rated",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Text(
+                        rated == total ? "All done! Ready to submit." : "Keep going!",
+                        style: TextStyle(
+                          color: rated == total ? _accentGreen : _textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernPlayerCard(PlayerToRateModel p, bool isRated) {
+    return GestureDetector(
+      onTap: () => _openRatingSheet(p),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isRated ? const Color(0xFF0F3025) : _cardSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isRated ? _accentGreen.withOpacity(0.5) : Colors.transparent,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // AVATAR
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isRated
+                      ? [_accentGreen, const Color(0xFF008C4A)]
+                      : [Colors.grey.shade700, Colors.grey.shade800],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: _cardSurface,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    p.username.isNotEmpty ? p.username.substring(0, 1).toUpperCase() : "?",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: isRated ? _accentGreen : Colors.white70,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.username,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      p.position.toUpperCase(),
+                      style: TextStyle(
+                        color: _textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            isRated
+                ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _accentGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: _accentGreen, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    "RATED",
+                    style: TextStyle(
+                      color: _accentGreen,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                : Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 10,
+                  )
+                ],
+              ),
+              child: const Icon(Icons.edit, color: Colors.black, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomDock(int ratedCount) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).padding.bottom + 20),
+      decoration: BoxDecoration(
+        color: _bgDark,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton(
+          onPressed: isSubmitting ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _accentGreen,
+            foregroundColor: Colors.black,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            disabledBackgroundColor: _cardSurface,
+            disabledForegroundColor: Colors.white30,
+          ),
+          child: isSubmitting
+              ? const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
+          )
+              : Text(
+            "Submit Ratings ($ratedCount)",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildEmptyState() => const Center(child: Text("No players found", style: TextStyle(color: Colors.white)));
 
   void _openRatingSheet(PlayerToRateModel player) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.85,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (_, controller) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Color(0xFF0E1B16),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              ),
-              child: RatingFormSheet(
-                player: player,
-                draft: _drafts[player.userId],
-                onSave: (draft) {
-                  setState(() {
-                    _drafts[player.userId] = draft;
-                  });
-                },
-              ),
-            );
-          },
-        );
-      },
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, c) => Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF0E1B16),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: RatingFormSheet(
+            player: player,
+            draft: _drafts[player.userId],
+            onSave: (draft) => setState(() => _drafts[player.userId] = draft),
+          ),
+        ),
+      ),
     );
   }
 
   Future<void> _submit() async {
     if (_drafts.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Please rate at least one player"),
-          backgroundColor: Colors.white.withOpacity(0.9),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          margin: const EdgeInsets.all(20),
-          action: SnackBarAction(label: "OK", textColor: Colors.black, onPressed: () {}),
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Rate at least one player")));
       return;
     }
-
     setState(() => isSubmitting = true);
-
     try {
-      await PlayerRatingService.submitRatings(
-        widget.matchId,
-        _drafts,
-      );
-
+      await PlayerRatingService.submitRatings(widget.matchId, _drafts);
       if (!mounted) return;
-
       Navigator.pop(context);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Ratings submitted successfully!"),
-          backgroundColor: Color(0xFF0A6F4A),
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error submitting ratings")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Error")));
     } finally {
-      if(mounted) setState(() => isSubmitting = false);
+      if (mounted) setState(() => isSubmitting = false);
     }
   }
 }
