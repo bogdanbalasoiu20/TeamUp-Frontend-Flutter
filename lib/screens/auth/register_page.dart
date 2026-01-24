@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/screens/matches/create_match_page.dart';
 import 'package:team_up_fe_new/screens/auth/login_page.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
@@ -18,10 +19,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController birthdayController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
 
+  DateTime? selectedBirthday;
   String? selectedPosition;
   bool _isLoading = false;
   bool _isPasswordVisible = false;
@@ -30,6 +31,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final Color _cardSurface = const Color(0xFF13241E);
   final Color _accentGreen = const Color(0xFF00E676);
   final Color _textSecondary = const Color(0xFF8A9E96);
+
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 18),
+      firstDate: DateTime(1950),
+      lastDate: now,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _accentGreen,
+              onPrimary: Colors.black,
+              surface: _cardSurface,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: _bgDark,
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (date != null) {
+      setState(() => selectedBirthday = date);
+    }
+  }
 
   Future<void> register() async {
     setState(() => _isLoading = true);
@@ -40,7 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         "username": usernameController.text.trim(),
         "password": passwordController.text.trim(),
         "phoneNumber": phoneController.text.trim(),
-        "birthday": birthdayController.text.trim(),
+        "birthday": selectedBirthday?.toIso8601String(),
         "position": selectedPosition,
         "city": cityController.text.trim(),
         "description": descriptionController.text.trim(),
@@ -53,7 +82,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Account created successfully")),
+        SnackBar(
+          content: const Text("Account created successfully", style: TextStyle(color: Colors.black)),
+          backgroundColor: _accentGreen,
+        ),
       );
 
       Navigator.pushReplacement(
@@ -95,7 +127,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-
           Positioned(
             bottom: -50,
             left: -50,
@@ -165,11 +196,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 32),
                   _buildSectionHeader("Player Profile"),
 
-                  // POSITION DROPDOWN
                   _buildModernDropdown(),
 
                   const SizedBox(height: 16),
-                  _buildModernInput(birthdayController, "Birthday (yyyy-MM-dd)", Icons.calendar_today_outlined),
+
+                  _buildClickableInput(
+                    icon: Icons.cake_outlined,
+                    label: "Birthday",
+                    value: selectedBirthday == null
+                        ? "Select Birthday"
+                        : DateFormat("yyyy-MM-dd").format(selectedBirthday!),
+                    onTap: _pickBirthday,
+                    isPlaceholder: selectedBirthday == null,
+                  ),
+
                   const SizedBox(height: 16),
                   _buildModernInput(phoneController, "Phone Number", Icons.phone_outlined, keyboardType: TextInputType.phone),
                   const SizedBox(height: 16),
@@ -184,7 +224,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 40),
 
-                  // SUBMIT BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 56,
@@ -218,7 +257,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 30),
 
-                  // FOOTER
                   Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -255,7 +293,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // --- WIDGET HELPER METHODS ---
 
   Widget _buildSectionHeader(String title) {
     return Padding(
@@ -318,6 +355,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  Widget _buildClickableInput({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    bool isPlaceholder = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+        ),
+        child: ListTile(
+          leading: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+          title: Text(
+            value,
+            style: TextStyle(
+              color: isPlaceholder ? _textSecondary.withOpacity(0.7) : Colors.white,
+              fontSize: 16,
+            ),
+          ),
+          trailing: Icon(Icons.calendar_today, color: _textSecondary, size: 18),
+        ),
+      ),
+    );
+  }
+
   Widget _buildModernDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -334,7 +402,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: TextStyle(color: _textSecondary.withOpacity(0.7)),
           ),
           isExpanded: true,
-          dropdownColor: _cardSurface, // Matches the dark card color
+          dropdownColor: _cardSurface,
           icon: Icon(Icons.arrow_drop_down, color: _accentGreen),
           style: const TextStyle(color: Colors.white, fontSize: 16),
           items: ["GOALKEEPER", "DEFENDER", "MIDFIELDER", "FORWARD"]

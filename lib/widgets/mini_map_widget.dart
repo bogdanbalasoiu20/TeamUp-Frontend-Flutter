@@ -27,7 +27,6 @@ class MiniMapWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
-              // MAPĂ PASIVĂ
               IgnorePointer(
                 ignoring: true,
                 child: FlutterMap(
@@ -73,7 +72,6 @@ class MiniMapWidget extends StatelessWidget {
                 ),
               ),
 
-              // GRADIENT TOP
               Positioned(
                 top: 0,
                 left: 0,
@@ -93,7 +91,6 @@ class MiniMapWidget extends StatelessWidget {
                 ),
               ),
 
-              // GRADIENT BOTTOM + TEXT
               Positioned(
                 left: 0,
                 right: 0,
@@ -113,38 +110,7 @@ class MiniMapWidget extends StatelessWidget {
                 ),
               ),
 
-              // CENTERED INFO TEXT
-              Positioned(
-                bottom: 10,
-                left: 0,
-                right: 0,
-                child: Column(
-                  children: [
-                    const Text(
-                      "Tap to choose field",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4,
-                            color: Colors.black,
-                          )
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Icon(
-                      Icons.open_in_full_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                  ],
-                ),
-              ),
 
-              // RIPPLE EFFECT (vizual feedback)
               Positioned.fill(
                 child: AnimatedOpacity(
                   opacity: 0,
