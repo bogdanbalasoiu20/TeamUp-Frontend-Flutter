@@ -257,26 +257,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   const SizedBox(height: 32),
                 ],
 
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: _cardSurface.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.05), width: 1),
-                    backgroundBlendMode: BlendMode.overlay,
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.bar_chart_rounded, color: _textSecondary, size: 32),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Detailed Statistics Coming Soon",
-                        style: TextStyle(color: _textSecondary, fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
+
               ],
             ),
           ),
@@ -537,11 +518,14 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   top: Radius.circular(28),
                 ),
               ),
-              child: const PlayerStatsModalContent(),
+              child: PlayerStatsModalContent(
+                userId: profile!.id,
+              ),
             );
           },
         );
       },
     );
   }
+
 }
