@@ -175,7 +175,7 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Color(0xFF0E1B16), // Dark background matching the theme
+        color: Color(0xFF0E1B16),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       padding: EdgeInsets.only(
@@ -249,7 +249,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
 
             const SizedBox(height: 10),
 
-            // Save Button (Gradient style)
             Container(
               height: 55,
               width: double.infinity,

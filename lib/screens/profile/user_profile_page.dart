@@ -19,7 +19,7 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _UserProfilePageState extends State<UserProfilePage> {
+class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
   UserProfile? profile;
   bool loading = true;
   bool isMyProfile = false;
@@ -28,6 +28,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool pendingReceived = false;
   String? requestId;
   Future<PlayerCardUi>? _playerCardFuture;
+
+  late AnimationController _pulseController;
 
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
@@ -39,6 +41,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
   void initState() {
     super.initState();
     _load();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
   }
 
   int computeAge(DateTime birthday) {
@@ -57,7 +69,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
       final loggedUser = prefs.getString("username");
       isMyProfile = (widget.username == loggedUser);
 
-      // 1) Load profile
       final res = await UserApi.fetchProfile(widget.username);
 
       setState(() {
@@ -65,7 +76,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
       });
 
-      // 2) Load relationship status
       final relation = await FriendApi.relationStatus(widget.username);
 
       setState(() {
@@ -161,29 +171,51 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- PLAYER CARD ---
                 Center(
                   child: GestureDetector(
                     onTap: () => _openPlayerStatsModal(context),
-                    child: Hero(
-                      tag: 'player_card_${p.id}',
-                      child: FutureBuilder<PlayerCardUi>(
-                        future: _playerCardFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return SizedBox(
-                                height: 250,
-                                child: Center(child: CircularProgressIndicator(color: _accentGreen))
-                            );
-                          }
-                          if (snapshot.hasError || !snapshot.hasData) {
-                            return const SizedBox(height: 200, child: Center(child: Text("Card Error", style: TextStyle(color: Colors.white))));
-                          }
-                          return Transform.scale(
-                            scale: 0.9,
-                            child: FifaPlayerCard(data: snapshot.data!),
-                          );
-                        },
+                    child: Transform.scale(
+                      scale: 0.85,
+                      child: SizedBox(
+                        width: 260,
+                        height: 380,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Hero(
+                              tag: 'player_card_${p.id}',
+                              child: FutureBuilder<PlayerCardUi>(
+                                future: _playerCardFuture,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return SizedBox(
+                                        height: 380,
+                                        child: Center(child: CircularProgressIndicator(color: _accentGreen))
+                                    );
+                                  }
+                                  if (snapshot.hasError || !snapshot.hasData) {
+                                    return const SizedBox(height: 380, child: Center(child: Text("Card Error", style: TextStyle(color: Colors.white))));
+                                  }
+                                  return FifaPlayerCard(data: snapshot.data!);
+                                },
+                              ),
+                            ),
+
+                            Positioned(
+                              top: 20,
+                              right: 15,
+                              child: AnimatedBuilder(
+                                animation: _pulseController,
+                                builder: (context, child) {
+                                  return Opacity(
+                                    opacity: 0.8 + (_pulseController.value * 0.2),
+                                    child: _buildTapHintPill(),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -215,7 +247,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                 const SizedBox(height: 32),
 
-                // --- PRIVATE INFO SECTION ---
                 if (isMyProfile) ...[
                   _buildSectionHeader("Private Details"),
                   const SizedBox(height: 12),
@@ -226,7 +257,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   const SizedBox(height: 32),
                 ],
 
-                // --- PLACEHOLDER ---
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
@@ -254,8 +284,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
       ),
     );
   }
-
-  // --- WIDGETS ---
 
   Widget _buildSectionHeader(String title) {
     return Text(
@@ -403,7 +431,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
     }
 
-    // Add Friend
     return _buildModernButton(
       text: "Add Friend",
       icon: Icons.person_add,
@@ -459,6 +486,39 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
+  Widget _buildTapHintPill() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.touch_app_outlined, color: _accentGreen, size: 14),
+              const SizedBox(width: 6),
+              const Text(
+                "STATS",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.0,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openPlayerStatsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -473,13 +533,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
             return Container(
               decoration: const BoxDecoration(
                 color: Color(0xFF0E1B16),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
               ),
-              child: SingleChildScrollView(
-                controller: controller,
-                padding: const EdgeInsets.all(20),
-                child: const PlayerStatsModalContent(),
-              ),
+              child: const PlayerStatsModalContent(),
             );
           },
         );
