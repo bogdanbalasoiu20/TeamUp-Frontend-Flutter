@@ -1,300 +1,31 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/auth/register_page.dart';
-import 'package:team_up_fe_new/utils/app_colors.dart';
 import 'package:team_up_fe_new/screens/auth/login_page.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const Color endColor = AppColors.primaryGreenLight;
-
-    return Scaffold(
-      body: Stack(
-        children: [
-
-          //Fundalul (gradient + imagine)
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF003B2F),
-                  AppColors.primaryGreenDark,
-                  AppColors.primaryGreenLight,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
-              // image: const DecorationImage(
-              //   image: AssetImage("lib/images/football_field.png"),
-              //   fit: BoxFit.cover,
-              //   opacity: 0.18,
-              // ),
-            ),
-          ),
-
-          // Blur peste imagine
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-            child: Container(
-              color: Colors.black.withOpacity(0.10),
-            ),
-          ),
-
-          // Gradient negru subtil pentru contrast mai bun
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.12),
-                  Colors.black.withOpacity(0.25),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-
-
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-
-
-                  Column(
-                    children: [
-                      const SizedBox(height: 140), // împinge titlul mai jos
-                      _FadeSlide(
-                        delay: 0,
-                        child: const Text(
-                          'TeamUp',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 50,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-
-                  Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      _FadeSlide(
-                        delay: 200,
-                        child: _AnimatedBall(),
-                      ),
-
-                      const SizedBox(height: 40),
-
-                      _FadeSlide(
-                        delay: 350,
-                        child: const Text(
-                          'Football starts here',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.3,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // Subtitlu nou
-                      _FadeSlide(
-                        delay: 450,
-                        child: Text(
-                          'Become your own player',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.85),
-                            fontSize: 17,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0.7,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-
-                  Column(
-                    children: [
-                      _FadeSlide(
-                        delay: 600,
-                        child: _WelcomeButton(
-                          text: 'SIGN IN',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context)=> const LoginScreen())
-                            );
-                            print('Navigare la Sign In');
-                          },
-                          isFilled: true,
-                          fillColor: endColor,
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      _FadeSlide(
-                        delay: 750,
-                        child: _WelcomeButton(
-                          text: 'SIGN UP',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context)=>const RegisterScreen())
-                            );
-                            print('Navigare la Sign Up');
-                          },
-                          isFilled: false,
-                          fillColor: endColor,
-                        ),
-                      ),
-
-                      const SizedBox(height: 50),
-
-                      // Footer
-                      _FadeSlide(
-                        delay: 900,
-                        child: Text(
-                          "Powered by TeamUp",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.5),
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
 }
 
-
-// Widget privat pentru butoanele de Sign In / Sign Up
-class _WelcomeButton extends StatefulWidget {
-  final String text;
-  final VoidCallback onTap;
-  final bool isFilled;
-  final Color fillColor;
-
-  const _WelcomeButton({
-    required this.text,
-    required this.onTap,
-    required this.isFilled,
-    required this.fillColor,
-  });
-
-  @override
-  State<_WelcomeButton> createState() => _WelcomeButtonState();
-}
-
-class _WelcomeButtonState extends State<_WelcomeButton> {
-  bool _isPressed = false;
-
-  void _onPress(bool pressed) {
-    setState(() {
-      _isPressed = pressed;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final text = widget.text;
-    final onTap = widget.onTap;
-    final isFilled = widget.isFilled;
-    final fillColor = widget.fillColor;
-
-    return GestureDetector(
-      onTapDown: (_) => _onPress(true),
-      onTapUp: (_) => _onPress(false),
-      onTapCancel: () => _onPress(false),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        width: double.infinity,
-        height: 55,
-        decoration: BoxDecoration(
-          color: isFilled ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: isFilled ? Colors.transparent : Colors.white,
-            width: 2,
-          ),
-          boxShadow: _isPressed
-              ? []
-              : [
-            if (isFilled)
-              BoxShadow(
-                color: fillColor.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: Center(
-          child: AnimatedScale(
-            scale: _isPressed ? 0.95 : 1.0,
-            duration: const Duration(milliseconds: 150),
-            child: Text(
-              text,
-              style: TextStyle(
-                color: isFilled ? fillColor : Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-// Animatia pentru minge
-class _AnimatedBall extends StatefulWidget {
-  @override
-  State<_AnimatedBall> createState() => _AnimatedBallState();
-}
-
-class _AnimatedBallState extends State<_AnimatedBall>
-    with SingleTickerProviderStateMixin {
+class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProviderStateMixin {
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+  final Color _fieldLineColor = const Color(0xFFFFFFFF).withOpacity(0.12);
 
   late AnimationController _controller;
-  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _animation = Tween<double>(begin: 0.9, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 2000),
     );
+    _controller.forward();
   }
 
   @override
@@ -305,58 +36,296 @@ class _AnimatedBallState extends State<_AnimatedBall>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _animation.value,
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
-                  blurRadius: 40,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.sports_soccer,
-              size: 80,
-              color: Colors.white,
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenHeight < 700;
+
+    return Scaffold(
+      backgroundColor: _bgDark,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            left: -50,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0A6F4A).withOpacity(0.25),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
+              ),
             ),
           ),
-        );
-      },
+
+          Positioned(
+            bottom: -50,
+            right: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _accentGreen.withOpacity(0.1),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  const Spacer(flex: 1),
+
+                  Expanded(
+                    flex: 5,
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Container(
+                          width: 260,
+                          height: 340,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: _fieldLineColor, width: 2),
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.white.withOpacity(0.01),
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(child: Container(height: 2, width: double.infinity, color: _fieldLineColor)),
+                              Center(
+                                  child: Container(
+                                      width: 70,
+                                      height: 70,
+                                      decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: _fieldLineColor, width: 2)
+                                      )
+                                  )
+                              ),
+                              Align(
+                                alignment: Alignment.topCenter,
+                                child: Container(
+                                  width: 100,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(color: _fieldLineColor, width: 2),
+                                        left: BorderSide(color: _fieldLineColor, width: 2),
+                                        right: BorderSide(color: _fieldLineColor, width: 2),
+                                      )
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Container(
+                                  width: 100,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                      border: Border(
+                                        top: BorderSide(color: _fieldLineColor, width: 2),
+                                        left: BorderSide(color: _fieldLineColor, width: 2),
+                                        right: BorderSide(color: _fieldLineColor, width: 2),
+                                      )
+                                  ),
+                                ),
+                              ),
+
+
+                              // Portar
+                              _buildAnimatedPlayer(Alignment(0, 0.88), 0.0, "GK", false),
+
+                              // Fundas Stanga
+                              _buildAnimatedPlayer(Alignment(-0.7, 0.5), 0.1, "LB", false),
+
+                              // Fundas Dreapta
+                              _buildAnimatedPlayer(Alignment(0.7, 0.5), 0.2, "RB", false),
+
+                              // Mijlocas Central
+                              _buildAnimatedPlayer(Alignment(0, 0.05), 0.3, "CM", false),
+
+                              // Atacant
+                              _buildAnimatedPlayer(Alignment(0, -0.6), 0.5, "ST", true),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(flex: 1),
+
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "TEAM UP",
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 36 : 42,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: 2.0,
+                          height: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Find your squad.\nOrganize matches. Rate the game.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: _textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+
+                      SizedBox(height: isSmallScreen ? 30 : 40),
+
+                      // Get Started Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _accentGreen,
+                            foregroundColor: Colors.black,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          child: const Text(
+                            "GET STARTED",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: BorderSide(color: Colors.white.withOpacity(0.2), width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                          ),
+                          child: const Text(
+                            "I HAVE AN ACCOUNT",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
-}
 
+  Widget _buildAnimatedPlayer(Alignment alignment, double delay, String label, bool isCaptain) {
+    final double start = delay * 0.5;
+    final double end = (delay * 0.5) + 0.4;
 
-// Fade + Slide animator
-class _FadeSlide extends StatelessWidget {
-  final Widget child;
-  final int delay;
+    final Animation<double> scaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(start, end > 1.0 ? 1.0 : end, curve: Curves.elasticOut),
+      ),
+    );
 
-  const _FadeSlide({required this.child, required this.delay});
+    final Animation<double> opacityAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Interval(start, end > 1.0 ? 1.0 : end, curve: Curves.easeIn),
+      ),
+    );
 
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder(
-      duration: const Duration(milliseconds: 700),
-      curve: Curves.easeOut,
-      tween: Tween<double>(begin: 0, end: 1),
-      builder: (context, value, _) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, (1 - value) * 20),
-            child: child,
-          ),
-        );
-      },
+    return Align(
+      alignment: alignment,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Opacity(
+            opacity: opacityAnim.value,
+            child: Transform.scale(
+              scale: scaleAnim.value,
+              child: Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: isCaptain ? _accentGreen : const Color(0xFF1F352E),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isCaptain ? _accentGreen : Colors.white.withOpacity(0.2),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isCaptain
+                          ? _accentGreen.withOpacity(0.4)
+                          : Colors.black.withOpacity(0.3),
+                      blurRadius: isCaptain ? 15 : 5,
+                      spreadRadius: isCaptain ? 2 : 0,
+                    )
+                  ],
+                ),
+                child: Center(
+                  child: isCaptain
+                      ? const Icon(Icons.star, size: 18, color: Colors.black)
+                      : Text(
+                    label,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.7),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

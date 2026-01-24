@@ -14,7 +14,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controllers
   final TextEditingController emailController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -27,15 +26,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _isPasswordVisible = false;
 
-  // --- THEME COLORS ---
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
   final Color _accentGreen = const Color(0xFF00E676);
   final Color _textSecondary = const Color(0xFF8A9E96);
 
-  // --------------------------
-  // SEND REGISTER REQUEST
-  // --------------------------
   Future<void> register() async {
     setState(() => _isLoading = true);
 
@@ -78,16 +73,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // --------------------------
-  // UI BUILD
-  // --------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _bgDark,
       body: Stack(
         children: [
-          // 1. AMBIENT BACKGROUND GLOW (Top Right)
           Positioned(
             top: -80,
             right: -80,
@@ -105,7 +96,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
 
-          // 2. AMBIENT BACKGROUND GLOW (Bottom Left)
           Positioned(
             bottom: -50,
             left: -50,
@@ -123,14 +113,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
 
-          // 3. CONTENT
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // BACK BUTTON
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -142,7 +130,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 24),
 
-                  // HEADER
                   const Text(
                     "Create Account",
                     style: TextStyle(
@@ -163,7 +150,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 32),
 
-                  // FORM SECTION
                   _buildSectionHeader("Credentials"),
                   _buildModernInput(emailController, "Email Address", Icons.email_outlined),
                   const SizedBox(height: 16),
@@ -312,7 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           hintText: hint,
           hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
           prefixIcon: Padding(
-            padding: EdgeInsets.only(bottom: maxLines > 1 ? 40 : 0), // Align icon top if multiline
+            padding: EdgeInsets.only(bottom: maxLines > 1 ? 40 : 0),
             child: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
           ),
           suffixIcon: isPassword
