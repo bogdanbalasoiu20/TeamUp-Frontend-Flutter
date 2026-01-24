@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
+
+const List<String> fifaOutfieldOrder = [
+  "PAC",
+  "DRI",
+  "SHO",
+  "DEF",
+  "PAS",
+  "PHY",
+];
+
+const List<String> fifaGoalkeeperOrder = [
+  "DIV",
+  "REF",
+  "HAN",
+  "SPD",
+  "KIC",
+  "POS",
+];
+
+const Color _textColor = Color(0xFF252525);
 
 class FifaPlayerCard extends StatelessWidget {
   final PlayerCardUi data;
 
   const FifaPlayerCard({super.key, required this.data});
-
 
   String _mapPosition(String? position) {
     if (position == null) return "MID";
@@ -13,30 +33,35 @@ class FifaPlayerCard extends StatelessWidget {
     switch (position.toLowerCase()) {
       case "goalkeeper":
         return "GK";
-
       case "midfielder":
         return "MID";
-
       case "defender":
         return "DEF";
-
       case "forward":
         return "FWD";
-
       default:
         return position.toUpperCase();
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final TextStyle fifaFont = GoogleFonts.oswald(
+      color: _textColor,
+      shadows: [
+        const Shadow(
+          blurRadius: 1,
+          color: Colors.white54,
+          offset: Offset(0, 1),
+        ),
+      ],
+    );
+
     return SizedBox(
       width: 260,
       height: 380,
       child: Stack(
         children: [
-          // ---------------- BACKGROUND ----------------
           Positioned.fill(
             child: Center(
               child: Container(
@@ -50,7 +75,6 @@ class FifaPlayerCard extends StatelessWidget {
                     ),
                     fit: BoxFit.contain,
                   ),
-
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.25),
@@ -64,56 +88,32 @@ class FifaPlayerCard extends StatelessWidget {
             ),
           ),
 
-
-
-          // ---------------- RATING + POSITION ----------------
           Positioned(
-            top: 50,
+            top: 60,
             left: 30,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   data.rating.toString(),
-                  style: const TextStyle(
-                    fontSize: 36,
+                  style: fifaFont.copyWith(
+                    fontSize: 40,
                     fontWeight: FontWeight.w900,
-                    color: Colors.black,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 6,
-                        color: Colors.white70,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+                    height: 1.0,
                   ),
                 ),
                 Text(
                   _mapPosition(data.position),
-                  style: const TextStyle(
-                    fontSize: 20,
+                  style: fifaFont.copyWith(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 4,
-                        color: Colors.white70,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+                    height: 1.0,
                   ),
                 ),
-
               ],
             ),
           ),
 
-
-
-          // ---------------- AVATAR ----------------
-
-
-          // workaround pentru NetworkImage (Flutter nu permite empty string)
           Positioned(
             top: 90,
             left: 0,
@@ -138,32 +138,21 @@ class FifaPlayerCard extends StatelessWidget {
             ),
           ),
 
-
-          // ---------------- NAME ----------------
           Positioned(
-            top: 215,
+            top: 210,
             left: 20,
             right: 20,
             child: Text(
               data.name.toUpperCase(),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
+              style: fifaFont.copyWith(
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-                color: Colors.black,
-                shadows: [
-                  Shadow(
-                    blurRadius: 6,
-                    color: Colors.white70,
-                    offset: Offset(0, 1),
-                  ),
-                ],
+                letterSpacing: 1.0,
               ),
             ),
           ),
 
-          // ---------------- STATS ----------------
           Positioned(
             bottom: 45,
             left: 24,
@@ -173,31 +162,29 @@ class FifaPlayerCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               childAspectRatio: 3.8,
-              children: data.stats.entries.map((e) {
+              children: (data.position?.toLowerCase() == "goalkeeper"
+                  ? const ["DIV", "REF", "HAN", "SPD", "KIC", "POS"]
+                  : const ["PAC", "DRI", "SHO", "DEF", "PAS", "PHY"])
+                  .where((key) => data.stats.containsKey(key))
+                  .map((key) {
+                final value = data.stats[key]!;
+
                 return Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "${e.value}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Colors.black,
-                        shadows: [
-                          Shadow(
-                            blurRadius: 4,
-                            color: Colors.white70,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
+                      "$value",
+                      style: fifaFont.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      e.key,
-                      style: const TextStyle(
+                      key,
+                      style: fifaFont.copyWith(
                         fontSize: 18,
-                        color: Colors.black87,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -211,7 +198,6 @@ class FifaPlayerCard extends StatelessWidget {
   }
 }
 
-
 String _cardBackgroundByRating(int rating) {
   if (rating >= 75) {
     return "assets/images/cards/gold_card.png";
@@ -221,4 +207,3 @@ String _cardBackgroundByRating(int rating) {
     return "assets/images/cards/bronze_card.png";
   }
 }
-
