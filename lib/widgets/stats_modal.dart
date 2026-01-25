@@ -5,6 +5,7 @@ import 'package:team_up_fe_new/models/player_card_history.dart';
 import 'package:team_up_fe_new/models/live_form.dart';
 import 'package:team_up_fe_new/services/live_form_api.dart';
 import 'package:team_up_fe_new/utils/live_form_state.dart';
+import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
 
 const Color _bgDark = Color(0xFF091210);
 const Color _cardSurface = Color(0xFF13241E);
@@ -29,6 +30,8 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   List<PlayerCardHistoryPoint> _fullHistory = [];
   LiveForm? _liveForm;
   String _selectedAttribute = "Overall";
+  PlayerCardUi? _card;
+
 
   final List<String> _statOptions = [
     "Overall",
@@ -44,13 +47,15 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   Future<void> _loadData() async {
     try {
       final results = await Future.wait([
+        PlayerCardService.getPlayerCard(widget.userId),
         PlayerCardService.getCardHistory(widget.userId),
         LiveFormApi.getLiveForm(widget.userId),
       ]);
 
       setState(() {
-        _fullHistory = results[0] as List<PlayerCardHistoryPoint>;
-        _liveForm = results[1] as LiveForm;
+        _card = results[0] as PlayerCardUi;
+        _fullHistory = results[1] as List<PlayerCardHistoryPoint>;
+        _liveForm = results[2] as LiveForm;
         _loadingHistory = false;
       });
     } catch (e) {
@@ -58,6 +63,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       setState(() => _loadingHistory = false);
     }
   }
+
 
   double _getValueForAttribute(PlayerCardHistoryPoint point, String attribute) {
     switch (attribute) {
@@ -140,10 +146,14 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   }
 
   Widget _buildAttributesTab() {
-    if (_loadingHistory) return const Center(child: CircularProgressIndicator(color: _accentGreen));
+    if (_loadingHistory || _card == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: _accentGreen),
+      );
+    }
 
     final gamesPlayed = _fullHistory.length;
-    final baseRating = _fullHistory.isNotEmpty ? _fullHistory.last.overallRating : 0.0;
+    final baseRating = _card?.rating.toDouble() ?? 0.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -168,7 +178,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   Widget _buildLiveFormCard(LiveForm form, double baseRating) {
     final state = getLiveFormState(form.delta);
 
-    // Calculam si ROTUNJIM Live Rating-ul
     final double exactLiveRating = baseRating + form.delta;
     final int displayLiveRating = exactLiveRating.round();
 

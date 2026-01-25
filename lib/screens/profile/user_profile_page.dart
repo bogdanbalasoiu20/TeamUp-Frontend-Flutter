@@ -9,6 +9,9 @@ import '../../models/user_profile.dart';
 import '../../services/user_api.dart';
 import '../../services/friend_api.dart';
 import '../../services/player_card_api.dart';
+import '../../models/live_form.dart';
+import '../../services/live_form_api.dart';
+import '../../utils/live_form_state.dart';
 
 class UserProfilePage extends StatefulWidget {
   final String username;
@@ -28,6 +31,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
   bool pendingReceived = false;
   String? requestId;
   Future<PlayerCardUi>? _playerCardFuture;
+  LiveForm? _liveForm;
 
   late AnimationController _pulseController;
 
@@ -71,8 +75,16 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
       final res = await UserApi.fetchProfile(widget.username);
 
+      LiveForm? form;
+      try {
+        form = await LiveFormApi.getLiveForm(res.id);
+      } catch (e) {
+        debugPrint("Could not load live form: $e");
+      }
+
       setState(() {
         profile = res;
+        _liveForm = form;
         _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
       });
 
@@ -201,6 +213,13 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                               ),
                             ),
 
+                            if (_liveForm != null)
+                              Positioned(
+                                top: 70,
+                                left: -30,
+                                child: _buildFormArrowBadge(),
+                              ),
+
                             Positioned(
                               top: 20,
                               right: 15,
@@ -256,8 +275,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                     _buildModernInfoTile(Icons.phone, "Phone", p.phoneNumber!),
                   const SizedBox(height: 32),
                 ],
-
-
               ],
             ),
           ),
@@ -500,6 +517,49 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     );
   }
 
+  Widget _buildFormArrowBadge() {
+    if (_liveForm == null) return const SizedBox.shrink();
+
+    final state = getLiveFormState(_liveForm!.delta);
+    IconData icon;
+    Color color;
+
+    switch (state) {
+      case LiveFormState.onFire:
+        icon = Icons.arrow_upward_rounded;
+        color = Colors.orangeAccent;
+        break;
+      case LiveFormState.good:
+        icon = Icons.trending_up_rounded;
+        color = _accentGreen;
+        break;
+      case LiveFormState.off:
+      case LiveFormState.bad:
+        icon = Icons.trending_down_rounded;
+        color = _dangerRed;
+        break;
+      case LiveFormState.normal:
+      default:
+        icon = Icons.remove_rounded;
+        color = Colors.grey;
+        break;
+    }
+
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.8),
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+        boxShadow: [
+          BoxShadow(color: color.withOpacity(0.4), blurRadius: 10, spreadRadius: 1),
+        ],
+      ),
+      child: Icon(icon, color: color, size: 26),
+    );
+  }
+
   void _openPlayerStatsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -527,5 +587,4 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       },
     );
   }
-
 }
