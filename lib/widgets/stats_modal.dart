@@ -12,6 +12,9 @@ const Color _cardSurface = Color(0xFF13241E);
 const Color _accentGreen = Color(0xFF00E676);
 const Color _textSecondary = Color(0xFF8A9E96);
 
+const List<String> _fifaOutfieldOrder = ["PAC", "DRI", "SHO", "DEF", "PAS", "PHY"];
+const List<String> _fifaGoalkeeperOrder = ["DIV", "REF", "HAN", "SPD", "KIC", "POS"];
+
 class PlayerStatsModalContent extends StatefulWidget {
   final String userId;
 
@@ -31,7 +34,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   LiveForm? _liveForm;
   String _selectedAttribute = "Overall";
   PlayerCardUi? _card;
-
 
   final List<String> _statOptions = [
     "Overall",
@@ -64,7 +66,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
     }
   }
 
-
   double _getValueForAttribute(PlayerCardHistoryPoint point, String attribute) {
     switch (attribute) {
       case "Overall": return point.overallRating;
@@ -78,11 +79,35 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
     }
   }
 
+  String _getStatFullName(String key) {
+    switch (key) {
+      case "PAC": return "Pace";
+      case "SHO": return "Shooting";
+      case "PAS": return "Passing";
+      case "DRI": return "Dribbling";
+      case "DEF": return "Defending";
+      case "PHY": return "Physical";
+      case "DIV": return "Diving";
+      case "REF": return "Reflexes";
+      case "HAN": return "Handling";
+      case "SPD": return "Speed";
+      case "KIC": return "Kicking";
+      case "POS": return "Positioning";
+      default: return key;
+    }
+  }
+
   List<FlSpot> _generateSpots() {
     List<FlSpot> spots = [];
+    int xIndex = 0;
+
+    if (_selectedAttribute == "Overall") {
+      spots.add(FlSpot(xIndex.toDouble(), 68.0));
+      xIndex++;
+    }
+
     int count = _fullHistory.length;
     int startIndex = count > 10 ? count - 10 : 0;
-    int xIndex = 0;
 
     for (int i = startIndex; i < count; i++) {
       final point = _fullHistory[i];
@@ -147,13 +172,22 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
 
   Widget _buildAttributesTab() {
     if (_loadingHistory || _card == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: _accentGreen),
-      );
+      return const Center(child: CircularProgressIndicator(color: _accentGreen));
     }
 
     final gamesPlayed = _fullHistory.length;
-    final baseRating = _card?.rating.toDouble() ?? 0.0;
+    final baseRating = _card!.rating.toDouble();
+
+    final isGoalkeeper = _card!.position?.toLowerCase() == "goalkeeper";
+    final List<String> statKeys = isGoalkeeper ? _fifaGoalkeeperOrder : _fifaOutfieldOrder;
+
+    // Mock Data Social Stats
+    final List<Map<String, dynamic>> socialStats = [
+      {"label": "FRP", "name": "Fairplay", "value": 99},
+      {"label": "AMZ", "name": "Fun", "value": 85},
+      {"label": "CMP", "name": "Compet.", "value": 92},
+      {"label": "TMK", "name": "Teamwork", "value": 78},
+    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -165,19 +199,141 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
             const SizedBox(height: 24),
           ],
 
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Card Stats", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _cardSurface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      ),
+                      child: Column(
+                        children: statKeys.where((key) => _card!.stats.containsKey(key)).map((key) {
+                          final value = _card!.stats[key]!;
+                          final fullName = _getStatFullName(key);
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: _buildStatBar(key, fullName, value, compact: true),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Social Stats", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _cardSurface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                      ),
+                      child: Column(
+                        children: socialStats.map((stat) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: _buildStatBar(stat["label"], stat["name"], stat["value"], compact: true),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
           const Text("General Info", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           _statRow("Recorded Updates", "$gamesPlayed"),
           _statRow("Current Base Rating", baseRating > 0 ? "${baseRating.round()}" : "N/A"),
+
           const SizedBox(height: 30),
         ],
       ),
     );
   }
 
+  Widget _buildStatBar(String label, String name, int value, {bool compact = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Row(
+                children: [
+                  Text(
+                      label,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: compact ? 13 : 14
+                      )
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                        name,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: _textSecondary,
+                            fontSize: compact ? 9 : 10
+                        )
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+                "$value",
+                style: TextStyle(
+                    color: value >= 80 ? _accentGreen : Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: compact ? 13 : 14
+                )
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(2),
+          child: LinearProgressIndicator(
+            value: value / 99.0,
+            backgroundColor: Colors.white.withOpacity(0.1),
+            valueColor: AlwaysStoppedAnimation<Color>(
+                value >= 80 ? _accentGreen : (value >= 60 ? const Color(0xFFC0CA33) : const Color(0xFFE57373))
+            ),
+            minHeight: 4,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLiveFormCard(LiveForm form, double baseRating) {
     final state = getLiveFormState(form.delta);
-
     final double exactLiveRating = baseRating + form.delta;
     final int displayLiveRating = exactLiveRating.round();
 
@@ -279,7 +435,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        "$displayLiveRating", // AICI AFISAM INTREGUL
+                        "$displayLiveRating",
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -431,7 +587,12 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       if (maxY - minY < 10) minY = (maxY - 10).clamp(0, 100);
     }
 
-    const double interval = 5.0;
+    const double yInterval = 5.0;
+
+    double xInterval = 1;
+    if (spots.length > 8) {
+      xInterval = (spots.length / 6).ceilToDouble();
+    }
 
     return LineChartData(
       minX: 0,
@@ -442,7 +603,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: false,
-        horizontalInterval: interval,
+        horizontalInterval: yInterval,
         checkToShowHorizontalLine: (value) => true,
         getDrawingHorizontalLine: (value) {
           return FlLine(
@@ -460,13 +621,22 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         bottomTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            interval: 1,
+            interval: xInterval,
             reservedSize: 32,
             getTitlesWidget: (value, meta) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 10.0),
+              String text;
+              if (_selectedAttribute == "Overall" && value.toInt() == 0) {
+                text = "Base";
+              } else {
+                int val = value.toInt();
+                text = (_selectedAttribute == "Overall") ? val.toString() : (val + 1).toString();
+              }
+
+              return SideTitleWidget(
+                axisSide: meta.axisSide,
+                space: 10,
                 child: Text(
-                  (value.toInt() + 1).toString(),
+                  text,
                   style: TextStyle(
                     color: _textSecondary.withOpacity(0.6),
                     fontSize: 11,
@@ -481,7 +651,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            interval: interval,
+            interval: yInterval,
             reservedSize: 50,
             getTitlesWidget: (value, meta) {
               if (value == minY && value > 0) return const SizedBox.shrink();

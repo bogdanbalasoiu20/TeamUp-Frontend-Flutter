@@ -527,7 +527,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     switch (state) {
       case LiveFormState.onFire:
         icon = Icons.arrow_upward_rounded;
-        color = Colors.orangeAccent;
+        color = const Color(0xFF64DD17);
         break;
       case LiveFormState.good:
         icon = Icons.trending_up_rounded;
