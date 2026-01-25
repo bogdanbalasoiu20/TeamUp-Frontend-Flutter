@@ -2,6 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/services/player_card_api.dart';
 import 'package:team_up_fe_new/models/player_card_history.dart';
+import 'package:team_up_fe_new/models/live_form.dart';
+import 'package:team_up_fe_new/services/live_form_api.dart';
+import 'package:team_up_fe_new/utils/live_form_state.dart';
 
 const Color _bgDark = Color(0xFF091210);
 const Color _cardSurface = Color(0xFF13241E);
@@ -24,6 +27,7 @@ class PlayerStatsModalContent extends StatefulWidget {
 class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   bool _loadingHistory = true;
   List<PlayerCardHistoryPoint> _fullHistory = [];
+  LiveForm? _liveForm;
   String _selectedAttribute = "Overall";
 
   final List<String> _statOptions = [
@@ -34,18 +38,23 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _loadData();
   }
 
-  Future<void> _loadHistory() async {
+  Future<void> _loadData() async {
     try {
-      final history = await PlayerCardService.getCardHistory(widget.userId);
+      final results = await Future.wait([
+        PlayerCardService.getCardHistory(widget.userId),
+        LiveFormApi.getLiveForm(widget.userId),
+      ]);
+
       setState(() {
-        _fullHistory = history;
+        _fullHistory = results[0] as List<PlayerCardHistoryPoint>;
+        _liveForm = results[1] as LiveForm;
         _loadingHistory = false;
       });
     } catch (e) {
-      debugPrint("Error loading history: $e");
+      debugPrint("Error loading data: $e");
       setState(() => _loadingHistory = false);
     }
   }
@@ -131,16 +140,177 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   }
 
   Widget _buildAttributesTab() {
+    if (_loadingHistory) return const Center(child: CircularProgressIndicator(color: _accentGreen));
+
     final gamesPlayed = _fullHistory.length;
-    final currentRating = _fullHistory.isNotEmpty ? _fullHistory.last.overallRating.round() : 0;
+    final baseRating = _fullHistory.isNotEmpty ? _fullHistory.last.overallRating : 0.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_liveForm != null) ...[
+            _buildLiveFormCard(_liveForm!, baseRating),
+            const SizedBox(height: 24),
+          ],
+
+          const Text("General Info", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
           _statRow("Recorded Updates", "$gamesPlayed"),
-          _statRow("Current Rating", currentRating > 0 ? "$currentRating" : "N/A"),
+          _statRow("Current Base Rating", baseRating > 0 ? "${baseRating.round()}" : "N/A"),
           const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveFormCard(LiveForm form, double baseRating) {
+    final state = getLiveFormState(form.delta);
+
+    // Calculam si ROTUNJIM Live Rating-ul
+    final double exactLiveRating = baseRating + form.delta;
+    final int displayLiveRating = exactLiveRating.round();
+
+    Color stateColor;
+    IconData stateIcon;
+    String stateText;
+
+    switch (state) {
+      case LiveFormState.onFire:
+        stateColor = Colors.orangeAccent;
+        stateIcon = Icons.local_fire_department_rounded;
+        stateText = "ON FIRE";
+        break;
+      case LiveFormState.good:
+        stateColor = _accentGreen;
+        stateIcon = Icons.trending_up_rounded;
+        stateText = "GOOD FORM";
+        break;
+      case LiveFormState.bad:
+        stateColor = Colors.redAccent;
+        stateIcon = Icons.trending_down_rounded;
+        stateText = "BAD FORM";
+        break;
+      case LiveFormState.off:
+        stateColor = Colors.blueGrey;
+        stateIcon = Icons.ac_unit_rounded;
+        stateText = "COLD";
+        break;
+      case LiveFormState.normal:
+      default:
+        stateColor = Colors.grey;
+        stateIcon = Icons.remove_rounded;
+        stateText = "NORMAL";
+        break;
+    }
+
+    final isPositive = form.delta >= 0;
+    final sign = isPositive ? "+" : "";
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [stateColor.withOpacity(0.15), _cardSurface],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: stateColor.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(stateIcon, color: stateColor, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    stateText,
+                    style: TextStyle(
+                      color: stateColor,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.0,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "Last ${form.matchesCount} matches",
+                  style: TextStyle(color: _textSecondary, fontSize: 10),
+                ),
+              )
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Live Rating", style: TextStyle(color: _textSecondary, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        "$displayLiveRating", // AICI AFISAM INTREGUL
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            height: 1.0
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: stateColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: stateColor.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      isPositive ? Icons.arrow_upward : Icons.arrow_downward,
+                      color: stateColor,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      "$sign${form.delta.toStringAsFixed(1)}",
+                      style: TextStyle(
+                        color: stateColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -264,6 +434,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         show: true,
         drawVerticalLine: false,
         horizontalInterval: interval,
+        checkToShowHorizontalLine: (value) => true,
         getDrawingHorizontalLine: (value) {
           return FlLine(
             color: Colors.white.withOpacity(0.08),
