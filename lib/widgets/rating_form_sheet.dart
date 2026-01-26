@@ -21,6 +21,8 @@ class RatingFormSheet extends StatefulWidget {
 class _RatingFormSheetState extends State<RatingFormSheet> {
   late PlayerRatingDraft _draft;
 
+  int _selectedTabIndex = 0;
+
   final Color _activeColor = const Color(0xFF46C264);
   final Color _inactiveColor = Colors.white24;
 
@@ -32,7 +34,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
       _draft = widget.draft!.copy();
     } else {
       _draft = PlayerRatingDraft();
-
       if (widget.player.position == "GOALKEEPER") {
         _draft
           ..gkDiving = 50
@@ -50,15 +51,64 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
           ..dribbling = 50
           ..physical = 50;
       }
-    }
 
+      _draft
+        ..fairPlay ??= 50
+        ..communication ??= 50
+        ..fun ??= 50
+        ..competitiveness ??= 50
+        ..adaptability ??= 50
+        ..reliability ??= 50;
+    }
   }
 
+  Widget _buildTabSwitch() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _buildTabButton("Skills", 0),
+          _buildTabButton("Behavior", 1),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildTabButton(String text, int index) {
+    final bool isActive = _selectedTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTabIndex = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isActive ? _activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isActive ? Colors.white : Colors.white70,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              fontSize: 15,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-  // --------------------------------------------------
-  //SLIDER
-  // --------------------------------------------------
   Widget _statSlider(
       String label,
       int? value,
@@ -80,7 +130,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Label + Value Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -93,7 +142,8 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: valueColor.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(8),
@@ -111,8 +161,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
             ],
           ),
           const SizedBox(height: 6),
-
-          // The Slider
           SliderTheme(
             data: SliderThemeData(
               trackHeight: 6,
@@ -137,9 +185,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
     );
   }
 
-  // --------------------------------------------------
-  // FIELD PLAYER STATS
-  // --------------------------------------------------
   List<Widget> _buildFieldStats() {
     return [
       _statSlider("Pace", _draft.pace, (v) => _draft.pace = v),
@@ -151,9 +196,6 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
     ];
   }
 
-  // --------------------------------------------------
-  // GOALKEEPER STATS
-  // --------------------------------------------------
   List<Widget> _buildGkStats() {
     return [
       _statSlider("Diving", _draft.gkDiving, (v) => _draft.gkDiving = v),
@@ -161,17 +203,37 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
       _statSlider("Kicking", _draft.gkKicking, (v) => _draft.gkKicking = v),
       _statSlider("Reflexes", _draft.gkReflexes, (v) => _draft.gkReflexes = v),
       _statSlider("Speed", _draft.gkSpeed, (v) => _draft.gkSpeed = v),
-      _statSlider(
-          "Positioning", _draft.gkPositioning, (v) => _draft.gkPositioning = v),
+      _statSlider("Positioning", _draft.gkPositioning,
+              (v) => _draft.gkPositioning = v),
     ];
   }
 
-  // --------------------------------------------------
-  // BUILD
-  // --------------------------------------------------
+  List<Widget> _buildBehaviorStats() {
+    return [
+      const SizedBox(height: 8),
+      _statSlider("Fair Play", _draft.fairPlay, (v) => _draft.fairPlay = v),
+      _statSlider("Communication", _draft.communication,
+              (v) => _draft.communication = v),
+      _statSlider("Fun", _draft.fun, (v) => _draft.fun = v),
+      _statSlider("Competitiveness", _draft.competitiveness,
+              (v) => _draft.competitiveness = v),
+      _statSlider("Adaptability", _draft.adaptability,
+              (v) => _draft.adaptability = v),
+      _statSlider("Reliability", _draft.reliability,
+              (v) => _draft.reliability = v),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final isGk = widget.player.position == "GOALKEEPER";
+
+    List<Widget> currentStats;
+    if (_selectedTabIndex == 0) {
+      currentStats = isGk ? _buildGkStats() : _buildFieldStats();
+    } else {
+      currentStats = _buildBehaviorStats();
+    }
 
     return Container(
       decoration: const BoxDecoration(
@@ -184,48 +246,42 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
         top: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 5,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 1. Drag Handle
+          Container(
+            width: 40,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isGk ? Icons.sports_handball : Icons.sports_soccer,
+                  color: const Color(0xFF46C264),
+                  size: 24,
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Header Title
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isGk ? Icons.sports_handball : Icons.sports_soccer,
-                    color: const Color(0xFF46C264),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       "Rate Player",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.white70),
                     ),
                     Text(
                       widget.player.username,
@@ -237,57 +293,62 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 10),
-            const Divider(color: Colors.white12),
-            const SizedBox(height: 20),
+          _buildTabSwitch(),
 
-            // Stats List
-            ...(isGk ? _buildGkStats() : _buildFieldStats()),
-
-            const SizedBox(height: 10),
-
-            Container(
-              height: 55,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0A6F4A), Color(0xFF46C264)],
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ...currentStats,
+                  const SizedBox(height: 10),
                 ],
               ),
-              child: ElevatedButton(
-                onPressed: () {
-                  widget.onSave(_draft);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+
+          Container(
+            margin: const EdgeInsets.only(top: 10),
+            height: 55,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0A6F4A), Color(0xFF46C264)],
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
-                child: const Text(
-                  "Save Rating",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () {
+                widget.onSave(_draft);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text(
+                "Save Rating",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

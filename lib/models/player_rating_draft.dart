@@ -13,6 +13,13 @@ class PlayerRatingDraft {
   int? gkSpeed;
   int? gkPositioning;
 
+  int? fairPlay;
+  int? communication;
+  int? fun;
+  int? competitiveness;
+  int? adaptability;
+  int? reliability;
+
   Map<String, dynamic> toJson(String ratedUserId, String position) {
     final Map<String, dynamic> data = {
       "ratedUserId": ratedUserId,
@@ -38,6 +45,22 @@ class PlayerRatingDraft {
       });
     }
 
+    if (fairPlay != null ||
+        communication != null ||
+        fun != null ||
+        competitiveness != null ||
+        adaptability != null ||
+        reliability != null) {
+      data.addAll({
+        "fairPlay": fairPlay,
+        "communication": communication,
+        "fun": fun,
+        "competitiveness": competitiveness,
+        "adaptability": adaptability,
+        "reliability": reliability,
+      });
+    }
+
     return data;
   }
 
@@ -55,6 +78,12 @@ class PlayerRatingDraft {
       ..gkKicking = gkKicking
       ..gkReflexes = gkReflexes
       ..gkSpeed = gkSpeed
-      ..gkPositioning = gkPositioning;
+      ..gkPositioning = gkPositioning
+      ..fairPlay = fairPlay
+      ..communication = communication
+      ..fun = fun
+      ..competitiveness = competitiveness
+      ..adaptability = adaptability
+      ..reliability = reliability;
   }
 }
