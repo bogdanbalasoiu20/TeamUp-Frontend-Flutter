@@ -1,10 +1,12 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/services/player_behavior_api.dart';
 import 'package:team_up_fe_new/services/player_card_api.dart';
 import 'package:team_up_fe_new/models/player_card_history.dart';
 import 'package:team_up_fe_new/models/live_form.dart';
 import 'package:team_up_fe_new/services/live_form_api.dart';
 import 'package:team_up_fe_new/utils/live_form_state.dart';
+import 'package:team_up_fe_new/widgets/player_behavior_ui.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
 
 const Color _bgDark = Color(0xFF091210);
@@ -34,6 +36,8 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   LiveForm? _liveForm;
   String _selectedAttribute = "Overall";
   PlayerCardUi? _card;
+  PlayerBehaviorUi? _behavior;
+
 
   final List<String> _statOptions = [
     "Overall",
@@ -52,12 +56,14 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         PlayerCardService.getPlayerCard(widget.userId),
         PlayerCardService.getCardHistory(widget.userId),
         LiveFormApi.getLiveForm(widget.userId),
+        PlayerBehaviorService.getBehaviorStats(widget.userId),
       ]);
 
       setState(() {
         _card = results[0] as PlayerCardUi;
         _fullHistory = results[1] as List<PlayerCardHistoryPoint>;
         _liveForm = results[2] as LiveForm;
+        _behavior = results[3] as PlayerBehaviorUi;
         _loadingHistory = false;
       });
     } catch (e) {
@@ -78,6 +84,19 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       default: return 0;
     }
   }
+
+  String _getBehaviorFullName(String key) {
+    switch (key) {
+      case "FRP": return "Fair Play";
+      case "COM": return "Communication";
+      case "FUN": return "Fun";
+      case "CMP": return "Competitiveness";
+      case "ADA": return "Adaptability";
+      case "REL": return "Reliability";
+      default: return key;
+    }
+  }
+
 
   String _getStatFullName(String key) {
     switch (key) {
@@ -181,13 +200,21 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
     final isGoalkeeper = _card!.position?.toLowerCase() == "goalkeeper";
     final List<String> statKeys = isGoalkeeper ? _fifaGoalkeeperOrder : _fifaOutfieldOrder;
 
-    // Mock Data Social Stats
-    final List<Map<String, dynamic>> socialStats = [
-      {"label": "FRP", "name": "Fairplay", "value": 99},
-      {"label": "AMZ", "name": "Fun", "value": 85},
-      {"label": "CMP", "name": "Compet.", "value": 92},
-      {"label": "TMK", "name": "Teamwork", "value": 78},
-    ];
+    if (_behavior != null)
+      Column(
+        children: _behavior!.stats.entries.map((e) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12.0),
+            child: _buildStatBar(
+              e.key,
+              _getBehaviorFullName(e.key),
+              e.value,
+              compact: true,
+            ),
+          );
+        }).toList(),
+      );
+
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -206,7 +233,14 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Card Stats", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Card Stats",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -216,13 +250,20 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                         border: Border.all(color: Colors.white.withOpacity(0.05)),
                       ),
                       child: Column(
-                        children: statKeys.where((key) => _card!.stats.containsKey(key)).map((key) {
+                        children: statKeys
+                            .where((key) => _card!.stats.containsKey(key))
+                            .map((key) {
                           final value = _card!.stats[key]!;
                           final fullName = _getStatFullName(key);
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
-                            child: _buildStatBar(key, fullName, value, compact: true),
+                            child: _buildStatBar(
+                              key,
+                              fullName,
+                              value,
+                              compact: true,
+                            ),
                           );
                         }).toList(),
                       ),
@@ -237,7 +278,14 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Social Stats", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Social Stats",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -246,11 +294,21 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: Colors.white.withOpacity(0.05)),
                       ),
-                      child: Column(
-                        children: socialStats.map((stat) {
+                      child: _behavior == null
+                          ? const Text(
+                        "No behavior data",
+                        style: TextStyle(color: Colors.white38),
+                      )
+                          : Column(
+                        children: _behavior!.stats.entries.map((e) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
-                            child: _buildStatBar(stat["label"], stat["name"], stat["value"], compact: true),
+                            child: _buildStatBar(
+                              e.key,
+                              _getBehaviorFullName(e.key),
+                              e.value,
+                              compact: true,
+                            ),
                           );
                         }).toList(),
                       ),
@@ -260,6 +318,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
               ),
             ],
           ),
+
 
           const SizedBox(height: 24),
 
