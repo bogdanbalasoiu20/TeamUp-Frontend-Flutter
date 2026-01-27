@@ -84,6 +84,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
         children: [
           _buildMapLayer(),
           _buildTopInterface(),
+          _buildRefreshButton(),
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -93,7 +94,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
             child: _buildFloatingBottomBar(),
           ),
           _buildSelectedMatchCard(),
-          if (loading)
+          if (loading && pins.isEmpty)
             Positioned(
               top: 120,
               left: 0,
@@ -417,6 +418,48 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
           ),
         );
       },
+    );
+  }
+
+
+  Widget _buildRefreshButton() {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 70,
+      right: 20,
+      child: GestureDetector(
+        onTap: () {
+          _fetchMatchesOnInit();
+        },
+        child: Container(
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+            color: _cardSurface,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
+          child: loading
+              ? Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: _accentGreen,
+            ),
+          )
+              : const Icon(
+            Icons.refresh_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      ),
     );
   }
 }
