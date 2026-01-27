@@ -321,12 +321,17 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
   }
 
   Widget _buildSelectedMatchCard() {
+    final bool isVisible = selectedPin != null;
+
     return AnimatedPositioned(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.elasticOut,
-      bottom: selectedPin != null ? 0 : -400,
+      duration: Duration(milliseconds: isVisible ? 500 : 250),
+
+      curve: isVisible ? Curves.fastLinearToSlowEaseIn : Curves.easeIn,
+
+      bottom: isVisible ? 0 : -420,
       left: 0,
       right: 0,
+
       child: GestureDetector(
         onVerticalDragEnd: (details) {
           if (details.primaryVelocity! > 0) {
@@ -339,7 +344,11 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
             color: _cardSurface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 30, spreadRadius: 5),
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 30,
+                  spreadRadius: 5
+              ),
             ],
           ),
           child: selectedPin == null
@@ -359,6 +368,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
               ),
               Expanded(
                 child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                   child: MatchCardPin(match: selectedPin!),
                 ),
