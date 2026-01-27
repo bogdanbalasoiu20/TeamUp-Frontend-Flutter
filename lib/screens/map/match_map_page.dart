@@ -83,9 +83,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
       body: Stack(
         children: [
           _buildMapLayer(),
-
           _buildTopInterface(),
-
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -94,9 +92,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
             right: 20,
             child: _buildFloatingBottomBar(),
           ),
-
           _buildSelectedMatchCard(),
-
           if (loading)
             Positioned(
               top: 120,
@@ -124,7 +120,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
       ),
     );
   }
-
 
   Widget _buildMapLayer() {
     return FlutterMap(
@@ -206,37 +201,38 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
   }
 
   Widget _buildTopInterface() {
-    return Column(
-      children: [
-        Container(
-          height: 140,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _bgDark.withOpacity(0.9),
-                _bgDark.withOpacity(0.0),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: SafeArea(
-            bottom: false,
-            child: TopSheetBar(
-              unseenCount: unseenCount,
-              onNotificationsTap: () async {
-                await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
-                _loadUnseen();
-              },
-              onMenuTap: () async {
-                final prefs = await SharedPreferences.getInstance();
-                final user = prefs.getString("username");
-                if (user != null && mounted) showLeftMenuModal(context, user);
-              },
-            ),
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: 140,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              _bgDark.withOpacity(0.9),
+              _bgDark.withOpacity(0.0),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
         ),
-      ],
+        child: SafeArea(
+          bottom: false,
+          child: TopSheetBar(
+            unseenCount: unseenCount,
+            onNotificationsTap: () async {
+              await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
+              _loadUnseen();
+            },
+            onMenuTap: () async {
+              final prefs = await SharedPreferences.getInstance();
+              final user = prefs.getString("username");
+              if (user != null && mounted) showLeftMenuModal(context, user);
+            },
+          ),
+        ),
+      ),
     );
   }
 
@@ -289,7 +285,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
                   ),
                 ],
               ),
-
               GestureDetector(
                 onTap: () async {
                   final created = await Navigator.push(
@@ -334,7 +329,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
       child: GestureDetector(
         onVerticalDragEnd: (details) {
           if (details.primaryVelocity! > 0) {
-            _deselectPin(); // Swipe down to close
+            _deselectPin();
           }
         },
         child: Container(
@@ -361,7 +356,6 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
                   ),
                 ),
               ),
-
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
