@@ -10,200 +10,275 @@ class MatchCardPin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final date = DateFormat("EEE, dd MMM • HH:mm")
-        .format(DateTime.parse(match.startsAt));
+    final DateTime start = DateTime.parse(match.startsAt);
+    final String dayNumber = DateFormat("d").format(start);
+    final String monthName = DateFormat("MMM").format(start).toUpperCase();
+    final String timeStr = DateFormat("HH:mm").format(start);
+
+    const Color cardBg = Color(0xFF101F1A);
+    const Color cardSurface = Color(0xFF1A2E28);
+    const Color accentGreen = Color(0xFF00E676);
+    const Color textGrey = Colors.white54;
+
+    final double fillPercent = (match.joinedPlayers / match.maxPlayers).clamp(0.0, 1.0);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF062D24),
-            Color(0xFF0A6F4A),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-
-        // 🔥 SHADOWS (DEPTH + EDGE)
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.45),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      height: 165,
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Stack(
         children: [
-          // ---------------- HEADER ----------------
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  match.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
-              ),
-              _playersBadge(),
-            ],
+              ],
+            ),
           ),
 
-          const SizedBox(height: 6),
-
-          // ---------------- DATE ----------------
-          Row(
-            children: [
-              const Icon(
-                Icons.schedule,
-                size: 15,
-                color: Colors.white70,
+          Positioned(
+            right: -30,
+            bottom: -20,
+            child: Transform.rotate(
+              angle: -0.2,
+              child: Icon(
+                Icons.sports_soccer,
+                size: 160,
+                color: Colors.white.withOpacity(0.03),
               ),
-              const SizedBox(width: 6),
-              Text(
-                date,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+            ),
           ),
 
-          const SizedBox(height: 16),
-
-          // ---------------- STATS ----------------
-          Row(
-            children: [
-              _statChip(
-                icon: Icons.timer,
-                label: "${match.durationMinutes} min",
-              ),
-              const SizedBox(width: 10),
-              _statChip(
-                icon: Icons.payments,
-                label: "${match.totalPrice.toStringAsFixed(0)} lei",
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 22),
-
-          // ---------------- CTA ----------------
-          SizedBox(
-            width: double.infinity,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        MatchOverviewPage(matchId: match.id),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 72,
+                  decoration: BoxDecoration(
+                      color: cardSurface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0,2))
+                      ]
                   ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.35),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      "View match",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          monthName,
+                          style: TextStyle(
+                            color: accentGreen.withOpacity(0.9),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ],
+
+                      Text(
+                        dayNumber,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
+                        ),
+                      ),
+
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF091410),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: accentGreen.withOpacity(0.3),
+                              width: 1
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.access_time_rounded, size: 10, color: accentGreen),
+                            const SizedBox(width: 4),
+                            Text(
+                              timeStr,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
                 ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        match.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
+
+                      const Spacer(),
+
+                      Row(
+                        children: [
+                          Icon(Icons.place_rounded, size: 14, color: accentGreen.withOpacity(0.8)),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              "Locație necunoscută",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: textGrey, fontSize: 12, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      "Players",
+                                      style: TextStyle(color: textGrey, fontSize: 11),
+                                    ),
+                                    Text(
+                                      "${match.joinedPlayers}/${match.maxPlayers}",
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 5),
+                                Stack(
+                                  children: [
+                                    Container(
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    AnimatedFractionallySizedBox(
+                                      duration: const Duration(milliseconds: 500),
+                                      widthFactor: fillPercent,
+                                      child: Container(
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: accentGreen,
+                                          borderRadius: BorderRadius.circular(10),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: accentGreen.withOpacity(0.6),
+                                              blurRadius: 6,
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(width: 14),
+
+                          Container(
+                            height: 36,
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: accentGreen.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: accentGreen.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  match.totalPrice == 0
+                                      ? "FREE"
+                                      : "${match.totalPrice.toInt()} LEI",
+                                  style: TextStyle(
+                                    color: match.totalPrice == 0 ? accentGreen : Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  color: accentGreen,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Positioned.fill(
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                splashColor: accentGreen.withOpacity(0.1),
+                highlightColor: accentGreen.withOpacity(0.05),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MatchOverviewPage(matchId: match.id),
+                    ),
+                  );
+                },
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------- PLAYERS BADGE ----------------
-  Widget _playersBadge() {
-    return Container(
-      padding:
-      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.people,
-            size: 14,
-            color: Colors.white,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            "${match.joinedPlayers}/${match.maxPlayers}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------- STAT CHIP ----------------
-  Widget _statChip({
-    required IconData icon,
-    required String label,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: Colors.white),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
             ),
           ),
         ],
