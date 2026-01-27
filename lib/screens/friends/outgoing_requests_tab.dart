@@ -14,6 +14,9 @@ class _OutgoingRequestsTabState extends State<OutgoingRequestsTab> {
   List<FriendRequest> requests = [];
   bool loading = true;
 
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+
   @override
   void initState() {
     super.initState();
@@ -22,108 +25,138 @@ class _OutgoingRequestsTabState extends State<OutgoingRequestsTab> {
 
   Future<void> _load() async {
     final r = await FriendApi.getOutgoing();
-    setState(() {
-      requests = r;
-      loading = false;
-    });
+    if (mounted) {
+      setState(() {
+        requests = r;
+        loading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF003B2F),
-            Color(0xFF0A6F4A),
-            Color(0xFF062D24),
+    if (loading) {
+      return Center(child: CircularProgressIndicator(color: _accentGreen));
+    }
+
+    if (requests.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.03),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.outbox_rounded, size: 48, color: Colors.white.withOpacity(0.2)),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "No outgoing requests",
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              "Requests you send will appear here",
+              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+            ),
           ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
         ),
-      ),
-      child: loading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : requests.isEmpty
-          ? const Center(
-        child: Text(
-          "No outgoing requests",
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-      )
-          : ListView.builder(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        itemCount: requests.length,
-        itemBuilder: (_, i) =>
-            _requestTile(context, requests[i]),
-      ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      itemCount: requests.length,
+      itemBuilder: (_, i) => _requestTile(context, requests[i]),
     );
   }
 
   Widget _requestTile(BuildContext context, FriendRequest r) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.18),
+        color: _cardSurface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.35),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Avatar
-          CircleAvatar(
-            radius: 32,
-            backgroundColor: Colors.white.withOpacity(0.35),
-            child: const Icon(Icons.person, size: 36, color: Colors.white),
-          ),
-
-          const SizedBox(width: 16),
-
-          // Username → open profile
-          Expanded(
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        UserProfilePage(username: r.addresseeUsername),
-                  ),
-                );
-              },
-              child: Text(
-                r.addresseeUsername,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-
-          // Status chip
-          Container(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orangeAccent),
-              color: Colors.orangeAccent.withOpacity(0.15),
-            ),
-            child: const Text(
-              "Pending",
-              style: TextStyle(
-                color: Colors.orangeAccent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UserProfilePage(username: r.addresseeUsername),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  child: const Icon(Icons.person, size: 30, color: Colors.white),
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        r.addresseeUsername,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Waiting for response...",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orangeAccent.withOpacity(0.5)),
+                    color: Colors.orangeAccent.withOpacity(0.1),
+                  ),
+                  child: const Text(
+                    "Pending",
+                    style: TextStyle(
+                      color: Colors.orangeAccent,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

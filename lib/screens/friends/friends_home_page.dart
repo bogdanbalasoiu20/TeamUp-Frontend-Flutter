@@ -18,10 +18,11 @@ class FriendsHomePage extends StatefulWidget {
   State<FriendsHomePage> createState() => _FriendsHomePageState();
 }
 
-class _FriendsHomePageState extends State<FriendsHomePage>
-    with TickerProviderStateMixin {
-
+class _FriendsHomePageState extends State<FriendsHomePage> {
   late int tabIndex;
+
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _accentGreen = const Color(0xFF00E676);
 
   @override
   void initState() {
@@ -31,110 +32,138 @@ class _FriendsHomePageState extends State<FriendsHomePage>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color(0xFF003B2F),
-            Color(0xFF0A6F4A),
-            Color(0xFF062D24),
-          ],
-          begin: Alignment.bottomCenter,
-          end: Alignment.topCenter,
-        ),
-      ),
-
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: Colors.white,
-          title: const Text(
-            "Friends",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  blurRadius: 8,
-                  color: Colors.black45,
-                  offset: Offset(0, 2),
-                )
-              ],
+    return Scaffold(
+      backgroundColor: _bgDark,
+      body: Stack(
+        children: [
+          Positioned(
+            right: -50,
+            top: -50,
+            child: Transform.rotate(
+              angle: -0.2,
+              child: Icon(
+                Icons.sports_soccer,
+                size: 300,
+                color: Colors.white.withOpacity(0.03),
+              ),
             ),
           ),
-          centerTitle: true,
-        ),
 
-        body: Column(
-          children: [
-            // ⭐ NAVBAR
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.16),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.25)),
-                    ),
-                    child: Row(
-                      children: [
-                        _navButton("Friends", 0),
-                        _navButton("Search", 1),
-                        _navButton("Incoming", 2),
-                        _navButton("Outgoing", 3),
-                      ],
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Social",
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _getTitleForIndex(tabIndex),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.05),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: const Icon(Icons.people_alt_outlined, color: Colors.white),
+                      )
+                    ],
+                  ),
+                ),
+
+                Container(
+                  height: 55,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF13241E),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Row(
+                    children: [
+                      _navItem(icon: Icons.people, index: 0),
+                      _navItem(icon: Icons.search, index: 1),
+                      _navItem(icon: Icons.call_received, index: 2),
+                      _navItem(icon: Icons.call_made, index: 3),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(tabIndex),
+                      child: _buildTabContent(),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-
-            const SizedBox(height: 10),
-
-            Expanded(child: _buildTabContent()),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  //NAV BUTTON
-  Widget _navButton(String label, int idx) {
-    bool selected = tabIndex == idx;
-
+  Widget _navItem({required IconData icon, required int index}) {
+    bool isSelected = tabIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => tabIndex = idx),
+        onTap: () => setState(() => tabIndex = index),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          alignment: Alignment.center,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
           decoration: BoxDecoration(
-            color: selected ? Colors.white.withOpacity(0.34) : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            color: isSelected ? _accentGreen : Colors.transparent,
+            borderRadius: BorderRadius.circular(24),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(selected ? 1 : 0.8),
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            color: isSelected ? const Color(0xFF091210) : Colors.white54,
+            size: 24,
           ),
         ),
       ),
     );
   }
 
-  //TAB CONTENT
+  String _getTitleForIndex(int index) {
+    switch (index) {
+      case 0: return "My Friends";
+      case 1: return "Find People";
+      case 2: return "Requests";
+      case 3: return "Sent";
+      default: return "Social";
+    }
+  }
+
   Widget _buildTabContent() {
     switch (tabIndex) {
       case 0:
