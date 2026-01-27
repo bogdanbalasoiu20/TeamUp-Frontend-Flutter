@@ -55,31 +55,58 @@ class _FriendsHomePageState extends State<FriendsHomePage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Social",
-                            style: TextStyle(
-                              color: Colors.white54,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1,
-                            ),
+                      // BACK BUTTON
+                      InkWell(
+                        onTap: () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(50),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.1)),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _getTitleForIndex(tabIndex),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 24,
                           ),
-                        ],
+                        ),
                       ),
+
+                      const SizedBox(width: 16),
+
+                      // TITLES
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Social",
+                              style: TextStyle(
+                                color: _accentGreen,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _getTitleForIndex(tabIndex),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // DECORATIVE ICON
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(

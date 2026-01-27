@@ -98,7 +98,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
         requestId = relation["requestId"];
       });
     } catch (e) {
-      setState(() => loading = false);
+      if (mounted) setState(() => loading = false);
     }
   }
 
@@ -125,7 +125,14 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     if (profile == null) {
       return Scaffold(
         backgroundColor: _bgDark,
-        body: const Center(child: Text("User not found", style: TextStyle(color: Colors.white))),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildTopBar(),
+              const Expanded(child: Center(child: Text("User not found", style: TextStyle(color: Colors.white)))),
+            ],
+          ),
+        ),
       );
     }
 
@@ -133,32 +140,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
     return Scaffold(
       backgroundColor: _bgDark,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          "PROFILE",
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-            letterSpacing: 1.0,
-          ),
-        ),
-      ),
       body: Stack(
         children: [
           Positioned(
@@ -169,114 +150,370 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0A6F4A).withOpacity(0.4),
+                color: const Color(0xFF0A6F4A).withOpacity(0.2),
               ),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                 child: Container(color: Colors.transparent),
               ),
             ),
           ),
 
-          SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 60, 20, 40),
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: GestureDetector(
-                    onTap: () => _openPlayerStatsModal(context),
-                    child: Transform.scale(
-                      scale: 0.85,
-                      child: SizedBox(
-                        width: 260,
-                        height: 380,
-                        child: Stack(
-                          clipBehavior: Clip.none,
+                _buildTopBar(),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: GestureDetector(
+                            onTap: () => _openPlayerStatsModal(context),
+                            child: Transform.scale(
+                              scale: 0.95,
+                              child: SizedBox(
+                                width: 260,
+                                height: 380,
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Hero(
+                                      tag: 'player_card_${p.id}',
+                                      child: FutureBuilder<PlayerCardUi>(
+                                        future: _playerCardFuture,
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState == ConnectionState.waiting) {
+                                            return SizedBox(
+                                                height: 380,
+                                                child: Center(child: CircularProgressIndicator(color: _accentGreen))
+                                            );
+                                          }
+                                          if (snapshot.hasError || !snapshot.hasData) {
+                                            return const SizedBox(height: 380, child: Center(child: Text("Card Error", style: TextStyle(color: Colors.white))));
+                                          }
+                                          return FifaPlayerCard(data: snapshot.data!);
+                                        },
+                                      ),
+                                    ),
+
+                                    if (_liveForm != null)
+                                      Positioned(
+                                        top: 70,
+                                        left: -30,
+                                        child: _buildFormArrowBadge(),
+                                      ),
+
+                                    Positioned(
+                                      top: 20,
+                                      right: 15,
+                                      child: AnimatedBuilder(
+                                        animation: _pulseController,
+                                        builder: (context, child) {
+                                          return Opacity(
+                                            opacity: 0.8 + (_pulseController.value * 0.2),
+                                            child: _buildTapHintPill(),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 30),
+
+                        _buildActionButtons(p),
+
+                        if (!isMyProfile) const SizedBox(height: 32),
+
+                        _buildSectionHeader("Player Bio"),
+                        const SizedBox(height: 16),
+
+                        Row(
                           children: [
-                            Hero(
-                              tag: 'player_card_${p.id}',
-                              child: FutureBuilder<PlayerCardUi>(
-                                future: _playerCardFuture,
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return SizedBox(
-                                        height: 380,
-                                        child: Center(child: CircularProgressIndicator(color: _accentGreen))
-                                    );
-                                  }
-                                  if (snapshot.hasError || !snapshot.hasData) {
-                                    return const SizedBox(height: 380, child: Center(child: Text("Card Error", style: TextStyle(color: Colors.white))));
-                                  }
-                                  return FifaPlayerCard(data: snapshot.data!);
-                                },
+                            if (p.birthday != null)
+                              Expanded(
+                                child: _buildStatBox(
+                                  label: "AGE",
+                                  value: "${computeAge(p.birthday!)}",
+                                  icon: Icons.cake_rounded,
+                                ),
                               ),
-                            ),
+                            if (p.birthday != null) const SizedBox(width: 12),
 
-                            if (_liveForm != null)
-                              Positioned(
-                                top: 70,
-                                left: -30,
-                                child: _buildFormArrowBadge(),
+                            if (p.position != null)
+                              Expanded(
+                                child: _buildStatBox(
+                                  label: "POSITION",
+                                  value: _abbreviatePosition(p.position!),
+                                  icon: Icons.sports_soccer_rounded,
+                                  highlight: true,
+                                ),
                               ),
+                            if (p.position != null) const SizedBox(width: 12),
 
-                            Positioned(
-                              top: 20,
-                              right: 15,
-                              child: AnimatedBuilder(
-                                animation: _pulseController,
-                                builder: (context, child) {
-                                  return Opacity(
-                                    opacity: 0.8 + (_pulseController.value * 0.2),
-                                    child: _buildTapHintPill(),
-                                  );
-                                },
+                            if (p.city != null && p.city!.trim().isNotEmpty)
+                              Expanded(
+                                child: _buildStatBox(
+                                  label: "CITY",
+                                  value: p.city!,
+                                  icon: Icons.location_on_rounded,
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                      ),
+
+                        const SizedBox(height: 12),
+
+                        // 2. BIO SECTION
+                        if (p.description != null && p.description!.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: _cardSurface,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withOpacity(0.05)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.format_quote_rounded, color: _accentGreen, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "ABOUT ME",
+                                      style: TextStyle(
+                                        color: _textSecondary,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  p.description!,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    height: 1.5,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        const SizedBox(height: 12),
+
+                        // 3. JOINED DATE
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.03),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.02)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "JOINED TEAMUP",
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              Text(
+                                "${p.createdAt.year} · ${_monthName(p.createdAt.month)}",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // PRIVATE DETAILS (IF MY PROFILE)
+                        if (isMyProfile) ...[
+                          _buildSectionHeader("Private Details"),
+                          const SizedBox(height: 12),
+                          if (p.email != null)
+                            _buildModernInfoTile(Icons.email_outlined, "Email", p.email!),
+                          if (p.phoneNumber != null)
+                            _buildModernInfoTile(Icons.phone_outlined, "Phone", p.phoneNumber!),
+                          const SizedBox(height: 32),
+                        ],
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 24),
-
-                _buildActionButtons(p),
-
-                const SizedBox(height: 32),
-
-                _buildSectionHeader("User Info"),
-                const SizedBox(height: 12),
-
-                if (p.birthday != null)
-                  _buildModernInfoTile(Icons.cake, "Age", "${computeAge(p.birthday!)} years old"),
-                if (p.position != null)
-                  _buildModernInfoTile(Icons.sports_soccer, "Position", p.position!),
-                if (p.city != null && p.city!.trim().isNotEmpty)
-                  _buildModernInfoTile(Icons.location_on, "City", p.city!),
-                if (p.description != null && p.description!.isNotEmpty)
-                  _buildModernInfoTile(Icons.description_outlined, "About me", p.description!),
-
-                _buildModernInfoTile(
-                  Icons.calendar_today,
-                  "Joined TeamUp",
-                  "${p.createdAt.year}-${p.createdAt.month.toString().padLeft(2, '0')}-${p.createdAt.day.toString().padLeft(2, '0')}",
-                ),
-
-                const SizedBox(height: 32),
-
-                if (isMyProfile) ...[
-                  _buildSectionHeader("Private Details"),
-                  const SizedBox(height: 12),
-                  if (p.email != null)
-                    _buildModernInfoTile(Icons.email, "Email", p.email!),
-                  if (p.phoneNumber != null)
-                    _buildModernInfoTile(Icons.phone, "Phone", p.phoneNumber!),
-                  const SizedBox(height: 32),
-                ],
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(50),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          // UNIVERSAL TEXTS
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "OVERVIEW",
+                  style: TextStyle(
+                    color: _accentGreen,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  "Player Profile",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+
+          // RIGHT ICON (Edit if me)
+          if (isMyProfile)
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditProfilePage(
+                      birthday: profile!.birthday,
+                      phone: profile!.phoneNumber,
+                      description: profile!.description,
+                      city: profile!.city,
+                      position: profile!.position,
+                    ),
+                  ),
+                ).then((v) { if (v == true) _load(); });
+              },
+              borderRadius: BorderRadius.circular(50),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withOpacity(0.1)),
+                ),
+                child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
+              ),
+            )
+          else
+            const SizedBox(width: 44),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatBox({
+    required String label,
+    required String value,
+    required IconData icon,
+    bool highlight = false,
+  }) {
+    return Container(
+      height: 100,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: highlight ? _accentGreen.withOpacity(0.15) : _cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: highlight ? _accentGreen.withOpacity(0.3) : Colors.white.withOpacity(0.05),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                  icon,
+                  size: 16,
+                  color: highlight ? _accentGreen : _textSecondary
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: highlight ? _accentGreen : _textSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: value.length > 8 ? 14 : 18,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -287,10 +524,10 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     return Text(
       title,
       style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w800,
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
         color: Colors.white,
-        letterSpacing: -0.5,
+        letterSpacing: 0.5,
       ),
     );
   }
@@ -302,11 +539,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       decoration: BoxDecoration(
         color: _cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.02)),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
@@ -340,8 +577,8 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                   value,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -354,34 +591,13 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
   Widget _buildActionButtons(UserProfile p) {
     if (isMyProfile) {
-      return _buildModernButton(
-        text: "Edit Profile",
-        icon: Icons.edit,
-        bgColor: _accentGreen,
-        textColor: Colors.black,
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EditProfilePage(
-                birthday: p.birthday,
-                phone: p.phoneNumber,
-                description: p.description,
-                city: p.city,
-                position: p.position,
-              ),
-            ),
-          ).then((v) {
-            if (v == true) _load();
-          });
-        },
-      );
+      return const SizedBox.shrink();
     }
 
     if (isFriend) {
       return _buildModernButton(
         text: "Unfriend",
-        icon: Icons.person_remove,
+        icon: Icons.person_remove_rounded,
         bgColor: _cardSurface,
         textColor: _dangerRed,
         borderColor: _dangerRed.withOpacity(0.3),
@@ -395,9 +611,10 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     if (pendingSent) {
       return _buildModernButton(
         text: "Request Sent",
-        icon: Icons.hourglass_top,
+        icon: Icons.access_time_rounded,
         bgColor: _cardSurface,
         textColor: _textSecondary,
+        borderColor: Colors.transparent,
         onTap: null,
       );
     }
@@ -408,7 +625,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           Expanded(
             child: _buildModernButton(
               text: "Accept",
-              icon: Icons.check,
+              icon: Icons.check_rounded,
               bgColor: _accentGreen,
               textColor: Colors.black,
               onTap: () => _respond(true),
@@ -418,7 +635,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           Expanded(
             child: _buildModernButton(
               text: "Decline",
-              icon: Icons.close,
+              icon: Icons.close_rounded,
               bgColor: _cardSurface,
               textColor: Colors.white,
               borderColor: Colors.white24,
@@ -431,7 +648,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
     return _buildModernButton(
       text: "Add Friend",
-      icon: Icons.person_add,
+      icon: Icons.person_add_rounded,
       bgColor: _accentGreen,
       textColor: Colors.black,
       onTap: () async {
@@ -451,7 +668,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
   }) {
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: 52,
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
@@ -463,7 +680,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          disabledBackgroundColor: _cardSurface,
+          disabledBackgroundColor: _cardSurface.withOpacity(0.5),
           disabledForegroundColor: Colors.white30,
         ),
         child: Row(
@@ -499,7 +716,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.touch_app_outlined, color: _accentGreen, size: 14),
+              Icon(Icons.bar_chart_rounded, color: _accentGreen, size: 14),
               const SizedBox(width: 6),
               const Text(
                 "STATS",
@@ -526,7 +743,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
     switch (state) {
       case LiveFormState.onFire:
-        icon = Icons.arrow_upward_rounded;
+        icon = Icons.local_fire_department_rounded;
         color = const Color(0xFF64DD17);
         break;
       case LiveFormState.good:
@@ -546,17 +763,17 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     }
 
     return Container(
-      width: 44,
-      height: 44,
+      width: 40,
+      height: 40,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.8),
+        color: const Color(0xFF091210),
         shape: BoxShape.circle,
         border: Border.all(color: color, width: 2),
         boxShadow: [
-          BoxShadow(color: color.withOpacity(0.4), blurRadius: 10, spreadRadius: 1),
+          BoxShadow(color: color.withOpacity(0.2), blurRadius: 10, spreadRadius: 1),
         ],
       ),
-      child: Icon(icon, color: color, size: 26),
+      child: Icon(icon, color: color, size: 24),
     );
   }
 
@@ -567,7 +784,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
       backgroundColor: Colors.transparent,
       builder: (_) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.75,
+          initialChildSize: 0.8,
           minChildSize: 0.5,
           maxChildSize: 0.95,
           builder: (_, controller) {
@@ -586,5 +803,19 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
         );
       },
     );
+  }
+
+  String _monthName(int month) {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return months[month - 1];
+  }
+
+  String _abbreviatePosition(String pos) {
+    if (pos.toLowerCase().contains("goalkeeper")) return "GK";
+    if (pos.toLowerCase().contains("defender")) return "DEF";
+    if (pos.toLowerCase().contains("midfielder")) return "MID";
+    if (pos.toLowerCase().contains("forward")) return "FWD";
+    if (pos.toLowerCase().contains("striker")) return "ST";
+    return pos;
   }
 }
