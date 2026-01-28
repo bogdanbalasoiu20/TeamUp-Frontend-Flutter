@@ -27,6 +27,10 @@ class _InvitedTabCreatorState extends State<InvitedTabCreator> {
   bool loading = false;
   String search = "";
 
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +56,9 @@ class _InvitedTabCreatorState extends State<InvitedTabCreator> {
         _SubTabs(
           selected: subTab,
           onChange: (i) => setState(() => subTab = i),
+          cardSurface: _cardSurface,
+          accentGreen: _accentGreen,
+          textSecondary: _textSecondary,
         ),
         Expanded(
           child: subTab == 0
@@ -76,9 +83,15 @@ class _InvitedTabCreatorState extends State<InvitedTabCreator> {
                 "Invite sent to ${f.username}",
               );
             },
+            cardSurface: _cardSurface,
+            accentGreen: _accentGreen,
+            textSecondary: _textSecondary,
           )
               : _InvitedPlayersList(
             participants: widget.invitedParticipants,
+            cardSurface: _cardSurface,
+            accentGreen: _accentGreen,
+            textSecondary: _textSecondary,
           ),
         ),
       ],
@@ -89,21 +102,35 @@ class _InvitedTabCreatorState extends State<InvitedTabCreator> {
 class _SubTabs extends StatelessWidget {
   final int selected;
   final Function(int) onChange;
+  final Color cardSurface;
+  final Color accentGreen;
+  final Color textSecondary;
 
   const _SubTabs({
     required this.selected,
     required this.onChange,
+    required this.cardSurface,
+    required this.accentGreen,
+    required this.textSecondary,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          _tab("Invite friends", 0),
-          _tab("Invited players", 1),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: cardSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+        ),
+        child: Row(
+          children: [
+            _tab("Invite friends", 0),
+            _tab("Invited players", 1),
+          ],
+        ),
       ),
     );
   }
@@ -113,20 +140,20 @@ class _SubTabs extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () => onChange(index),
-        child: Container(
-          height: 40,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           alignment: Alignment.center,
+          margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: active
-                ? Colors.white.withOpacity(0.35)
-                : Colors.white.withOpacity(0.15),
+            color: active ? accentGreen : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: active ? Colors.black : textSecondary,
               fontWeight: FontWeight.w700,
+              fontSize: 13,
             ),
           ),
         ),
@@ -140,12 +167,18 @@ class _InviteFriendsList extends StatelessWidget {
   final bool loading;
   final Function(String) onSearch;
   final Function(InvitableFriend) onInvite;
+  final Color cardSurface;
+  final Color accentGreen;
+  final Color textSecondary;
 
   const _InviteFriendsList({
     required this.friends,
     required this.loading,
     required this.onSearch,
     required this.onInvite,
+    required this.cardSurface,
+    required this.accentGreen,
+    required this.textSecondary,
   });
 
   @override
@@ -153,25 +186,32 @@ class _InviteFriendsList extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: "Search friends",
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+          child: Container(
+            decoration: BoxDecoration(
+              color: cardSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
             ),
-            onChanged: onSearch,
+            child: TextField(
+              style: const TextStyle(color: Colors.white),
+              cursorColor: accentGreen,
+              decoration: InputDecoration(
+                hintText: "Search friends...",
+                hintStyle: TextStyle(color: textSecondary),
+                prefixIcon: Icon(Icons.search, color: textSecondary),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+              onChanged: onSearch,
+            ),
           ),
         ),
         Expanded(
           child: loading
-              ? const Center(child: CircularProgressIndicator())
+              ? Center(child: CircularProgressIndicator(color: accentGreen))
               : ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             itemCount: friends.length,
             itemBuilder: (_, i) {
               final f = friends[i];
@@ -199,22 +239,30 @@ class _InviteFriendsList extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.18),
+          color: cardSurface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: Colors.white.withOpacity(0.35),
+            color: Colors.white.withOpacity(0.05),
           ),
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.35),
-              child: const Icon(Icons.person,
-                  size: 30, color: Colors.white),
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.black.withOpacity(0.3),
+                border: Border.all(color: accentGreen.withOpacity(0.3)),
+              ),
+              child: const Icon(
+                Icons.person,
+                size: 28,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -222,7 +270,7 @@ class _InviteFriendsList extends StatelessWidget {
                 f.username,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 17,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -231,30 +279,25 @@ class _InviteFriendsList extends StatelessWidget {
                 ? Text(
               "Invited",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.65),
-                fontWeight: FontWeight.w700,
+                color: textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             )
-                : GestureDetector(
-              onTap: () => onInvite(f),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFF0A6F4A),
-                      Color(0xFF46C264),
-                    ],
+                : SizedBox(
+              height: 36,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentGreen,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: BorderRadius.circular(14),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
+                onPressed: () => onInvite(f),
                 child: const Text(
                   "Invite",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -267,26 +310,41 @@ class _InviteFriendsList extends StatelessWidget {
 
 class _InvitedPlayersList extends StatelessWidget {
   final List<Participant> participants;
+  final Color cardSurface;
+  final Color accentGreen;
+  final Color textSecondary;
 
-  const _InvitedPlayersList({required this.participants});
+  const _InvitedPlayersList({
+    required this.participants,
+    required this.cardSurface,
+    required this.accentGreen,
+    required this.textSecondary,
+  });
 
   @override
   Widget build(BuildContext context) {
     if (participants.isEmpty) {
-      return const Center(
-        child: Text(
-          "No users here",
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white70,
-            fontWeight: FontWeight.w500,
-          ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.mail_outline, size: 48, color: textSecondary.withOpacity(0.5)),
+            const SizedBox(height: 16),
+            Text(
+              "No invited players yet",
+              style: TextStyle(
+                fontSize: 16,
+                color: textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       itemCount: participants.length,
       itemBuilder: (_, i) {
         final p = participants[i];
@@ -302,22 +360,30 @@ class _InvitedPlayersList extends StatelessWidget {
             );
           },
           child: Container(
-            margin: const EdgeInsets.only(bottom: 14),
+            margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.18),
+              color: cardSurface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.35),
+                color: Colors.white.withOpacity(0.05),
               ),
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white.withOpacity(0.35),
-                  child: const Icon(Icons.person,
-                      size: 30, color: Colors.white),
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.black.withOpacity(0.3),
+                    border: Border.all(color: accentGreen.withOpacity(0.3)),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    size: 28,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -325,15 +391,15 @@ class _InvitedPlayersList extends StatelessWidget {
                     p.username,
                     style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 17,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
                 Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.5),
-                  size: 18,
+                  Icons.chevron_right,
+                  color: textSecondary.withOpacity(0.5),
+                  size: 24,
                 ),
               ],
             ),

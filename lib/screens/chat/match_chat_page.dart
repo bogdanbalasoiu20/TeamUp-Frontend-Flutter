@@ -33,13 +33,15 @@ class _MatchChatTabState extends State<MatchChatTab> {
   StompClient? stompClient;
   bool _historyLoaded = false;
 
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+
   @override
   void initState() {
     super.initState();
 
-    /// dacă userul NU are voie la chat → nu inițializăm nimic
     if (!widget.isAllowedToChat) {
-      print("### USER NOT ALLOWED TO CHAT → SKIP WS & HISTORY");
       return;
     }
 
@@ -47,9 +49,6 @@ class _MatchChatTabState extends State<MatchChatTab> {
     _initWebSocket();
   }
 
-  // -----------------------------------------------------------
-  // LOAD HISTORY
-  // -----------------------------------------------------------
   Future<void> _loadChatHistory() async {
     if (_historyLoaded) return;
     _historyLoaded = true;
@@ -59,9 +58,6 @@ class _MatchChatTabState extends State<MatchChatTab> {
     _scrollToBottom();
   }
 
-  // -----------------------------------------------------------
-  // WEBSOCKET INIT
-  // -----------------------------------------------------------
   void _initWebSocket() async {
     if (stompClient != null) return;
 
@@ -106,9 +102,6 @@ class _MatchChatTabState extends State<MatchChatTab> {
     super.dispose();
   }
 
-  // -----------------------------------------------------------
-  // UI ROOT
-  // -----------------------------------------------------------
   @override
   Widget build(BuildContext context) {
     if (!widget.isAllowedToChat) {
@@ -120,7 +113,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
         Expanded(
           child: ListView.builder(
             controller: _chatScroll,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             itemCount: messages.length,
             itemBuilder: (_, i) => _chatBubble(messages[i]),
           ),
@@ -130,42 +123,51 @@ class _MatchChatTabState extends State<MatchChatTab> {
     );
   }
 
-  // -----------------------------------------------------------
-  // LOCKED VIEW
-  // -----------------------------------------------------------
   Widget _buildLockedChatMessage() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(22),
-        child: Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
-          ),
-          child: const Text(
-            "Join the match to access the chat",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.white70,
-              fontWeight: FontWeight.w600,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _cardSurface,
+                border: Border.all(color: _textSecondary.withOpacity(0.3)),
+              ),
+              child: Icon(Icons.lock_outline, size: 32, color: _textSecondary),
             ),
-          ),
+            const SizedBox(height: 20),
+            const Text(
+              "Chat Locked",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Join the match to access the team chat.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: _textSecondary,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // -----------------------------------------------------------
-  // CHAT BUBBLE
-  // -----------------------------------------------------------
   Widget _chatBubble(ChatMessage msg) {
     final bool isMe = msg.senderId == widget.currentUserId;
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
         crossAxisAlignment:
@@ -173,49 +175,45 @@ class _MatchChatTabState extends State<MatchChatTab> {
         children: [
           if (!isMe)
             Padding(
-              padding: const EdgeInsets.only(left: 6, bottom: 2),
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
               child: Text(
                 msg.senderUsername,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
+                  fontWeight: FontWeight.bold,
+                  color: _textSecondary,
                 ),
               ),
             ),
 
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            constraints: const BoxConstraints(maxWidth: 280),
+            constraints: const BoxConstraints(maxWidth: 260),
             decoration: BoxDecoration(
-              gradient: isMe
-                  ? const LinearGradient(
-                colors: [
-                  Color(0xFF0A6F4A),
-                  Color(0xFF0E8C60),
-                ],
-              )
-                  : const LinearGradient(
-                colors: [
-                  Colors.white10,
-                  Colors.white24,
-                ],
-              ),
+              color: isMe ? _accentGreen : _cardSurface,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(isMe ? 18 : 4),
-                bottomRight: Radius.circular(isMe ? 4 : 18),
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isMe ? 16 : 2),
+                bottomRight: Radius.circular(isMe ? 2 : 16),
               ),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.15),
-              ),
+              border: isMe
+                  ? null
+                  : Border.all(color: Colors.white.withOpacity(0.05)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ],
             ),
             child: Text(
               msg.content,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: isMe ? Colors.black : Colors.white.withOpacity(0.9),
                 fontSize: 15,
+                fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
                 height: 1.3,
               ),
             ),
@@ -225,58 +223,58 @@ class _MatchChatTabState extends State<MatchChatTab> {
     );
   }
 
-  // -----------------------------------------------------------
-  // INPUT BAR
-  // -----------------------------------------------------------
   Widget _buildMessageInput() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.18),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF091210),
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.05)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: _cardSurface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: TextField(
+                controller: _msgController,
+                style: const TextStyle(color: Colors.white),
+                cursorColor: _accentGreen,
+                decoration: InputDecoration(
+                  hintText: "Type a message...",
+                  hintStyle: TextStyle(color: _textSecondary),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                ),
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _msgController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Write a message...",
-                      hintStyle: TextStyle(color: Colors.white60),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
-                  onTap: _sendMessage,
-                  child: const CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Color(0xFF18C77A),
-                    child: Icon(Icons.send, color: Colors.black),
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _sendMessage,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _accentGreen,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.send, color: Colors.black, size: 22),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  // -----------------------------------------------------------
-  // SEND MESSAGE
-  // -----------------------------------------------------------
   void _sendMessage() async {
     final text = _msgController.text.trim();
     if (text.isEmpty) return;
@@ -291,12 +289,12 @@ class _MatchChatTabState extends State<MatchChatTab> {
   }
 
   void _scrollToBottom() {
-    Future.delayed(const Duration(milliseconds: 80), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       if (_chatScroll.hasClients) {
         _chatScroll.animateTo(
           _chatScroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
         );
       }
     });

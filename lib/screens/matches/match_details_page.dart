@@ -21,7 +21,6 @@ class MatchDetailsTab extends StatelessWidget {
   final Future<void> Function() onInvitePlayers;
   final Future<void> Function() onRefreshRequest;
 
-
   const MatchDetailsTab({
     super.key,
     required this.match,
@@ -36,349 +35,396 @@ class MatchDetailsTab extends StatelessWidget {
 
   bool get isCreator => currentUserId == creatorId;
 
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+
   @override
   Widget build(BuildContext context) {
     if (match == null) {
-      return const Center(
-        child: CircularProgressIndicator(color: Colors.white),
+      return Center(
+        child: CircularProgressIndicator(color: _accentGreen),
       );
     }
 
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
       children: [
-        _buildMatchDetailsCard(),
-        const SizedBox(height: 25),
+        _buildLocationSection(),
+        const SizedBox(height: 32),
+
+        _buildSectionLabel("Game Info"),
+        const SizedBox(height: 8),
+        _buildHeaderInfo(),
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                Icons.timer_outlined,
+                "${match!.durationMinutes} min",
+                "Duration",
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildStatCard(
+                Icons.people_outline,
+                "${match!.currentPlayers}/${match!.maxPlayers}",
+                "Players",
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        _buildStatCard(
+          Icons.attach_money,
+          "${match!.totalPrice.toStringAsFixed(2)} RON",
+          "Total Price",
+          fullWidth: true,
+        ),
 
         if (match!.joinDeadline != null) ...[
-          _sectionTitle("Join Deadline"),
-          _buildJoinDeadlineCard(),
-          const SizedBox(height: 25),
+          const SizedBox(height: 32),
+          _buildSectionLabel("Join Deadline"),
+          const SizedBox(height: 8),
+          _buildInfoContainer(
+            icon: Icons.lock_clock_outlined,
+            text: formatMatchTime(match!.joinDeadline!, null),
+          ),
         ],
 
         if (match!.notes.isNotEmpty) ...[
-          _sectionTitle("Notes"),
-          _buildNotesCard(match!.notes),
-          const SizedBox(height: 25),
+          const SizedBox(height: 32),
+          _buildSectionLabel("Notes & Instructions"),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _cardSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: Text(
+              match!.notes,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 15,
+                height: 1.5,
+              ),
+            ),
+          ),
         ],
 
-        _sectionTitle("Location"),
-        _buildLocationMap(),
-        const SizedBox(height: 35),
-
-        _sectionTitle("Your Status"),
+        const SizedBox(height: 32),
+        _buildSectionLabel("Your Status"),
+        const SizedBox(height: 8),
         _buildStatusCard(),
-        const SizedBox(height: 25),
 
         if (isCreator || me?.status == "ACCEPTED") ...[
-          _sectionTitle("Actions"),
-          _buildActionCard(context),
+          const SizedBox(height: 32),
+          _buildSectionLabel("Actions"),
+          const SizedBox(height: 8),
+          _buildActionButtons(context),
+          const SizedBox(height: 40),
         ],
       ],
     );
   }
 
-  // ============================================================
-  // STATUS CARD (separat, doar text)
-  // ============================================================
+  Widget _buildSectionLabel(String text) {
+    return Text(
+      text.toUpperCase(),
+      style: TextStyle(
+        color: _textSecondary,
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.0,
+      ),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionLabel("Venue Location"),
+        const SizedBox(height: 8),
+        Container(
+          height: 180,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: _accentGreen, width: 2.5),
+            color: _cardSurface,
+            boxShadow: [
+              BoxShadow(
+                color: _accentGreen.withOpacity(0.25),
+                blurRadius: 15,
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(21.5),
+            child: FlutterMap(
+              options: MapOptions(
+                center: LatLng(match!.lat, match!.lng),
+                zoom: 15,
+                interactiveFlags: InteractiveFlag.none,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  userAgentPackageName: "com.teamup.app",
+                  tileProvider: NetworkTileProvider(),
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(match!.lat, match!.lng),
+                      width: 40,
+                      height: 40,
+                      builder: (_) => Icon(
+                        Icons.location_on,
+                        color: _accentGreen,
+                        size: 40,
+                        shadows: const [
+                          Shadow(blurRadius: 10, color: Colors.black)
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Icon(Icons.location_on, color: _accentGreen, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                match!.venueName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeaderInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          match!.title.isEmpty ? "Match Details" : match!.title,
+          style: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Icon(Icons.calendar_month, size: 16, color: _textSecondary),
+            const SizedBox(width: 8),
+            Text(
+              formatMatchTime(match!.startsAt, match!.endsAt),
+              style: TextStyle(color: _textSecondary, fontSize: 16),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(IconData icon, String value, String label, {bool fullWidth = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Row(
+        mainAxisAlignment: fullWidth ? MainAxisAlignment.start : MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: _accentGreen.withOpacity(0.9), size: 24),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                label,
+                style: TextStyle(
+                  color: _textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoContainer({required IconData icon, required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: _textSecondary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusCard() {
     final bool userIsCreator = isCreator;
     final bool isAccepted = me?.status == "ACCEPTED";
 
     String statusText;
+    Color statusColor = _accentGreen;
+    IconData statusIcon = Icons.info_outline;
 
     if (userIsCreator) {
-      statusText = "Match Admin";
+      statusText = "You are the Host";
+      statusIcon = Icons.star;
     } else if (me == null) {
-      statusText = "Not part of this match";
+      statusText = "Not Joined";
+      statusColor = _textSecondary;
+      statusIcon = Icons.person_off;
     } else if (isAccepted) {
-      statusText = "Confirmed player";
+      statusText = "Confirmed Player";
+      statusIcon = Icons.check_circle;
     } else {
       statusText = me!.status;
+      statusColor = Colors.orange;
+      statusIcon = Icons.access_time;
     }
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: statusColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: statusColor.withOpacity(0.3)),
       ),
-      child: Text(
-        statusText,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        children: [
+          Icon(statusIcon, color: statusColor, size: 24),
+          const SizedBox(width: 12),
+          Text(
+            statusText,
+            style: TextStyle(
+              color: statusColor,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // ============================================================
-  // ACTION CARD (separat, doar butoane)
-  // ============================================================
-  Widget _buildActionCard(BuildContext context) {
+  Widget _buildActionButtons(BuildContext context) {
     final bool userIsCreator = isCreator;
     final bool isAccepted = me?.status == "ACCEPTED";
 
-    // CREATOR →  Cancel Match + Edit
     if (userIsCreator) {
-      return Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Column(
-          children: [
-            ActionButtonAnimated(
-              colors: const [
-                Color(0xFF0A6F4A),
-                Color(0xFF46C264),
-              ],
-              text: "Edit Match",
-              onTap: () async {
-                final updated = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditMatchPage(match: match!),
-                  ),
-                );
-
-                if (updated == true) {
-                  await onRefreshRequest();
-                }
-              },
-            ),
-
-            const SizedBox(height: 14),
-
-            ActionButtonAnimated(
-              colors: const [
-                Color(0xFFA30000),
-                Color(0xFFE53935),
-              ],
-              text: "Cancel Match",
-              onTap: () async {
-                await onCancelMatch();
-                showTopBanner(context, "Match canceled");
-              },
-            ),
-          ],
-        ),
-      );
-    }
-
-    // PLAYER ACCEPTED → Leave Match
-    if (!userIsCreator && isAccepted) {
-      return Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.12),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white24),
-        ),
-        child: ActionButtonAnimated(
-          colors: const [Color(0xFFA30000), Color(0xFFE53935)],
-          text: "Leave Match",
-          onTap: () async {
-            await onLeaveMatch();
-            showTopBanner(context, "You left the match");
-          },
-        ),
-      );
-    }
-
-    // PLAYER NON-ACCEPTED
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: const Text(
-        "You can leave only after your request is accepted.",
-        style: TextStyle(color: Colors.white70, fontSize: 14),
-      ),
-    );
-  }
-
-  // ============================================================
-  // LOCATION MAP
-  // ============================================================
-  Widget _buildLocationMap() {
-    final m = match!;
-
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white30),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: FlutterMap(
-        options: MapOptions(
-          center: LatLng(m.lat, m.lng),
-          zoom: 15,
-          interactiveFlags: InteractiveFlag.none,
-        ),
+      return Column(
         children: [
-          TileLayer(
-            urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: "com.teamup.app",
-            tileProvider: NetworkTileProvider(),
-          ),
-
-          MarkerLayer(
-            markers: [
-              Marker(
-                point: LatLng(m.lat, m.lng),
-                width: 40,
-                height: 40,
-                builder: (_) => const Icon(
-                  Icons.location_on,
-                  color: Colors.red,
-                  size: 40,
+          ActionButtonAnimated(
+            colors: const [Color(0xFF1B4D3E), Color(0xFF2C6E58)],
+            text: "Edit Match Details",
+            onTap: () async {
+              final updated = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditMatchPage(match: match!),
                 ),
-              ),
-            ],
+              );
+
+              if (updated == true) {
+                await onRefreshRequest();
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          ActionButtonAnimated(
+            // Red: Deep Burgundy
+            colors: const [Color(0xFF59181B), Color(0xFF8C262B)],
+            text: "Cancel Match",
+            onTap: () async {
+              await onCancelMatch();
+              showTopBanner(context, "Match canceled");
+            },
           ),
         ],
-      ),
-    );
-  }
+      );
+    }
 
-  // ============================================================
-  // MATCH DETAILS CARD
-  // ============================================================
-  Widget _buildMatchDetailsCard() {
-    final m = match!;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            m.title.isEmpty ? "Match Details" : m.title,
-            style: const TextStyle(
-              fontSize: 22,
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          _detailRow(Icons.place, m.venueName),
-          _detailRow(
-            Icons.schedule,
-            formatMatchTime(m.startsAt, m.endsAt),
-          ),
-          _detailRow(Icons.timer, "${m.durationMinutes} minutes"),
-          _detailRow(Icons.people, "${m.currentPlayers}/${m.maxPlayers} players"),
-          _detailRow(Icons.payments, "${m.totalPrice.toStringAsFixed(2)} lei"),
-
-
-        ],
-      ),
-    );
-  }
-
-
-  Widget _buildJoinDeadlineCard() {
-    final d = match!.joinDeadline!;
+    if (isAccepted) {
+      return ActionButtonAnimated(
+        colors: const [Color(0xFF59181B), Color(0xFF8C262B)],
+        text: "Leave Match",
+        onTap: () async {
+          await onLeaveMatch();
+          showTopBanner(context, "You left the match");
+        },
+      );
+    }
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
+        color: _cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
       ),
-      child: Row(
-        children: [
-          const Icon(Icons.lock_clock, color: Colors.white70, size: 22),
-          const SizedBox(width: 10),
-
-          Expanded(
-            child: Text(
-              formatMatchTime(d, null),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-                height: 1.35,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-  Widget _detailRow(IconData icon, String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.white70),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotesCard(String notes) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Text(
-        notes,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Colors.white70,
-          height: 1.35,
-        ),
-      ),
-    );
-  }
-
-
-  // ============================================================
-  // SECTION TITLE
-  // ============================================================
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
+      child: Center(
+        child: Text(
+          "Wait for acceptance to leave.",
+          style: TextStyle(color: _textSecondary),
         ),
       ),
     );
