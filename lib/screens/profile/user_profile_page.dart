@@ -405,20 +405,20 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "OVERVIEW",
+                  "Player",
                   style: TextStyle(
                     color: _accentGreen,
-                    fontSize: 11,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 2.0,
                   ),
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  "Player Profile",
+                  "Profile",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
                   ),

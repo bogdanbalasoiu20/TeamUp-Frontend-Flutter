@@ -137,8 +137,8 @@ class _FriendsTabState extends State<FriendsTab> {
                   ),
                   child: const CircleAvatar(
                     radius: 24,
-                    backgroundColor: Colors.white10,
-                    child: Icon(Icons.person, size: 28, color: Colors.white70),
+                    backgroundColor: Colors.black,
+                    child: Icon(Icons.person, size: 28, color: Colors.white),
                   ),
                 ),
 
@@ -169,17 +169,10 @@ class _FriendsTabState extends State<FriendsTab> {
                   ),
                 ),
 
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: _accentGreen.withOpacity(0.8),
-                    size: 18,
-                  ),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: _accentGreen.withOpacity(0.8),
+                  size: 18,
                 ),
               ],
             ),

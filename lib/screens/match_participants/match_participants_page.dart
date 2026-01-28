@@ -145,8 +145,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
   @override
   Widget build(BuildContext context) {
-    final confirmed =
-    participants.where((p) => p.status == "ACCEPTED").toList();
+    final confirmed = participants.where((p) => p.status == "ACCEPTED").toList();
     final invited = participants.where((p) => p.status == "INVITED").toList();
     final requests = participants.where((p) => p.status == "REQUESTED").toList();
     final waitlist = participants.where((p) => p.status == "WAITLIST").toList();
@@ -155,88 +154,143 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
 
     return Scaffold(
       backgroundColor: _bgDark,
-      appBar: AppBar(
-        backgroundColor: _bgDark,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          "Match Overview",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 0.5,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            child: Container(
-              height: 54,
-              decoration: BoxDecoration(
-                color: _cardSurface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withOpacity(0.05)),
-              ),
-              padding: const EdgeInsets.all(4),
-              child: Row(
-                children: [
-                  _mainTabButton("Participants", 0),
-                  _mainTabButton("Details", 1),
-                  _mainTabButton("Chat", 2),
-                ],
-              ),
+          Positioned(
+            right: -50,
+            top: -50,
+            child: Transform.rotate(
+              angle: -0.2,
+
             ),
           ),
-
-          const SizedBox(height: 12),
-
-          if (mainTab == 0)
-            SlideTransition(
-              position: barOffset,
-              child: Center(
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(0),
+          SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () => Navigator.pop(context),
+                        borderRadius: BorderRadius.circular(50),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withOpacity(0.1)),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Match",
+                              style: TextStyle(
+                                color: _accentGreen,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              "Overview",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Container(
+                      //   padding: const EdgeInsets.all(10),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.white.withOpacity(0.05),
+                      //     shape: BoxShape.circle,
+                      //     border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      //   ),
+                      //   child: const Icon(Icons.stadium_outlined, color: Colors.white),
+                      // )
+                    ],
                   ),
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Container(
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: _cardSurface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    ),
+                    padding: const EdgeInsets.all(4),
                     child: Row(
                       children: [
-                        _reactionPill("Confirmed", 0),
-                        const SizedBox(width: 8),
-                        _reactionPill("Invited", 1),
-                        const SizedBox(width: 8),
-                        _reactionPill("Requests", 2),
-                        const SizedBox(width: 8),
-                        _reactionPill("Waitlist", 3),
+                        _mainTabButton("Participants", 0),
+                        _mainTabButton("Details", 1),
+                        _mainTabButton("Chat", 2),
                       ],
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                if (mainTab == 0)
+                  SlideTransition(
+                    position: barOffset,
+                    child: Center(
+                      child: Container(
+                        height: 44,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(0),
+                        ),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _reactionPill("Confirmed", 0),
+                              const SizedBox(width: 8),
+                              _reactionPill("Invited", 1),
+                              const SizedBox(width: 8),
+                              _reactionPill("Requests", 2),
+                              const SizedBox(width: 8),
+                              _reactionPill("Waitlist", 3),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: loading
+                      ? Center(child: CircularProgressIndicator(color: _accentGreen))
+                      : _buildContent(
+                      confirmed, invited, requests, waitlist, canChat),
+                ),
+                if (mainTab == 0)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+                    child: _buildBottomActionButton(),
+                  ),
+              ],
             ),
-
-          const SizedBox(height: 10),
-
-          Expanded(
-            child: loading
-                ? Center(child: CircularProgressIndicator(color: _accentGreen))
-                : _buildContent(
-                confirmed, invited, requests, waitlist, canChat),
           ),
-
-          if (mainTab == 0)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
-              child: _buildBottomActionButton(),
-            ),
         ],
       ),
     );
@@ -249,10 +303,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       child: GestureDetector(
         onTap: () {
           setState(() => mainTab = index);
-          if (index == 0)
+          if (index == 0) {
             barController.forward();
-          else
+          } else {
             barController.reverse();
+          }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -460,7 +515,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
       List<Participant> requests,
       List<Participant> waitlist,
       bool canChat) {
-    if (mainTab == 1)
+    if (mainTab == 1) {
       return MatchDetailsTab(
         match: matchInfo,
         creatorId: creatorId!,
@@ -478,13 +533,15 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
           await _loadParticipants();
         },
       );
+    }
 
-    if (mainTab == 2)
+    if (mainTab == 2) {
       return MatchChatTab(
         matchId: widget.matchId,
         currentUserId: currentUserId ?? "",
         isAllowedToChat: canChat,
       );
+    }
 
     List<List<Participant>> sections = [
       confirmed,
@@ -613,9 +670,9 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
               _promoteButton(p)
             else
               Icon(
-                Icons.chevron_right,
-                color: _textSecondary.withOpacity(0.5),
-                size: 24,
+                Icons.arrow_forward_rounded,
+                color: _accentGreen.withOpacity(0.8),
+                size: 18,
               ),
           ],
         ),
