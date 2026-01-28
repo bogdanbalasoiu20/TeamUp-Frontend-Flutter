@@ -8,6 +8,8 @@ import 'package:team_up_fe_new/services/live_form_api.dart';
 import 'package:team_up_fe_new/utils/live_form_state.dart';
 import 'package:team_up_fe_new/widgets/player_behavior_ui.dart';
 import 'package:team_up_fe_new/widgets/player_card/player_card_ui.dart';
+import 'package:team_up_fe_new/models/user_stats.dart';
+import 'package:team_up_fe_new/services/user_stats_api.dart';
 
 const Color _bgDark = Color(0xFF091210);
 const Color _cardSurface = Color(0xFF13241E);
@@ -37,7 +39,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   String _selectedAttribute = "Overall";
   PlayerCardUi? _card;
   PlayerBehaviorUi? _behavior;
-
+  UserStats? _userStats;
 
   final List<String> _statOptions = [
     "Overall",
@@ -57,6 +59,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         PlayerCardService.getCardHistory(widget.userId),
         LiveFormApi.getLiveForm(widget.userId),
         PlayerBehaviorService.getBehaviorStats(widget.userId),
+        UserStatsApi.getUserStats(widget.userId),
       ]);
 
       setState(() {
@@ -64,6 +67,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         _fullHistory = results[1] as List<PlayerCardHistoryPoint>;
         _liveForm = results[2] as LiveForm;
         _behavior = results[3] as PlayerBehaviorUi;
+        _userStats = results[4] as UserStats;
         _loadingHistory = false;
       });
     } catch (e) {
@@ -96,7 +100,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       default: return key;
     }
   }
-
 
   String _getStatFullName(String key) {
     switch (key) {
@@ -199,22 +202,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
 
     final isGoalkeeper = _card!.position?.toLowerCase() == "goalkeeper";
     final List<String> statKeys = isGoalkeeper ? _fifaGoalkeeperOrder : _fifaOutfieldOrder;
-
-    if (_behavior != null)
-      Column(
-        children: _behavior!.stats.entries.map((e) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: _buildStatBar(
-              e.key,
-              _getBehaviorFullName(e.key),
-              e.value,
-              compact: true,
-            ),
-          );
-        }).toList(),
-      );
-
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -319,17 +306,62 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
             ],
           ),
 
-
           const SizedBox(height: 24),
 
-          const Text("General Info", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          _statRow("Recorded Updates", "$gamesPlayed"),
-          _statRow("Current Base Rating", baseRating > 0 ? "${baseRating.round()}" : "N/A"),
-
-          const SizedBox(height: 30),
+          if (_userStats != null) ...[
+            const Text("User Activity & Rating", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _cardSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: _buildSimpleStatItem("Matches Played", "${_userStats!.matchesPlayed}", Icons.sports_soccer)),
+                      Container(width: 1, height: 40, color: Colors.white10),
+                      Expanded(child: _buildSimpleStatItem("Matches Created", "${_userStats!.matchesCreated}", Icons.add_circle_outline)),
+                    ],
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: _buildSimpleStatItem("Votes Given", "${_userStats!.votesGiven}", Icons.how_to_vote)),
+                      Container(width: 1, height: 40, color: Colors.white10),
+                      Expanded(child: _buildSimpleStatItem("Votes Received", "${_userStats!.votesReceived}", Icons.star_border)),
+                    ],
+                  ),
+                  const Divider(color: Colors.white10, height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: _buildSimpleStatItem("Current Rating", _userStats!.currentRating.round().toString(), Icons.bar_chart)),
+                      Container(width: 1, height: 40, color: Colors.white10),
+                      Expanded(child: _buildSimpleStatItem("Max Rating", _userStats!.maxRating.round().toString(), Icons.emoji_events_outlined, valueColor: _accentGreen)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildSimpleStatItem(String label, String value, IconData icon, {Color valueColor = Colors.white}) {
+    return Column(
+      children: [
+        Icon(icon, color: _textSecondary, size: 20),
+        const SizedBox(height: 6),
+        Text(value, style: TextStyle(color: valueColor, fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(color: _textSecondary, fontSize: 11)),
+      ],
     );
   }
 
