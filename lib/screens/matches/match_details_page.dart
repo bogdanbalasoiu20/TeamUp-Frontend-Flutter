@@ -376,7 +376,7 @@ class MatchDetailsTab extends StatelessWidget {
         children: [
           ActionButtonAnimated(
             colors: const [Color(0xFF1B4D3E), Color(0xFF2C6E58)],
-            text: "Edit Match Details",
+            text: "Edit Match",
             onTap: () async {
               final updated = await Navigator.push(
                 context,

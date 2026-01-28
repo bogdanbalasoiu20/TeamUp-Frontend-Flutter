@@ -33,7 +33,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
   String? position;
   bool updating = false;
 
-  // --- THEME COLORS ---
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
   final Color _accentGreen = const Color(0xFF00E676);
@@ -168,7 +167,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           SafeArea(
             child: Column(
               children: [
-                // CUSTOM APP BAR
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
@@ -204,7 +202,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                         _buildSectionHeader("Personal Info"),
 
-                        // BIRTHDAY PICKER
                         _buildClickableInput(
                           icon: Icons.cake_outlined,
                           label: "Birthday",
@@ -212,12 +209,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               ? "Select your birthday"
                               : DateFormat("yyyy-MM-dd").format(birthday!),
                           onTap: _pickBirthday,
-                          isPlaceholder: birthday == null,
                         ),
 
                         const SizedBox(height: 16),
 
-                        // PHONE
                         _buildModernInput(
                           controller: phoneController,
                           label: "Phone Number",
@@ -227,7 +222,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                         const SizedBox(height: 16),
 
-                        // CITY
                         _buildModernInput(
                           controller: cityController,
                           label: "City",
@@ -237,12 +231,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         const SizedBox(height: 32),
                         _buildSectionHeader("Player Details"),
 
-                        // POSITION DROPDOWN
                         _buildModernDropdown(),
 
                         const SizedBox(height: 16),
 
-                        // DESCRIPTION
                         _buildModernInput(
                           controller: descriptionController,
                           label: "Bio / Description",
@@ -252,7 +244,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                         const SizedBox(height: 40),
 
-                        // SAVE BUTTON
                         SizedBox(
                           width: double.infinity,
                           height: 56,
@@ -297,7 +288,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12, left: 4),
@@ -313,7 +303,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  // Standard Text Input
   Widget _buildModernInput({
     required TextEditingController controller,
     required String label,
@@ -331,28 +320,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white),
+        style: const TextStyle(color: Colors.white, fontSize: 16),
         decoration: InputDecoration(
-          hintText: label,
-          hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+          labelText: label,
+          labelStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+          floatingLabelStyle: TextStyle(color: _accentGreen),
           prefixIcon: Padding(
             padding: EdgeInsets.only(bottom: maxLines > 1 ? 40 : 0),
             child: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
       ),
     );
   }
 
-  // Clickable Input (for DatePicker)
   Widget _buildClickableInput({
     required IconData icon,
     required String label,
     required String value,
     required VoidCallback onTap,
-    bool isPlaceholder = false,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -366,22 +354,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
         child: ListTile(
           leading: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
           title: Text(
-            value,
+            label,
             style: TextStyle(
-              color: isPlaceholder ? _textSecondary.withOpacity(0.7) : Colors.white,
-              fontSize: 16,
+              color: _textSecondary.withOpacity(0.7),
+              fontSize: 12,
             ),
           ),
-          trailing: Icon(Icons.calendar_today, color: _textSecondary, size: 18),
+          subtitle: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          trailing: Icon(Icons.edit, color: _textSecondary, size: 18),
         ),
       ),
     );
   }
 
-  // Dropdown for Position
   Widget _buildModernDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
         color: _cardSurface,
         borderRadius: BorderRadius.circular(16),

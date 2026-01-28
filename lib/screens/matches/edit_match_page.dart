@@ -1,9 +1,9 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
-import '../../utils/app_colors.dart';
 
 class EditMatchPage extends StatefulWidget {
   final MatchInfo match;
@@ -27,10 +27,14 @@ class _EditMatchPageState extends State<EditMatchPage> {
   bool updating = false;
   String visibility = "PUBLIC";
 
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+  final Color _textSecondary = const Color(0xFF8A9E96);
+
   @override
   void initState() {
     super.initState();
-
     final m = widget.match;
 
     titleController = TextEditingController(text: m.title);
@@ -46,32 +50,75 @@ class _EditMatchPageState extends State<EditMatchPage> {
 
   Future<void> _pickDate({required bool isStart}) async {
     final now = DateTime.now();
+    final initial = isStart ? (startsAt ?? now) : (joinDeadline ?? now);
 
     final date = await showDatePicker(
       context: context,
-      initialDate: isStart ? (startsAt ?? now) : (joinDeadline ?? now),
+      initialDate: initial,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _accentGreen,
+              onPrimary: Colors.black,
+              surface: _cardSurface,
+              onSurface: Colors.white,
+            ),
+            dialogBackgroundColor: _bgDark,
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (date == null) return;
+    if (!mounted) return;
 
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.fromDateTime(isStart ? (startsAt ?? now) : (joinDeadline ?? now)),
+      initialTime: TimeOfDay.fromDateTime(initial),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _accentGreen,
+              onPrimary: Colors.black,
+              surface: _cardSurface,
+              onSurface: Colors.white,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: _cardSurface,
+              dialBackgroundColor: _bgDark,
+              dialHandColor: _accentGreen,
+              hourMinuteTextColor: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (time == null) return;
 
     final dt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
 
     setState(() {
-      if (isStart) startsAt = dt;
-      else joinDeadline = dt;
+      if (isStart) {
+        startsAt = dt;
+      } else {
+        joinDeadline = dt;
+      }
     });
   }
 
   void showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(msg, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red.shade900,
+      ),
     );
   }
 
@@ -92,207 +139,217 @@ class _EditMatchPageState extends State<EditMatchPage> {
     try {
       await ApiService.patch("/api/matches/${widget.match.id}", payload);
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Match updated successfully")),
+        SnackBar(
+          content: const Text("Match updated successfully!", style: TextStyle(color: Colors.black)),
+          backgroundColor: _accentGreen,
+        ),
       );
 
       Navigator.pop(context, true);
-
     } catch (e) {
       showError(e is ApiException ? e.toString() : "Unexpected error");
     }
 
-    setState(() => updating = false);
+    if (mounted) setState(() => updating = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final m = widget.match;
-
     return Scaffold(
+      backgroundColor: _bgDark,
       body: Stack(
         children: [
-          // BACKGROUND
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFF003B2F),
-                  AppColors.primaryGreenDark,
-                  AppColors.primaryGreenLight,
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
+
+          Positioned(
+            top: -80,
+            right: -80,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFF0A6F4A).withOpacity(0.3),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                child: Container(color: Colors.transparent),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _accentGreen.withOpacity(0.1),
+              ),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+                child: Container(color: Colors.transparent),
               ),
             ),
           ),
 
-          // TITLE
-          Padding(
-            padding: const EdgeInsets.fromLTRB(28, 70, 28, 0),
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
-                  "Edit Match",
-                  style: TextStyle(
-                    fontSize: 42,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    shadows: [
-                      Shadow(
-                        blurRadius: 12,
-                        color: Colors.black54,
-                        offset: Offset(0, 3),
+              children: [
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.05),
+                          padding: const EdgeInsets.all(12),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Text(
+                        "Edit Match",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 6),
-                Text(
-                  "Adjust details • Save",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 17,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
-          // WHITE SHEET
-          Positioned(
-            top: size.height * 0.28,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(26, 32, 26, 0),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(40),
-                  topRight: Radius.circular(40),
-                ),
-              ),
 
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader("Logistics"),
 
-                    // FIELD (DISABLED) WITH ICONS
-                    const Text(
-                      "Field (cannot be changed)",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF003B2F),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
+                        _buildReadOnlyField(
+                          icon: Icons.location_on_outlined,
+                          label: "Venue (Fixed)",
+                          value: widget.match.venueName,
+                        ),
+                        const SizedBox(height: 16),
 
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.black26),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 22, color: Colors.black54),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              m.venueName,
-                              style: const TextStyle(
+                        _buildClickableInput(
+                          icon: Icons.calendar_month_outlined,
+                          label: "Start Time",
+                          value: startsAt == null
+                              ? "Select start time"
+                              : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
+                          onTap: () => _pickDate(isStart: true),
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildModernInput(
+                          controller: durationController,
+                          label: "Duration - Minutes",
+                          icon: Icons.timer_outlined,
+                          keyboardType: TextInputType.number,
+                        ),
+
+                        const SizedBox(height: 32),
+                        _buildSectionHeader("Rules & Cost"),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildModernInput(
+                                controller: maxPlayersController,
+                                label: "Max Players",
+                                icon: Icons.group_outlined,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildModernInput(
+                                controller: priceController,
+                                label: "Total Price",
+                                icon: Icons.payments_outlined,
+                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildClickableInput(
+                          icon: Icons.lock_clock_outlined,
+                          label: "Join Deadline",
+                          value: joinDeadline == null
+                              ? "No deadline set"
+                              : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
+                          onTap: () => _pickDate(isStart: false),
+                        ),
+
+                        const SizedBox(height: 32),
+                        _buildSectionHeader("Information"),
+
+                        _buildModernInput(
+                          controller: titleController,
+                          label: "Match Title",
+                          icon: Icons.sports_soccer_outlined,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _buildModernInput(
+                          controller: notesController,
+                          label: "Notes / Description",
+                          icon: Icons.description_outlined,
+                          maxLines: 4,
+                        ),
+
+                        const SizedBox(height: 40),
+
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: updating ? null : _updateMatch,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _accentGreen,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              disabledBackgroundColor: _cardSurface,
+                            ),
+                            child: updating
+                                ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
+                            )
+                                : const Text(
+                              "SAVE CHANGES",
+                              style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.black54,
-                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
-                          const Icon(Icons.lock, size: 20, color: Colors.black45),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // START TIME
-                    _iconPickerBox(
-                      icon: Icons.schedule,
-                      label: "Start Time",
-                      text: startsAt == null
-                          ? "Select date & time"
-                          : DateFormat("yyyy-MM-dd HH:mm").format(startsAt!),
-                      onTap: () => _pickDate(isStart: true),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // DEADLINE
-                    _iconPickerBox(
-                      icon: Icons.lock_clock,
-                      label: "Join Deadline (optional)",
-                      text: joinDeadline == null
-                          ? "Select deadline"
-                          : DateFormat("yyyy-MM-dd HH:mm").format(joinDeadline!),
-                      onTap: () => _pickDate(isStart: false),
-                    ),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Duration (minutes)", durationController, Icons.timer),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Maximum players", maxPlayersController, Icons.people),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Total price", priceController, Icons.payments),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Title", titleController, Icons.sports_soccer),
-                    const SizedBox(height: 20),
-
-                    _iconTextField("Notes", notesController, Icons.note_alt, maxLines: 3),
-
-                    const SizedBox(height: 40),
-
-                    GestureDetector(
-                      onTap: updating ? null : _updateMatch,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        height: 55,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              Color(0xFF003B2F),
-                              Color(0xFF0A6F4A),
-                              Color(0xFF46C264),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
                         ),
-                        child: Center(
-                          child: updating
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : const Text(
-                            "SAVE CHANGES",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
+                        const SizedBox(height: 40),
+                      ],
                     ),
-
-                    const SizedBox(height: 100),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -300,87 +357,123 @@ class _EditMatchPageState extends State<EditMatchPage> {
     );
   }
 
-
-  Widget _iconPickerBox({
-    required IconData icon,
-    required String label,
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF003B2F),
-          ),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(
+        title.toUpperCase(),
+        style: TextStyle(
+          color: _textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
         ),
-        const SizedBox(height: 6),
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.black12),
-            ),
-            child: Row(
-              children: [
-                Icon(icon, color: Colors.black87),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(text, style: const TextStyle(fontSize: 15)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
 
-  Widget _iconTextField(String label, TextEditingController controller, IconData icon, {int maxLines = 1}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
+  Widget _buildModernInput({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white, fontSize: 16),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
+          floatingLabelStyle: TextStyle(color: _accentGreen),
+          prefixIcon: Padding(
+            padding: EdgeInsets.only(bottom: maxLines > 1 ? 40 : 0),
+            child: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClickableInput({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+        ),
+        child: ListTile(
+          leading: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+          title: Text(
+            label,
+            style: TextStyle(
+              color: _textSecondary.withOpacity(0.7),
+              fontSize: 12,
+            ),
+          ),
+          subtitle: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          trailing: Icon(Icons.edit, color: _textSecondary, size: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadOnlyField({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.02)),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white38, size: 22),
+        title: Text(
           label,
+          style: TextStyle(
+            color: _textSecondary.withOpacity(0.5),
+            fontSize: 12,
+          ),
+        ),
+        subtitle: Text(
+          value,
           style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF003B2F),
+            color: Colors.white54,
+            fontSize: 16,
           ),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.black12),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.black87),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  maxLines: maxLines,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        trailing: const Icon(Icons.lock_outline, color: Colors.white24, size: 18),
+      ),
     );
   }
 }
