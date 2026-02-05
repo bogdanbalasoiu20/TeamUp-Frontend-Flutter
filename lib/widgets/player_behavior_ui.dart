@@ -14,8 +14,8 @@ class PlayerBehaviorUi {
         "COM": data['communication'],
         "FUN": data['fun'],
         "CMP": data['competitiveness'],
-        "ADA": data['adaptability'],
-        "REL": data['reliability'],
+        "SFH": data['selfishness'],
+        "AGR": data['aggressiveness'],
       },
       feedbackCount: data['feedbackCount'],
     );

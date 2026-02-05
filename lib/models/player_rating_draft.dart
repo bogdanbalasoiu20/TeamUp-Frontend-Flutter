@@ -17,8 +17,8 @@ class PlayerRatingDraft {
   int? communication;
   int? fun;
   int? competitiveness;
-  int? adaptability;
-  int? reliability;
+  int? selfishness;
+  int? aggressiveness;
 
   Map<String, dynamic> toJson(String ratedUserId, String position) {
     final Map<String, dynamic> data = {
@@ -49,15 +49,15 @@ class PlayerRatingDraft {
         communication != null ||
         fun != null ||
         competitiveness != null ||
-        adaptability != null ||
-        reliability != null) {
+        selfishness != null ||
+        aggressiveness != null) {
       data.addAll({
         "fairPlay": fairPlay,
         "communication": communication,
         "fun": fun,
         "competitiveness": competitiveness,
-        "adaptability": adaptability,
-        "reliability": reliability,
+        "selfishness": selfishness,
+        "aggressiveness": aggressiveness,
       });
     }
 
@@ -83,7 +83,7 @@ class PlayerRatingDraft {
       ..communication = communication
       ..fun = fun
       ..competitiveness = competitiveness
-      ..adaptability = adaptability
-      ..reliability = reliability;
+      ..selfishness = selfishness
+      ..aggressiveness = aggressiveness;
   }
 }

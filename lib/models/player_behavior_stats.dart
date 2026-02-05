@@ -3,8 +3,8 @@ class PlayerBehaviorStats {
   final int communication;
   final int fun;
   final int competitiveness;
-  final int adaptability;
-  final int reliability;
+  final int selfishness;
+  final int aggressiveness;
   final int feedbackCount;
 
   PlayerBehaviorStats({
@@ -12,8 +12,8 @@ class PlayerBehaviorStats {
     required this.communication,
     required this.fun,
     required this.competitiveness,
-    required this.adaptability,
-    required this.reliability,
+    required this.selfishness,
+    required this.aggressiveness,
     required this.feedbackCount,
   });
 
@@ -23,8 +23,8 @@ class PlayerBehaviorStats {
       communication: json['communication'],
       fun: json['fun'],
       competitiveness: json['competitiveness'],
-      adaptability: json['adaptability'],
-      reliability: json['reliability'],
+      selfishness: json['selfishness'],
+      aggressiveness: json['aggressiveness'],
       feedbackCount: json['feedbackCount'],
     );
   }

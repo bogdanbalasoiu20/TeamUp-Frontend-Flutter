@@ -95,8 +95,8 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
       case "COM": return "Communication";
       case "FUN": return "Fun";
       case "CMP": return "Competitiveness";
-      case "ADA": return "Adaptability";
-      case "REL": return "Reliability";
+      case "SFH": return "Selfishness";
+      case "AGR": return "Aggressiveness";
       default: return key;
     }
   }

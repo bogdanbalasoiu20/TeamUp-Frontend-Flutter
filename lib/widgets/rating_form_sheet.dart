@@ -57,8 +57,8 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
         ..communication ??= 50
         ..fun ??= 50
         ..competitiveness ??= 50
-        ..adaptability ??= 50
-        ..reliability ??= 50;
+        ..selfishness ??= 50
+        ..aggressiveness ??= 50;
     }
   }
 
@@ -217,10 +217,10 @@ class _RatingFormSheetState extends State<RatingFormSheet> {
       _statSlider("Fun", _draft.fun, (v) => _draft.fun = v),
       _statSlider("Competitiveness", _draft.competitiveness,
               (v) => _draft.competitiveness = v),
-      _statSlider("Adaptability", _draft.adaptability,
-              (v) => _draft.adaptability = v),
-      _statSlider("Reliability", _draft.reliability,
-              (v) => _draft.reliability = v),
+      _statSlider("Selfishness", _draft.selfishness,
+              (v) => _draft.selfishness = v),
+      _statSlider("Aggressiveness", _draft.aggressiveness,
+              (v) => _draft.aggressiveness = v),
     ];
   }
 
