@@ -12,6 +12,8 @@ import '../../services/player_card_api.dart';
 import '../../models/live_form.dart';
 import '../../services/live_form_api.dart';
 import '../../utils/live_form_state.dart';
+import 'package:team_up_fe_new/widgets/chemistry_ui.dart';
+
 
 class UserProfilePage extends StatefulWidget {
   final String username;
@@ -231,7 +233,11 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
                         _buildActionButtons(p),
 
-                        if (!isMyProfile) const SizedBox(height: 32),
+                        if (!isMyProfile) ...[
+                          const SizedBox(height: 24),
+                          ChemistryUI(otherUserId: p.id),
+                          const SizedBox(height: 32),
+                        ],
 
                         _buildSectionHeader("Player Bio"),
                         const SizedBox(height: 16),
