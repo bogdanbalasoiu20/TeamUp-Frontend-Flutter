@@ -16,6 +16,7 @@ class ChemistryUI extends StatefulWidget {
 
 class _ChemistryUIState extends State<ChemistryUI> {
   late Future<ChemistryResult> _chemistryFuture;
+  bool _isExpanded = false;
 
   @override
   void initState() {
@@ -29,6 +30,7 @@ class _ChemistryUIState extends State<ChemistryUI> {
     if (oldWidget.otherUserId != widget.otherUserId) {
       setState(() {
         _chemistryFuture = ChemistryApi.getChemistry(widget.otherUserId);
+        _isExpanded = false;
       });
     }
   }
@@ -38,34 +40,18 @@ class _ChemistryUIState extends State<ChemistryUI> {
     return FutureBuilder<ChemistryResult>(
       future: _chemistryFuture,
       builder: (context, snapshot) {
-        // 1. LOADING STATE
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoading();
         }
 
-        // 2. ERROR STATE (Aici era problema - acum o afișăm)
         if (snapshot.hasError) {
-          debugPrint("CHEMISTRY ERROR: ${snapshot.error}"); // Scrie în consolă
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
-              border: Border.all(color: Colors.red),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              "Eroare: ${snapshot.error}",
-              style: const TextStyle(color: Colors.red),
-            ),
-          );
+          return const SizedBox.shrink();
         }
 
-        // 3. NO DATA STATE
         if (!snapshot.hasData) {
-          return const Text("No data found", style: TextStyle(color: Colors.white));
+          return const SizedBox.shrink();
         }
 
-        // 4. SUCCESS STATE
         return _buildContent(context, snapshot.data!);
       },
     );
@@ -74,87 +60,173 @@ class _ChemistryUIState extends State<ChemistryUI> {
   Widget _buildLoading() {
     return Container(
       width: double.infinity,
-      height: 100,
-      padding: const EdgeInsets.all(20),
+      height: 80,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.03),
         borderRadius: BorderRadius.circular(20),
       ),
       child: const Center(
-        child: CircularProgressIndicator(color: Colors.greenAccent),
+        child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.greenAccent)
+        ),
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, ChemistryResult chemistry) {
     final score = chemistry.score;
+    final color = _scoreColor(score);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF13241E),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _isExpanded = !_isExpanded;
+          });
+        },
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_graph_rounded, color: Colors.greenAccent, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                "FIELD CHEMISTRY",
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
+        splashColor: color.withOpacity(0.1),
+        highlightColor: color.withOpacity(0.05),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF13241E),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color: _isExpanded ? color.withOpacity(0.5) : Colors.white.withOpacity(0.05),
+                width: 1
+            ),
+            boxShadow: _isExpanded ? [
+              BoxShadow(
+                color: color.withOpacity(0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              )
+            ] : [],
           ),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "$score%",
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: _scoreColor(score),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _getVerdict(score),
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Left side: Label + Score
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.auto_graph_rounded, color: color, size: 16),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "FIELD CHEMISTRY",
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                              color: Colors.white54,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "$score%",
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: color,
+                              height: 1.0,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            _getVerdict(score),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              height: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  overflow: TextOverflow.ellipsis,
+
+                  // Right side: Animated Arrow
+                  AnimatedRotation(
+                    turns: _isExpanded ? 0.5 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOutBack,
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          color: Colors.white70,
+                          size: 20
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // EXPANDABLE CONTENT (Reasons)
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Divider(color: Colors.white.withOpacity(0.1), height: 1),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "MATCH ANALYSIS",
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (chemistry.reasons.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: chemistry.reasons
+                              .map((r) => _buildReasonChip(r))
+                              .toList(),
+                        )
+                      else
+                        const Text(
+                            "Calculated based on position and playstyle.",
+                            style: TextStyle(color: Colors.white38, fontSize: 13)
+                        ),
+                    ],
+                  ),
                 ),
+                crossFadeState: _isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 300),
+                sizeCurve: Curves.easeInOutQuart,
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          if (chemistry.reasons.isNotEmpty)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: chemistry.reasons
-                  .take(3)
-                  .map((r) => _buildReasonChip(r))
-                  .toList(),
-            )
-          else
-            const Text("Not enough data yet", style: TextStyle(color: Colors.white54, fontSize: 12)),
-        ],
+        ),
       ),
     );
   }
@@ -172,25 +244,38 @@ class _ChemistryUIState extends State<ChemistryUI> {
         !text.toLowerCase().contains("low");
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isPositive
-            ? const Color(0xFF00E676).withOpacity(0.1)
-            : const Color(0xFFCF6679).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+            ? const Color(0xFF00E676).withOpacity(0.08)
+            : const Color(0xFFCF6679).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isPositive
-              ? const Color(0xFF00E676).withOpacity(0.3)
-              : const Color(0xFFCF6679).withOpacity(0.3),
+              ? const Color(0xFF00E676).withOpacity(0.2)
+              : const Color(0xFFCF6679).withOpacity(0.2),
         ),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          color: isPositive ? const Color(0xFF00E676) : const Color(0xFFCF6679),
-          fontWeight: FontWeight.w500,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPositive ? Icons.check_circle_outline_rounded : Icons.remove_circle_outline_rounded,
+            size: 14,
+            color: isPositive ? const Color(0xFF00E676) : const Color(0xFFCF6679),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12,
+                color: isPositive ? const Color(0xFF00E676) : const Color(0xFFCF6679),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
