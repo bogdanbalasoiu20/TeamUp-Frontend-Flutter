@@ -1,7 +1,9 @@
+import 'chemistry_reason.dart';
+
 class ChemistryResult {
   final int score;
   final double similarity;
-  final List<String> reasons;
+  final List<ChemistryReason> reasons;
 
   ChemistryResult({
     required this.score,
@@ -13,7 +15,9 @@ class ChemistryResult {
     return ChemistryResult(
       score: json['score'],
       similarity: (json['similarity'] as num).toDouble(),
-      reasons: List<String>.from(json['reasons'] ?? []),
+      reasons: (json['reasons'] as List<dynamic>? ?? [])
+          .map((r) => ChemistryReason.fromJson(r))
+          .toList(),
     );
   }
 }
