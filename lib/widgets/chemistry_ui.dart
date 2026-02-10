@@ -22,18 +22,22 @@ class _ChemistryUIState extends State<ChemistryUI> {
   @override
   void initState() {
     super.initState();
-    _chemistryFuture = ChemistryApi.getChemistry(widget.otherUserId);
+    _loadChemistry();
   }
 
   @override
   void didUpdateWidget(ChemistryUI oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.otherUserId != widget.otherUserId) {
-      setState(() {
-        _chemistryFuture = ChemistryApi.getChemistry(widget.otherUserId);
-        _isExpanded = false;
-      });
+      _loadChemistry();
     }
+  }
+
+  void _loadChemistry() {
+    setState(() {
+      _chemistryFuture = ChemistryApi.getChemistry(widget.otherUserId);
+      _isExpanded = false;
+    });
   }
 
   @override
@@ -49,7 +53,7 @@ class _ChemistryUIState extends State<ChemistryUI> {
           return const SizedBox.shrink();
         }
 
-        return _buildContent(context, snapshot.data!);
+        return _buildCard(snapshot.data!);
       },
     );
   }
@@ -75,7 +79,7 @@ class _ChemistryUIState extends State<ChemistryUI> {
     );
   }
 
-  Widget _buildContent(BuildContext context, ChemistryResult chemistry) {
+  Widget _buildCard(ChemistryResult chemistry) {
     final score = chemistry.score;
     final color = _scoreColor(score);
 
@@ -86,7 +90,9 @@ class _ChemistryUIState extends State<ChemistryUI> {
         borderRadius: BorderRadius.circular(20),
         splashColor: color.withOpacity(0.1),
         highlightColor: color.withOpacity(0.05),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOutQuart,
           width: double.infinity,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -96,13 +102,14 @@ class _ChemistryUIState extends State<ChemistryUI> {
               color: _isExpanded
                   ? color.withOpacity(0.5)
                   : Colors.white.withOpacity(0.05),
+              width: 1.5,
             ),
             boxShadow: _isExpanded
                 ? [
               BoxShadow(
-                color: color.withOpacity(0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                color: color.withOpacity(0.15),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               )
             ]
                 : [],
@@ -111,9 +118,22 @@ class _ChemistryUIState extends State<ChemistryUI> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(score, color),
+
               AnimatedCrossFade(
                 firstChild: const SizedBox.shrink(),
-                secondChild: _buildReasons(chemistry),
+                secondChild: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                    const SizedBox(height: 20),
+
+                    _buildRoleMatchup(chemistry.yourRole, chemistry.otherRole),
+
+                    const SizedBox(height: 24),
+
+                    _buildReasons(chemistry),
+                  ],
+                ),
                 crossFadeState: _isExpanded
                     ? CrossFadeState.showSecond
                     : CrossFadeState.showFirst,
@@ -131,41 +151,67 @@ class _ChemistryUIState extends State<ChemistryUI> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Icon(Icons.auto_graph_rounded, color: color, size: 16),
-            const SizedBox(width: 8),
-            const Text(
-              "FIELD CHEMISTRY",
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.2,
-                color: Colors.white54,
-              ),
+        Row(
+          children: [
+            // Circular Progress Score
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: CircularProgressIndicator(
+                    value: score / 100,
+                    strokeWidth: 4,
+                    backgroundColor: color.withOpacity(0.1),
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+                Text(
+                  "$score",
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
-          ]),
-          const SizedBox(height: 8),
-          Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(
-              "$score%",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.auto_graph_rounded, color: color, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      "FIELD CHEMISTRY",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: Colors.white.withOpacity(0.5),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _getVerdict(score),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              _getVerdict(score),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ]),
-        ]),
+          ],
+        ),
+        // Sageata animata
         AnimatedRotation(
           turns: _isExpanded ? 0.5 : 0.0,
           duration: const Duration(milliseconds: 300),
@@ -183,31 +229,110 @@ class _ChemistryUIState extends State<ChemistryUI> {
     );
   }
 
-  Widget _buildReasons(ChemistryResult chemistry) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Divider(color: Colors.white.withOpacity(0.1)),
-        const SizedBox(height: 16),
-        const Text(
-          "MATCH ANALYSIS",
+  Widget _buildRoleMatchup(String myRole, String otherRole) {
+    String formatRole(String role) {
+      if (role.isEmpty) return "Unknown";
+      return role.replaceAll('_', ' ').split(' ').map((word) {
+        if (word.isEmpty) return '';
+        return word[0] + word.substring(1).toLowerCase();
+      }).join(' ');
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildRoleColumn("You", formatRole(myRole), true),
+
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.compare_arrows_rounded, color: Colors.white54, size: 20),
+          ),
+
+          _buildRoleColumn("Partner", formatRole(otherRole), false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleColumn(String label, String role, bool isMe) {
+    final accentColor = const Color(0xFF00E676);
+
+    return Column(
+      children: [
+        Text(
+          label.toUpperCase(),
           style: TextStyle(
-            color: Colors.white54,
+            color: isMe ? accentColor : Colors.white54,
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
           ),
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: chemistry.reasons
-              .map((r) => _buildReasonChip(r))
-              .toList(),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isMe
+                ? accentColor.withOpacity(0.1)
+                : Colors.white.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isMe
+                  ? accentColor.withOpacity(0.3)
+                  : Colors.transparent,
+            ),
+          ),
+          child: Text(
+            role,
+            style: TextStyle(
+              color: isMe ? accentColor : Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
-      ]),
+      ],
     );
+  }
+
+  Widget _buildReasons(ChemistryResult chemistry) {
+    if (chemistry.reasons.isEmpty) return const SizedBox.shrink();
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          "MATCH ANALYSIS",
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.0,
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: chemistry.reasons.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
+          return _buildReasonChip(chemistry.reasons[index]);
+        },
+      ),
+    ]);
   }
 
   Widget _buildReasonChip(ChemistryReason reason) {
@@ -229,26 +354,33 @@ class _ChemistryUIState extends State<ChemistryUI> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.25)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.15)),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 14, color: color),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            reason.message,
-            style: TextStyle(
-              fontSize: 12,
-              color: color,
-              fontWeight: FontWeight.w500,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              reason.message,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.white.withOpacity(0.9),
+                height: 1.4,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 

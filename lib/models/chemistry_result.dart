@@ -4,11 +4,15 @@ class ChemistryResult {
   final int score;
   final double similarity;
   final List<ChemistryReason> reasons;
+  final String yourRole;
+  final String otherRole;
 
   ChemistryResult({
     required this.score,
     required this.similarity,
     required this.reasons,
+    required this.yourRole,
+    required this.otherRole
   });
 
   factory ChemistryResult.fromJson(Map<String, dynamic> json) {
@@ -18,6 +22,8 @@ class ChemistryResult {
       reasons: (json['reasons'] as List<dynamic>? ?? [])
           .map((r) => ChemistryReason.fromJson(r))
           .toList(),
+      yourRole: json['yourRole'],
+      otherRole: json['otherRole'],
     );
   }
 }
