@@ -14,7 +14,6 @@ import '../../services/live_form_api.dart';
 import '../../utils/live_form_state.dart';
 import 'package:team_up_fe_new/widgets/chemistry_ui.dart';
 
-
 class UserProfilePage extends StatefulWidget {
   final String username;
 
@@ -26,6 +25,8 @@ class UserProfilePage extends StatefulWidget {
 
 class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProviderStateMixin {
   UserProfile? profile;
+  String? _role;
+
   bool loading = true;
   bool isMyProfile = false;
   bool isFriend = false;
@@ -59,6 +60,14 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     super.dispose();
   }
 
+  String _formatRole(String role) {
+    if (role == 'ROOKIE') return 'Rookie';
+    return role.replaceAll('_', ' ').split(' ').map((word) {
+      if (word.isEmpty) return '';
+      return word[0] + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   int computeAge(DateTime birthday) {
     final now = DateTime.now();
     int age = now.year - birthday.year;
@@ -77,6 +86,13 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
       final res = await UserApi.fetchProfile(widget.username);
 
+      String? fetchedRole;
+      try {
+        fetchedRole = await _fetchRoleInternal(res.id, prefs);
+      } catch (e) {
+        debugPrint("Could not fetch role: $e");
+      }
+
       LiveForm? form;
       try {
         form = await LiveFormApi.getLiveForm(res.id);
@@ -86,6 +102,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
       setState(() {
         profile = res;
+        _role = fetchedRole;
         _liveForm = form;
         _playerCardFuture = PlayerCardService.getPlayerCard(res.id);
       });
@@ -102,6 +119,10 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
     } catch (e) {
       if (mounted) setState(() => loading = false);
     }
+  }
+
+  Future<String> _fetchRoleInternal(String userId, SharedPreferences prefs) async {
+    return await UserApi.fetchUserRole(userId);
   }
 
   Future<void> _sendRequest() async {
@@ -252,20 +273,29 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                                   icon: Icons.cake_rounded,
                                 ),
                               ),
-                            if (p.birthday != null) const SizedBox(width: 12),
+                            if (p.birthday != null) const SizedBox(width: 8),
 
                             if (p.position != null)
                               Expanded(
                                 child: _buildStatBox(
-                                  label: "POSITION",
+                                  label: "POS",
                                   value: _abbreviatePosition(p.position!),
                                   icon: Icons.sports_soccer_rounded,
-                                  highlight: true,
                                 ),
                               ),
-                            if (p.position != null) const SizedBox(width: 12),
+                            if (p.position != null) const SizedBox(width: 8),
 
-                            if (p.city != null && p.city!.trim().isNotEmpty)
+                            if (_role != null && _role!.isNotEmpty && _role != 'Unknown')
+                              Expanded(
+                                flex: 2,
+                                child: _buildStatBox(
+                                  label: "ARCHETYPE",
+                                  value: _formatRole(_role!),
+                                  icon: Icons.stars_rounded,
+                                  highlight: true,
+                                ),
+                              )
+                            else if (p.city != null && p.city!.trim().isNotEmpty)
                               Expanded(
                                 child: _buildStatBox(
                                   label: "CITY",
@@ -276,9 +306,13 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                           ],
                         ),
 
+                        if (_role != null && _role!.isNotEmpty && _role != 'Unknown' && p.city != null && p.city!.trim().isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _buildModernInfoTile(Icons.location_on_rounded, "Based in", p.city!),
+                        ],
+
                         const SizedBox(height: 12),
 
-                        // 2. BIO SECTION
                         if (p.description != null && p.description!.isNotEmpty)
                           Container(
                             width: double.infinity,
@@ -322,7 +356,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
                         const SizedBox(height: 12),
 
-                        // 3. JOINED DATE
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -357,7 +390,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
 
                         const SizedBox(height: 32),
 
-                        // PRIVATE DETAILS (IF MY PROFILE)
                         if (isMyProfile) ...[
                           _buildSectionHeader("Private Details"),
                           const SizedBox(height: 12),
@@ -435,7 +467,6 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
             ),
           ),
 
-          // RIGHT ICON (Edit if me)
           if (isMyProfile)
             InkWell(
               onTap: () {

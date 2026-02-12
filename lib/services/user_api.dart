@@ -29,5 +29,24 @@ class UserApi {
 
     return UserProfile.fromJson(data);
   }
+
+
+  static Future<String> fetchUserRole(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final url = Uri.parse("$baseUrl/$userId/role");
+
+    final resp = await http.get(url, headers: {
+      "Content-Type": "application/json",
+      if (prefs.getString("access_token") != null)
+        "Authorization": "Bearer ${prefs.getString("access_token")}",
+    });
+
+    final json = jsonDecode(resp.body);
+    final data = json["data"];
+
+    return data["role"];
+  }
+
 }
 
