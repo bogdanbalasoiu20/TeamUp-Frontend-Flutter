@@ -123,11 +123,6 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
     List<FlSpot> spots = [];
     int xIndex = 0;
 
-    if (_selectedAttribute == "Overall") {
-      spots.add(FlSpot(xIndex.toDouble(), 68.0));
-      xIndex++;
-    }
-
     int count = _fullHistory.length;
     int startIndex = count > 10 ? count - 10 : 0;
 
@@ -503,9 +498,15 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  "Last ${form.matchesCount} matches",
-                  style: TextStyle(color: _textSecondary, fontSize: 10),
+                  form.matchesCount == 1
+                      ? "Last match"
+                      : "Last ${form.matchesCount} matches",
+                  style: TextStyle(
+                    color: _textSecondary,
+                    fontSize: 10,
+                  ),
                 ),
+
               )
             ],
           ),
