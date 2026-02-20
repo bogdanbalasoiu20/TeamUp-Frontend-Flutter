@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:team_up_fe_new/models/tournament.dart';
 import 'package:team_up_fe_new/screens/tournament/create_tournament_page.dart';
+import 'package:team_up_fe_new/screens/tournament/tournament_details_page.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
 
 
@@ -185,6 +186,14 @@ class _TournamentsPageState extends State<TournamentsPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TournamentDetailsPage(
+                  tournamentId: tournament.id,
+                ),
+              ),
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(20),
