@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/main_pages/discover_page.dart';
 import 'package:team_up_fe_new/screens/main_pages/home_page.dart';
 import 'package:team_up_fe_new/screens/map/match_map_page.dart';
-import 'package:team_up_fe_new/screens/main_pages/teams_page.dart';
+import 'package:team_up_fe_new/screens/team/teams_page.dart';
 import 'package:team_up_fe_new/screens/tournament/tournaments_page.dart';
 
 class TeamUpNavBar extends StatelessWidget {

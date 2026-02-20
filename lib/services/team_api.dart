@@ -7,12 +7,16 @@ class TeamApi {
 
   /// CREATE TEAM
   static Future<TeamModel> createTeam(String name) async {
+    print("API CALL: Creating team with name: $name");
+
     final response = await ApiService.post(
       "/api/teams",
       {
         "name": name,
       },
     );
+
+    print("API RESPONSE: $response");
 
     return TeamModel.fromJson(response["data"]);
   }
