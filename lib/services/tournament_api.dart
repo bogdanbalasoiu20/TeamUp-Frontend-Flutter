@@ -6,8 +6,7 @@ class TournamentApi {
   /// CREATE TOURNAMENT
   static Future<Map<String, dynamic>> createTournament({
     required String name,
-    required double latitude,
-    required double longitude,
+    required String venueId,
     required int maxTeams,
     required DateTime startsAt,
     required DateTime endsAt,
@@ -17,8 +16,7 @@ class TournamentApi {
       "/api/tournaments",
       {
         "name": name,
-        "latitude": latitude,
-        "longitude": longitude,
+        "venueId": venueId,
         "maxTeams": maxTeams,
         "startsAt": startsAt.toIso8601String(),
         "endsAt": endsAt.toIso8601String(),
@@ -74,5 +72,26 @@ class TournamentApi {
         "${ApiService.baseUrl}/api/tournaments/$tournamentId/standings");
 
     return response["data"];
+  }
+
+  static Future<List<dynamic>> getAllTournaments() async {
+    final response = await ApiService.get(
+        "${ApiService.baseUrl}/api/tournaments");
+
+    return response["data"];
+  }
+
+  static Future<void> finishMatch(
+      String matchId,
+      int scoreHome,
+      int scoreAway,
+      ) async {
+    await ApiService.post(
+      "/api/tournament-matches/$matchId/finish",
+      {
+        "scoreHome": scoreHome,
+        "scoreAway": scoreAway,
+      },
+    );
   }
 }
