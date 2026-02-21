@@ -103,6 +103,14 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     }
   }
 
+  String _formatDateRange(DateTime start, DateTime end) {
+    final bool sameDay = start.year == end.year && start.month == end.month && start.day == end.day;
+    if (sameDay) {
+      return "${DateFormat("MMM dd, HH:mm").format(start)} - ${DateFormat("HH:mm").format(end)}";
+    }
+    return "${DateFormat("MMM dd, HH:mm").format(start)}  -  ${DateFormat("MMM dd, HH:mm").format(end)}";
+  }
+
   Widget _buildTopBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -172,7 +180,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
       ),
     );
   }
-
 
   Widget _buildMapSection() {
     final double mapLat = tournament!.venueLatitude;
@@ -324,12 +331,15 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                         const SizedBox(height: 6),
 
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(Icons.calendar_month_rounded, color: _textSecondary, size: 16),
                             const SizedBox(width: 6),
-                            Text(
-                              "${DateFormat("MMM dd").format(tournament!.startsAt)} - ${DateFormat("MMM dd").format(tournament!.endsAt)}",
-                              style: TextStyle(color: _textSecondary, fontSize: 14),
+                            Expanded(
+                              child: Text(
+                                _formatDateRange(tournament!.startsAt, tournament!.endsAt),
+                                style: TextStyle(color: _textSecondary, fontSize: 14),
+                              ),
                             ),
                           ],
                         ),

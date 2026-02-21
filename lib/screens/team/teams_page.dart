@@ -1,8 +1,12 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
-
+import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
+import 'package:team_up_fe_new/services/notifications_api.dart';
+import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
+import 'package:team_up_fe_new/widgets/top_bar.dart';
 
 class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
@@ -17,95 +21,103 @@ class _TeamsPageState extends State<TeamsPage> {
   final Color _accentGreen = const Color(0xFF00E676);
   final Color _textSecondary = const Color(0xFF8A9E96);
 
+  int unseenCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnseen();
+  }
+
+  Future<void> _loadUnseen() async {
+    try {
+      final all = await NotificationsApi.fetchAll();
+      final count = all.where((n) => !n.isSeen).length;
+      if (mounted) setState(() => unseenCount = count);
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
         backgroundColor: _bgDark,
-        body: Stack(
-          children: [
-            Positioned(
-              top: -100,
-              left: -50,
-              child: Container(
-                width: 350,
-                height: 350,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF0A6F4A).withOpacity(0.3),
-                ),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
-                  child: Container(color: Colors.transparent),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TopSheetBar(
+                unseenCount: unseenCount,
+                onNotificationsTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationsPage()),
+                  );
+                  _loadUnseen();
+                },
+                onMenuTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  final user = prefs.getString("username");
+                  if (user != null && mounted) showLeftMenuModal(context, user);
+                },
+              ),
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 34,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -1.0,
+                          fontFamily: 'Roboto',
+                        ),
+                        children: [
+                          const TextSpan(text: "T"),
+                          TextSpan(
+                            text: "e",
+                            style: TextStyle(color: _accentGreen),
+                          ),
+                          const TextSpan(text: "ams"),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Manage or discover squads",
+                      style: TextStyle(color: _textSecondary, fontSize: 15),
+                    ),
+                  ],
                 ),
               ),
-            ),
 
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, top: 12, right: 16, bottom: 8),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.05),
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Teams",
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            Text(
-                              "Manage or discover squads",
-                              style: TextStyle(color: Color(0xFF8A9E96), fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  TabBar(
-                    indicatorColor: _accentGreen,
-                    labelColor: _accentGreen,
-                    unselectedLabelColor: _textSecondary,
-                    dividerColor: Colors.white.withOpacity(0.05),
-                    indicatorWeight: 3,
-                    tabs: const [
-                      Tab(text: "MY TEAMS"),
-                      Tab(text: "EXPLORE"),
-                    ],
-                  ),
-
-
-                  const Expanded(
-                    child: TabBarView(
-                      children: [
-                        _MyTeamsTab(),
-                        _ExploreTeamsTab(),
-                      ],
-                    ),
-                  ),
+              TabBar(
+                indicatorColor: _accentGreen,
+                labelColor: _accentGreen,
+                unselectedLabelColor: _textSecondary,
+                dividerColor: Colors.white.withOpacity(0.05),
+                indicatorWeight: 3,
+                tabs: const [
+                  Tab(text: "MY TEAMS"),
+                  Tab(text: "EXPLORE"),
                 ],
               ),
-            ),
-          ],
+
+              const Expanded(
+                child: TabBarView(
+                  children: [
+                    _MyTeamsTab(),
+                    _ExploreTeamsTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -270,8 +282,6 @@ class _MyTeamsTabState extends State<_MyTeamsTab> {
     );
   }
 }
-
-
 
 class _ExploreTeamsTab extends StatefulWidget {
   const _ExploreTeamsTab();
@@ -459,11 +469,8 @@ class TeamCardWidget extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-
                     _buildStatColumn("Rating", team.teamRating.toStringAsFixed(1), Icons.star, Colors.amber),
-
                     _buildStatColumn("Chem", "${team.teamChemistry.toInt()}%", Icons.science, Colors.cyan),
-
                     _buildStatColumn("W-D-L", "${team.wins}-${team.draws}-${team.losses}", Icons.emoji_events, accentGreen),
                   ],
                 )

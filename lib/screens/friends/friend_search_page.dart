@@ -55,40 +55,39 @@ class _FriendSearchPageState extends State<FriendSearchPage> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _cardSurface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) => _search(value),
-                cursorColor: _accentGreen,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  hintText: "Find users...",
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-                  prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.5)),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear, color: Colors.white54),
-                    onPressed: () {
-                      _searchController.clear();
-                      _search("");
-                    },
-                  )
-                      : null,
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => _search(value),
+              cursorColor: _accentGreen,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: "Find users...",
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                prefixIcon: Icon(Icons.search, color: _accentGreen),
+                filled: true,
+                fillColor: _cardSurface,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
                 ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: _accentGreen),
+                ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.white54),
+                  onPressed: () {
+                    _searchController.clear();
+                    _search("");
+                  },
+                )
+                    : null,
               ),
             ),
           ),
