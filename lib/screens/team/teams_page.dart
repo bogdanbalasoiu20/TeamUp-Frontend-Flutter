@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/team.dart';
+import 'package:team_up_fe_new/screens/team/team_members_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
 import 'package:team_up_fe_new/services/notifications_api.dart';
@@ -433,6 +434,12 @@ class TeamCardWidget extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TeamDetailsPage(teamId: team.id),
+              ),
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(20),

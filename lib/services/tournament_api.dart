@@ -1,4 +1,6 @@
 import 'package:team_up_fe_new/exceptions/api_service.dart';
+import 'package:team_up_fe_new/models/page_model.dart';
+import 'package:team_up_fe_new/models/tournament.dart';
 
 
 class TournamentApi {
@@ -74,11 +76,26 @@ class TournamentApi {
     return response["data"];
   }
 
-  static Future<List<dynamic>> getAllTournaments() async {
-    final response = await ApiService.get(
-        "${ApiService.baseUrl}/api/tournaments");
+  static Future<PageModel<TournamentModel>> getTournaments({
+    String? status,
+    int page = 0,
+    int size = 10,
+  }) async {
 
-    return response["data"];
+    final query = StringBuffer(
+        "${ApiService.baseUrl}/api/tournaments?page=$page&size=$size"
+    );
+
+    if (status != null) {
+      query.write("&status=$status");
+    }
+
+    final response = await ApiService.get(query.toString());
+
+    return PageModel.fromJson(
+      response["data"],
+          (json) => TournamentModel.fromJson(json),
+    );
   }
 
   static Future<void> finishMatch(

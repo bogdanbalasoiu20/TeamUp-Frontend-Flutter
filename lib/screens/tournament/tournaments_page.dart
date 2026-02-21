@@ -38,21 +38,36 @@ class _TournamentsPageState extends State<TournamentsPage> {
 
   Future<void> _fetchTournaments() async {
     setState(() => isLoading = true);
+
     try {
-      final data = await TournamentApi.getAllTournaments();
-      if (mounted) {
-        setState(() {
-          tournaments = data.map((json) => TournamentModel.fromJson(json)).toList();
-          isLoading = false;
-        });
-      }
+      String? status;
+
+      if (selectedFilter == "Open") status = "OPEN";
+      if (selectedFilter == "Ongoing") status = "ONGOING";
+      if (selectedFilter == "Finished") status = "FINISHED";
+
+      final page = await TournamentApi.getTournaments(
+        status: status,
+        page: 0,
+        size: 20,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        tournaments = page.content;
+        isLoading = false;
+      });
+
     } catch (e) {
-      if (mounted) {
-        setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red.shade900),
-        );
-      }
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
+          backgroundColor: Colors.red.shade900,
+        ),
+      );
     }
   }
 
@@ -202,7 +217,10 @@ class _TournamentsPageState extends State<TournamentsPage> {
   Widget _buildFilterChip(String label, String emoji) {
     final bool isSelected = selectedFilter == label;
     return GestureDetector(
-      onTap: () => setState(() => selectedFilter = label),
+      onTap: () {
+        setState(() => selectedFilter = label);
+        _fetchTournaments();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(right: 12),
