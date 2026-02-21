@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:team_up_fe_new/models/tournament.dart';
 import 'package:team_up_fe_new/models/tournament_match.dart';
 import 'package:team_up_fe_new/models/tournament_standing.dart';
+import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
+import 'package:team_up_fe_new/services/team_api.dart';
 
 class TournamentDetailsPage extends StatefulWidget {
   final String tournamentId;
@@ -69,21 +72,19 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     }
   }
 
-  Future<void> _joinTournament() async {
-    try {
-      await TournamentApi.joinTournament(widget.tournamentId, "dummy-team-id");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Joined successfully!", style: TextStyle(color: Colors.black)),
-          backgroundColor: _accentGreen,
-        ),
-      );
-      _fetchData();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to join: $e"), backgroundColor: Colors.red.shade900),
-      );
-    }
+  // Deschiderea modalului de selectare a echipei
+  void _openJoinModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _SelectTeamToJoinModal(
+        tournamentId: widget.tournamentId,
+        onTeamJoined: () {
+          _fetchData(); // Refreshează pagina după join
+        },
+      ),
+    );
   }
 
   Future<void> _startTournament() async {
@@ -351,7 +352,8 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                             if (isOpen)
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: _joinTournament,
+                                  // Am înlocuit _joinTournament cu _openJoinModal
+                                  onPressed: _openJoinModal,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _cardSurface,
                                     foregroundColor: Colors.white,
@@ -539,6 +541,160 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
           ),
         );
       },
+    );
+  }
+}
+
+// Widget-ul (Modalul) care permite selectarea echipei pentru a participa
+class _SelectTeamToJoinModal extends StatefulWidget {
+  final String tournamentId;
+  final VoidCallback onTeamJoined;
+
+  const _SelectTeamToJoinModal({required this.tournamentId, required this.onTeamJoined});
+
+  @override
+  State<_SelectTeamToJoinModal> createState() => _SelectTeamToJoinModalState();
+}
+
+class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+
+  List<TeamModel> myCaptainTeams = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTeams();
+  }
+
+  Future<void> _fetchTeams() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? currentUsername = prefs.getString("username");
+
+      final teams = await TeamApi.getMyTeams();
+
+      if (mounted) {
+        setState(() {
+          // Filtrăm doar echipele unde ești căpitan
+          myCaptainTeams = teams.where((t) => t.captainUsername == currentUsername).toList();
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _joinWithTeam(String teamId) async {
+    try {
+      await TournamentApi.joinTournament(widget.tournamentId, teamId);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: const Text("Team joined successfully!", style: TextStyle(color: Colors.black)), backgroundColor: _accentGreen),
+        );
+        widget.onTeamJoined();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to join: $e"), backgroundColor: Colors.red.shade900),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.5,
+      decoration: BoxDecoration(
+        color: _bgDark,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "Select Team to Join",
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "You can only enroll teams you captain.",
+            style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13),
+          ),
+          const SizedBox(height: 24),
+
+          Expanded(
+            child: isLoading
+                ? Center(child: CircularProgressIndicator(color: _accentGreen))
+                : myCaptainTeams.isEmpty
+                ? Center(
+              child: Text(
+                "You are not the captain of any team.\nCreate a team first!",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white.withOpacity(0.5)),
+              ),
+            )
+                : ListView.builder(
+              itemCount: myCaptainTeams.length,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemBuilder: (context, i) {
+                final team = myCaptainTeams[i];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: _cardSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _accentGreen.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.shield_rounded, color: _accentGreen),
+                    ),
+                    title: Text(
+                      team.name,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      "Rating: ${team.teamRating.toStringAsFixed(1)}",
+                      style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () => _joinWithTeam(team.id),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accentGreen,
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text("Enroll", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
