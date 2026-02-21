@@ -1,11 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+
 import 'package:team_up_fe_new/models/tournament.dart';
 import 'package:team_up_fe_new/models/tournament_match.dart';
 import 'package:team_up_fe_new/models/tournament_standing.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
-
 
 class TournamentDetailsPage extends StatefulWidget {
   final String tournamentId;
@@ -101,6 +103,136 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     }
   }
 
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(50),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "TOURNAMENT",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Details",
+                  style: TextStyle(
+                    color: _accentGreen,
+                    fontSize: 27,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (tournament != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: tournament!.status.toUpperCase() == "OPEN" ? _accentGreen.withOpacity(0.15) : Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: tournament!.status.toUpperCase() == "OPEN" ? _accentGreen.withOpacity(0.5) : Colors.transparent),
+              ),
+              child: Text(
+                tournament!.status.toUpperCase(),
+                style: TextStyle(
+                  color: tournament!.status.toUpperCase() == "OPEN" ? _accentGreen : _textSecondary,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildMapSection() {
+    final double mapLat = tournament!.venueLatitude;
+    final double mapLng = tournament!.venueLongitude;
+
+    return Container(
+      height: 140,
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _accentGreen, width: 2),
+        color: _cardSurface,
+        boxShadow: [
+          BoxShadow(
+            color: _accentGreen.withOpacity(0.15),
+            blurRadius: 15,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: FlutterMap(
+          options: MapOptions(
+            center: LatLng(mapLat, mapLng),
+            zoom: 15,
+            interactiveFlags: InteractiveFlag.none,
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+              userAgentPackageName: "com.teamup.app",
+            ),
+            MarkerLayer(
+              markers: [
+                Marker(
+                  point: LatLng(mapLat, mapLng),
+                  width: 40,
+                  height: 40,
+                  builder: (_) => Icon(
+                    Icons.location_on,
+                    color: _accentGreen,
+                    size: 36,
+                    shadows: const [Shadow(blurRadius: 8, color: Colors.black87)],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -113,8 +245,14 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     if (tournament == null) {
       return Scaffold(
         backgroundColor: _bgDark,
-        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-        body: const Center(child: Text("Tournament not found", style: TextStyle(color: Colors.white))),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildTopBar(),
+              const Expanded(child: Center(child: Text("Tournament not found", style: TextStyle(color: Colors.white)))),
+            ],
+          ),
+        ),
       );
     }
 
@@ -128,16 +266,16 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
           children: [
             Positioned(
               top: -100,
-              right: -50,
+              right: -100,
               child: Container(
-                width: 350,
-                height: 350,
+                width: 300,
+                height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF0A6F4A).withOpacity(0.3),
+                  color: const Color(0xFF0A6F4A).withOpacity(0.2),
                 ),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                  filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                   child: Container(color: Colors.transparent),
                 ),
               ),
@@ -147,76 +285,56 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16, top: 12, right: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white.withOpacity(0.05),
-                            padding: const EdgeInsets.all(12),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isOpen ? _accentGreen.withOpacity(0.15) : Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: isOpen ? _accentGreen : Colors.transparent),
-                          ),
-                          child: Text(
-                            tournament!.status.toUpperCase(),
-                            style: TextStyle(
-                              color: isOpen ? _accentGreen : _textSecondary,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildTopBar(),
 
+                  const SizedBox(height: 16),
 
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        _buildMapSection(),
+
                         Text(
                           tournament!.name,
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 26,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: -0.5,
                           ),
                         ),
                         const SizedBox(height: 12),
+
                         Row(
                           children: [
-                            Icon(Icons.location_on, color: _textSecondary, size: 18),
-                            const SizedBox(width: 8),
-                            Text(tournament!.venueName, style: TextStyle(color: _textSecondary, fontSize: 16)),
+                            Icon(Icons.location_on_rounded, color: _textSecondary, size: 16),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                tournament!.venueName,
+                                style: TextStyle(color: _textSecondary, fontSize: 14),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
+
                         Row(
                           children: [
-                            Icon(Icons.calendar_month, color: _textSecondary, size: 18),
-                            const SizedBox(width: 8),
+                            Icon(Icons.calendar_month_rounded, color: _textSecondary, size: 16),
+                            const SizedBox(width: 6),
                             Text(
                               "${DateFormat("MMM dd").format(tournament!.startsAt)} - ${DateFormat("MMM dd").format(tournament!.endsAt)}",
-                              style: TextStyle(color: _textSecondary, fontSize: 16),
+                              style: TextStyle(color: _textSecondary, fontSize: 14),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 24),
-
+                        const SizedBox(height: 20),
 
                         Row(
                           children: [
@@ -227,11 +345,12 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _cardSurface,
                                     foregroundColor: Colors.white,
+                                    elevation: 0,
                                     padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    side: BorderSide(color: _accentGreen.withOpacity(0.5)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    side: BorderSide(color: _accentGreen.withOpacity(0.3)),
                                   ),
-                                  child: const Text("JOIN TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             if (isOpen) const SizedBox(width: 12),
@@ -241,8 +360,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: _accentGreen,
                                   foregroundColor: Colors.black,
+                                  elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                 ),
                                 child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
                               ),
@@ -253,6 +373,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                     ),
                   ),
 
+                  const SizedBox(height: 8),
 
                   TabBar(
                     indicatorColor: _accentGreen,
@@ -260,12 +381,12 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                     unselectedLabelColor: _textSecondary,
                     dividerColor: Colors.white.withOpacity(0.05),
                     indicatorWeight: 3,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
                     tabs: const [
                       Tab(text: "STANDINGS"),
                       Tab(text: "MATCHES"),
                     ],
                   ),
-
 
                   Expanded(
                     child: TabBarView(
@@ -284,34 +405,36 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     );
   }
 
-
   Widget _buildStandingsTab() {
     if (standings.isEmpty) {
       return Center(child: Text("No standings yet.", style: TextStyle(color: _textSecondary)));
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       child: Container(
         decoration: BoxDecoration(
           color: _cardSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
         ),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columnSpacing: 24,
-            headingTextStyle: TextStyle(color: _textSecondary, fontWeight: FontWeight.bold),
+            headingTextStyle: TextStyle(color: _textSecondary, fontWeight: FontWeight.bold, fontSize: 12),
             dataTextStyle: const TextStyle(color: Colors.white),
             columns: const [
-              DataColumn(label: Text("Team")),
+              DataColumn(label: Text("TEAM")),
               DataColumn(label: Text("P")),
               DataColumn(label: Text("W")),
               DataColumn(label: Text("D")),
               DataColumn(label: Text("L")),
               DataColumn(label: Text("GD")),
-              DataColumn(label: Text("Pts")),
+              DataColumn(label: Text("PTS")),
             ],
             rows: standings.map((s) {
               final gd = s.goalsFor - s.goalsAgainst;
@@ -322,7 +445,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                 DataCell(Text(s.draws.toString())),
                 DataCell(Text(s.losses.toString())),
                 DataCell(Text(gd > 0 ? "+$gd" : gd.toString(), style: TextStyle(color: gd > 0 ? _accentGreen : Colors.white))),
-                DataCell(Text(s.points.toString(), style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, fontSize: 16))),
+                DataCell(Text(s.points.toString(), style: TextStyle(color: _accentGreen, fontWeight: FontWeight.w900, fontSize: 16))),
               ]);
             }).toList(),
           ),
@@ -331,65 +454,73 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     );
   }
 
-
   Widget _buildMatchesTab() {
     if (matches.isEmpty) {
       return Center(child: Text("No matches scheduled yet.", style: TextStyle(color: _textSecondary)));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24),
       itemCount: matches.length,
       itemBuilder: (context, index) {
         final match = matches[index];
         final isFinished = match.status.toUpperCase() == "FINISHED";
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
             color: _cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.04)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+            ],
           ),
           child: Column(
             children: [
               Text(
                 "Matchday ${match.matchDay}",
-                style: TextStyle(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                style: TextStyle(color: _textSecondary, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
                       match.homeTeamName,
                       textAlign: TextAlign.right,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isFinished ? Colors.black.withOpacity(0.3) : _accentGreen.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: isFinished ? Colors.black.withOpacity(0.3) : _bgDark,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : _accentGreen.withOpacity(0.3)),
                     ),
                     child: Text(
                       isFinished ? "${match.scoreHome} - ${match.scoreAway}" : "VS",
                       style: TextStyle(
                         color: isFinished ? Colors.white : _accentGreen,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
                       ),
                     ),
                   ),
+
                   Expanded(
                     child: Text(
                       match.awayTeamName,
                       textAlign: TextAlign.left,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

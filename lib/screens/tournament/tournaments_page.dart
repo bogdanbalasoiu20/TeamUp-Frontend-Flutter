@@ -1,10 +1,15 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/tournament.dart';
 import 'package:team_up_fe_new/screens/tournament/create_tournament_page.dart';
 import 'package:team_up_fe_new/screens/tournament/tournament_details_page.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
+import 'package:team_up_fe_new/services/notifications_api.dart';
+import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
+import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
+import 'package:team_up_fe_new/widgets/top_bar.dart';
 
 class TournamentsPage extends StatefulWidget {
   const TournamentsPage({super.key});
@@ -22,11 +27,13 @@ class _TournamentsPageState extends State<TournamentsPage> {
   List<TournamentModel> tournaments = [];
   bool isLoading = true;
   String selectedFilter = "All";
+  int unseenCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetchTournaments();
+    _loadUnseen();
   }
 
   Future<void> _fetchTournaments() async {
@@ -47,6 +54,14 @@ class _TournamentsPageState extends State<TournamentsPage> {
         );
       }
     }
+  }
+
+  Future<void> _loadUnseen() async {
+    try {
+      final all = await NotificationsApi.fetchAll();
+      final count = all.where((n) => !n.isSeen).length;
+      if (mounted) setState(() => unseenCount = count);
+    } catch (_) {}
   }
 
   @override
@@ -70,16 +85,16 @@ class _TournamentsPageState extends State<TournamentsPage> {
           style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 70),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       RichText(
@@ -92,7 +107,6 @@ class _TournamentsPageState extends State<TournamentsPage> {
                             fontFamily: 'Roboto',
                           ),
                           children: [
-
                             const TextSpan(text: "Tournam"),
                             TextSpan(
                               text: "e",
@@ -109,61 +123,78 @@ class _TournamentsPageState extends State<TournamentsPage> {
                       ),
                     ],
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
-                    ),
-                    child: IconButton(
-                      onPressed: _fetchTournaments,
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 40,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      _buildFilterChip("All", "🔥"),
+                      _buildFilterChip("Open", "🟢"),
+                      _buildFilterChip("Ongoing", "🏆"),
+                      _buildFilterChip("Finished", "🏁"),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: isLoading
+                      ? Center(child: CircularProgressIndicator(color: _accentGreen))
+                      : tournaments.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                    color: _accentGreen,
+                    backgroundColor: _cardSurface,
+                    onRefresh: _fetchTournaments,
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 120),
+                      itemCount: tournaments.length,
+                      itemBuilder: (context, index) {
+                        return _buildProTournamentCard(tournaments[index]);
+                      },
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 12),
-
-
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  _buildFilterChip("All", "🔥"),
-                  _buildFilterChip("Open", "🟢"),
-                  _buildFilterChip("Ongoing", "🏆"),
-                  _buildFilterChip("Finished", "🏁"),
-                ],
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _bgDark.withOpacity(0.9),
+                    _bgDark.withOpacity(0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 16),
-
-            Expanded(
-              child: isLoading
-                  ? Center(child: CircularProgressIndicator(color: _accentGreen))
-                  : tournaments.isEmpty
-                  ? _buildEmptyState()
-                  : RefreshIndicator(
-                color: _accentGreen,
-                backgroundColor: _cardSurface,
-                onRefresh: _fetchTournaments,
-                child: ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 120),
-                  itemCount: tournaments.length,
-                  itemBuilder: (context, index) {
-                    return _buildProTournamentCard(tournaments[index]);
+              child: SafeArea(
+                bottom: false,
+                child: TopSheetBar(
+                  unseenCount: unseenCount,
+                  onNotificationsTap: () async {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
+                    _loadUnseen();
+                  },
+                  onMenuTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    final user = prefs.getString("username");
+                    if (user != null && mounted) showLeftMenuModal(context, user);
                   },
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -249,7 +280,6 @@ class _TournamentsPageState extends State<TournamentsPage> {
                   ),
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -279,9 +309,7 @@ class _TournamentsPageState extends State<TournamentsPage> {
                             ],
                           ),
                         ),
-
                         const SizedBox(width: 16),
-
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +355,6 @@ class _TournamentsPageState extends State<TournamentsPage> {
                             ],
                           ),
                         ),
-
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
@@ -347,11 +374,9 @@ class _TournamentsPageState extends State<TournamentsPage> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 16),
                     Divider(color: Colors.white.withOpacity(0.05), height: 1),
                     const SizedBox(height: 16),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -374,7 +399,6 @@ class _TournamentsPageState extends State<TournamentsPage> {
                             ),
                           ],
                         ),
-
                         Row(
                           children: [
                             _buildMiniTag(Icons.sports_soccer, "5v5"),
