@@ -5,6 +5,8 @@ import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import '../../models/user_search_result.dart';
+import '../../services/friend_api.dart';
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamId;
@@ -25,6 +27,8 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   TeamModel? team;
   List<TeamMemberModel> members = [];
   String? currentUser;
+
+  final int maxOnPitch = 5;
 
   @override
   void initState() {
@@ -65,6 +69,16 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   bool get isCaptain => team?.captainUsername == currentUser;
   bool get isMember => members.any((m) => m.username == currentUser);
 
+  List<TeamMemberModel> get startingPlayers {
+    if (members.length <= maxOnPitch) return members;
+    return members.sublist(0, maxOnPitch);
+  }
+
+  List<TeamMemberModel> get bench {
+    if (members.length <= maxOnPitch) return [];
+    return members.sublist(maxOnPitch);
+  }
+
   Future<void> _leaveTeam() async {
     try {
       final myMemberId = members.firstWhere((m) => m.username == currentUser).userId;
@@ -86,6 +100,106 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
         SnackBar(content: Text("Failed to remove player: $e"), backgroundColor: Colors.red.shade900),
       );
     }
+  }
+
+  void _showPlayerOptions(TeamMemberModel member) {
+    final bool isUserCaptain = member.username == team!.captainUsername;
+    final bool canKick = isCaptain && !isUserCaptain;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _bgDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _cardSurface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.person_outline_rounded, color: _accentGreen),
+                ),
+                title: const Text(
+                  "View Profile",
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => UserProfilePage(username: member.username)),
+                  );
+                },
+              ),
+              if (canKick)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.person_remove_rounded, color: Colors.redAccent),
+                  ),
+                  title: const Text(
+                    "Remove from Team",
+                    style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _removeMember(member.userId);
+                  },
+                ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  List<List<TeamMemberModel>> _getFormationRows() {
+    List<TeamMemberModel> activePlayers = startingPlayers;
+    if (activePlayers.isEmpty) return [];
+    List<List<TeamMemberModel>> rows = [];
+    int total = activePlayers.length;
+
+    if (total == 1) return [[activePlayers[0]]];
+    if (total == 2) return [[activePlayers[0]], [activePlayers[1]]];
+
+    rows.add([activePlayers[0]]);
+
+    int remaining = total - 1;
+    int rowsCount = remaining >= 6 ? 3 : 2;
+    int perRow = (remaining / rowsCount).ceil();
+
+    int currentIndex = 1;
+    for (int i = 0; i < rowsCount; i++) {
+      List<TeamMemberModel> row = [];
+      for (int j = 0; j < perRow && currentIndex < total; j++) {
+        row.add(activePlayers[currentIndex++]);
+      }
+      if (row.isNotEmpty) rows.add(row);
+    }
+
+    return rows.reversed.toList();
   }
 
   Widget _buildTopBar() {
@@ -200,77 +314,193 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     );
   }
 
-  Widget _buildMemberTile(TeamMemberModel member) {
+  Widget _buildPlayerMarker(TeamMemberModel member) {
     final bool isUserCaptain = member.username == team!.captainUsername;
-    final bool canKick = isCaptain && !isUserCaptain;
+
+    return GestureDetector(
+      onTap: () => _showPlayerOptions(member),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _cardSurface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: isUserCaptain ? Colors.amber : _accentGreen, width: 2),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 6, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 24),
+              ),
+              if (isUserCaptain)
+                Positioned(
+                  top: -6,
+                  right: -6,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.black,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.stars_rounded, color: Colors.amber, size: 20),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              member.username,
+              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPitch() {
+    final Color pitchGreen = const Color(0xFF163324);
+    final Color lineOpacity = Colors.white.withOpacity(0.15);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: double.infinity,
+      height: 450,
       decoration: BoxDecoration(
-        color: _cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: pitchGreen,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: lineOpacity, width: 2),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 10)),
+        ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => UserProfilePage(username: member.username)),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: Colors.white.withOpacity(0.1),
-                  child: const Icon(Icons.person, color: Colors.white54, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        member.username,
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            isUserCaptain ? Icons.stars_rounded : Icons.sports_soccer_rounded,
-                            color: isUserCaptain ? Colors.amber : _textSecondary,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isUserCaptain ? "Captain" : "Player",
-                            style: TextStyle(
-                              color: isUserCaptain ? Colors.amber : _textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (canKick)
-                  IconButton(
-                    icon: const Icon(Icons.person_remove_rounded, color: Colors.redAccent),
-                    onPressed: () => _removeMember(member.userId),
-                  ),
-              ],
+      child: Stack(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              height: 2,
+              color: lineOpacity,
             ),
           ),
-        ),
+          Align(
+            alignment: Alignment.center,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: lineOpacity, width: 2),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              width: 140,
+              height: 60,
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: lineOpacity, width: 2),
+                  right: BorderSide(color: lineOpacity, width: 2),
+                  bottom: BorderSide(color: lineOpacity, width: 2),
+                ),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: 140,
+              height: 60,
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(color: lineOpacity, width: 2),
+                  right: BorderSide(color: lineOpacity, width: 2),
+                  top: BorderSide(color: lineOpacity, width: 2),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: _getFormationRows().map((rowMembers) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: rowMembers.map((m) => _buildPlayerMarker(m)).toList(),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSubstitutions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "SUBSTITUTIONS",
+              style: TextStyle(
+                color: _textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.0,
+              ),
+            ),
+            Text(
+              "${bench.length} reserves",
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: _cardSurface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: bench.isEmpty
+              ? Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
+              child: Text(
+                "No players on the bench.",
+                style: TextStyle(color: _textSecondary, fontStyle: FontStyle.italic),
+              ),
+            ),
+          )
+              : Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            alignment: WrapAlignment.center,
+            children: bench.map((member) => _buildPlayerMarker(member)).toList(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -374,31 +604,71 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "TEAM ROSTER",
-                              style: TextStyle(
-                                color: _textSecondary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 1.0,
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "TACTICAL VIEW",
+                                  style: TextStyle(
+                                    color: _textSecondary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${startingPlayers.length} on pitch",
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            if (isCaptain)
+                              GestureDetector(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    backgroundColor: Colors.transparent,
+                                    isScrollControlled: true,
+                                    builder: (_) => _AddPlayerModal(
+                                      teamId: widget.teamId,
+                                      currentMembers: members,
+                                      onAdded: () {
+                                        _fetchData();
+                                      },
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: _accentGreen.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: _accentGreen.withOpacity(0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.person_add_alt_1_rounded, color: _accentGreen, size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "ADD",
+                                        style: TextStyle(
+                                          color: _accentGreen,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                            Text(
-                              "${members.length} players",
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 16),
 
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: members.length,
-                          itemBuilder: (context, index) {
-                            return _buildMemberTile(members[index]);
-                          },
-                        ),
+                        _buildPitch(),
+
+                        _buildSubstitutions(),
 
                         const SizedBox(height: 32),
 
@@ -445,6 +715,208 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddPlayerModal extends StatefulWidget {
+  final String teamId;
+  final List<TeamMemberModel> currentMembers;
+  final VoidCallback onAdded;
+
+  const _AddPlayerModal({
+    required this.teamId,
+    required this.currentMembers,
+    required this.onAdded,
+  });
+
+  @override
+  State<_AddPlayerModal> createState() => _AddPlayerModalState();
+}
+
+class _AddPlayerModalState extends State<_AddPlayerModal> {
+  final TextEditingController _searchController = TextEditingController();
+  List<UserSearchResult> results = [];
+  bool loading = false;
+
+  final Color _bgDark = const Color(0xFF091210);
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
+
+  Future<void> _search(String q) async {
+    q = q.trim();
+
+    if (q.isEmpty) {
+      if (mounted) {
+        setState(() {
+          results = [];
+          loading = false;
+        });
+      }
+      return;
+    }
+
+    setState(() => loading = true);
+
+    try {
+      final r = await FriendApi.searchUsers(q);
+      if (mounted) {
+        setState(() {
+          results = r.where((u) => !widget.currentMembers.any((m) => m.userId == u.id)).toList();
+          loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> _addPlayer(String userId) async {
+    try {
+      await TeamApi.addPlayer(widget.teamId, userId);
+      if (mounted) {
+        widget.onAdded();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: const Text("Player added to team!", style: TextStyle(color: Colors.black)), backgroundColor: _accentGreen),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add player: $e"), backgroundColor: Colors.red.shade900),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.75,
+      decoration: BoxDecoration(
+        color: _bgDark,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            "Add Player",
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => _search(value),
+              cursorColor: _accentGreen,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: "Search username...",
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                prefixIcon: Icon(Icons.search, color: _accentGreen),
+                filled: true,
+                fillColor: _cardSurface,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: _accentGreen),
+                ),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.white54),
+                  onPressed: () {
+                    _searchController.clear();
+                    _search("");
+                  },
+                )
+                    : null,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (loading)
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: CircularProgressIndicator(color: _accentGreen),
+            ),
+          if (!loading && results.isEmpty && _searchController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 40),
+              child: Text("No users found", style: TextStyle(color: Colors.white.withOpacity(0.5))),
+            ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: results.length,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemBuilder: (context, i) {
+                final u = results[i];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: _cardSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundImage: u.photoUrl.isNotEmpty ? NetworkImage(u.photoUrl) : null,
+                          child: u.photoUrl.isEmpty ? const Icon(Icons.person, color: Colors.white54) : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            u.username,
+                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => _addPlayer(u.id),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: _accentGreen,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Text(
+                              "Add",
+                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
