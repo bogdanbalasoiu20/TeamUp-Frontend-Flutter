@@ -5,7 +5,6 @@ import 'package:team_up_fe_new/screens/map/map_page.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
 import 'package:team_up_fe_new/widgets/mini_map_widget.dart';
 
-
 class CreateTournamentPage extends StatefulWidget {
   const CreateTournamentPage({super.key});
 
@@ -145,13 +144,72 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
         ),
       );
 
-
       Navigator.pop(context, true);
     } catch (e) {
       showError(e.toString());
     } finally {
       if (mounted) setState(() => creating = false);
     }
+  }
+
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(50),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 16),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "CREATE",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "Tournament",
+                  style: TextStyle(
+                    color: _accentGreen,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 44),
+        ],
+      ),
+    );
   }
 
   @override
@@ -162,16 +220,16 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
         children: [
           Positioned(
             top: -100,
-            left: -50,
+            right: -100,
             child: Container(
-              width: 350,
-              height: 350,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0A6F4A).withOpacity(0.3),
+                color: const Color(0xFF0A6F4A).withOpacity(0.2),
               ),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                 child: Container(color: Colors.transparent),
               ),
             ),
@@ -181,17 +239,7 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 12, bottom: 4),
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                ),
+                _buildTopBar(),
 
                 Expanded(
                   child: SingleChildScrollView(
@@ -199,21 +247,8 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "New Tournament",
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          "Set up the competition details.",
-                          style: TextStyle(color: _textSecondary, fontSize: 16),
-                        ),
+                        const SizedBox(height: 10),
 
-                        const SizedBox(height: 24),
 
                         _buildSectionLabel("Tournament Venue"),
                         const SizedBox(height: 8),
@@ -242,7 +277,6 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-
                                 MiniMapWidget(
                                   selectedVenue: selectedVenue,
                                   onTap: () async {
@@ -253,7 +287,6 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
                                     if (venue != null) setState(() => selectedVenue = venue);
                                   },
                                 ),
-
                                 if (selectedVenue == null)
                                   IgnorePointer(
                                     child: Container(

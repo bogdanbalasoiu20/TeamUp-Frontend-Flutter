@@ -145,6 +145,62 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     }
   }
 
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(50),
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withOpacity(0.1)),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          Expanded(
+            child: Row(
+              children: [
+                const Text(
+                  "Create",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 27,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "Match",
+                  style: TextStyle(
+                    color: _accentGreen,
+                    fontSize: 27,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 44),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,16 +209,16 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         children: [
           Positioned(
             top: -100,
-            left: -50,
+            right: -100,
             child: Container(
-              width: 350,
-              height: 350,
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF0A6F4A).withOpacity(0.3),
+                color: const Color(0xFF0A6F4A).withOpacity(0.2),
               ),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+                filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
                 child: Container(color: Colors.transparent),
               ),
             ),
@@ -173,17 +229,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 12, bottom: 4),
-                  child: IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.white.withOpacity(0.05),
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
-                ),
+                _buildTopBar(),
 
                 Expanded(
                   child: SingleChildScrollView(
@@ -191,25 +237,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          "Create Match",
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        Text(
-                          "Set up the game details below.",
-                          style: TextStyle(
-                            color: _textSecondary,
-                            fontSize: 16,
-                          ),
-                        ),
 
-                        const SizedBox(height: 24),
-
+                        const SizedBox(height: 20),
 
                         _buildSectionLabel("Venue Location"),
                         const SizedBox(height: 8),
@@ -279,7 +308,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                             ),
                           ),
                         ),
-
 
                         if (selectedVenue != null)
                           Padding(
@@ -423,7 +451,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       ),
     );
   }
-
 
   Widget _buildSectionLabel(String text) {
     return Text(
