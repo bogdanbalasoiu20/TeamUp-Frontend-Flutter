@@ -11,9 +11,14 @@ import '../../services/friend_api.dart';
 
 class PitchPosition {
   final int slotIndex;
+  final String label;
   final Alignment alignment;
 
-  PitchPosition({required this.slotIndex, required this.alignment});
+  PitchPosition({
+    required this.slotIndex,
+    required this.label,
+    required this.alignment,
+  });
 }
 
 class TeamDetailsPage extends StatefulWidget {
@@ -37,29 +42,29 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   String? currentUser;
 
   final List<PitchPosition> _pitchPositions = [
-
     // --- ATACANȚI ---
-    PitchPosition(slotIndex: 11, alignment: const Alignment(-0.65, -0.85)),
-    PitchPosition(slotIndex: 12, alignment: const Alignment(-0.25, -0.90)),
-    PitchPosition(slotIndex: 13, alignment: const Alignment(0.25, -0.90)),
-    PitchPosition(slotIndex: 14, alignment: const Alignment(0.65, -0.85)),
+    PitchPosition(slotIndex: 12, label: 'LW', alignment: const Alignment(-0.8, -0.85)),
+    PitchPosition(slotIndex: 13, label: 'ST', alignment: const Alignment(-0.25, -0.95)),
+    PitchPosition(slotIndex: 14, label: 'ST', alignment: const Alignment(0.25, -0.95)),
+    PitchPosition(slotIndex: 15, label: 'RW', alignment: const Alignment(0.8, -0.85)),
 
     // --- MIJLOCAȘI ---
-    PitchPosition(slotIndex: 6, alignment: const Alignment(-0.80, -0.30)),
-    PitchPosition(slotIndex: 7, alignment: const Alignment(-0.40, -0.20)),
-    PitchPosition(slotIndex: 8, alignment: const Alignment(0.0, -0.15)),
-    PitchPosition(slotIndex: 9, alignment: const Alignment(0.40, -0.20)),
-    PitchPosition(slotIndex: 10, alignment: const Alignment(0.80, -0.30)),
+    PitchPosition(slotIndex: 6, label: 'LM', alignment: const Alignment(-0.90, -0.30)),
+    PitchPosition(slotIndex: 7, label: 'CM', alignment: const Alignment(-0.40, -0.10)),
+    PitchPosition(slotIndex: 8, label: 'CDM', alignment: const Alignment(0.0, 0.1)),
+    PitchPosition(slotIndex: 9, label: 'CAM', alignment: const Alignment(0.0, -0.5)),
+    PitchPosition(slotIndex: 10, label: 'CM', alignment: const Alignment(0.40, -0.10)),
+    PitchPosition(slotIndex: 11, label: 'RM', alignment: const Alignment(0.90, -0.30)),
 
     // --- FUNDAȘI ---
-    PitchPosition(slotIndex: 1, alignment: const Alignment(-0.80, 0.40)),
-    PitchPosition(slotIndex: 2, alignment: const Alignment(-0.40, 0.50)),
-    PitchPosition(slotIndex: 3, alignment: const Alignment(0.0, 0.55)),
-    PitchPosition(slotIndex: 4, alignment: const Alignment(0.40, 0.50)),
-    PitchPosition(slotIndex: 5, alignment: const Alignment(0.80, 0.40)),
+    PitchPosition(slotIndex: 1, label: 'LB', alignment: const Alignment(-0.90, 0.40)),
+    PitchPosition(slotIndex: 2, label: 'CB', alignment: const Alignment(-0.45, 0.50)),
+    PitchPosition(slotIndex: 3, label: 'CB', alignment: const Alignment(0.0, 0.55)),
+    PitchPosition(slotIndex: 4, label: 'CB', alignment: const Alignment(0.45, 0.50)),
+    PitchPosition(slotIndex: 5, label: 'RB', alignment: const Alignment(0.90, 0.40)),
 
     // --- PORTAR ---
-    PitchPosition(slotIndex: 0, alignment: const Alignment(0.0, 0.90)),
+    PitchPosition(slotIndex: 0, label: 'GK', alignment: const Alignment(0.0, 1.0)),
   ];
 
   @override
@@ -388,7 +393,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     );
   }
 
-  Widget _buildPlayerMarker(TeamMemberModel member) {
+  Widget _buildPlayerMarker(TeamMemberModel member, {String? positionLabel}) {
     final bool isUserCaptain = member.username == team!.captainUsername;
 
     return GestureDetector(
@@ -439,13 +444,25 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          )
+          ),
+          if (positionLabel != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              positionLabel,
+              style: TextStyle(
+                color: _accentGreen,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ]
         ],
       ),
     );
   }
 
-  Widget _buildEmptySlot(bool isHovered) {
+  Widget _buildEmptySlot(bool isHovered, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -469,15 +486,22 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
         ),
         const SizedBox(height: 6),
         Container(
-          height: 18,
-          color: Colors.transparent,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.4),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDraggablePlayer(TeamMemberModel member) {
-    Widget playerWidget = _buildPlayerMarker(member);
+  Widget _buildDraggablePlayer(TeamMemberModel member, {String? positionLabel}) {
+    Widget playerWidget = _buildPlayerMarker(member, positionLabel: positionLabel);
 
     if (!isCaptain) return playerWidget;
 
@@ -578,17 +602,20 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                   final isHovered = candidateData.isNotEmpty;
 
                   return Container(
-                    width: 55,
-                    height: 75,
+                    width: 60,
+                    height: 95,
                     alignment: Alignment.center,
                     child: assignedPlayer != null
-                        ? _buildDraggablePlayer(assignedPlayer)
-                        : _buildEmptySlot(isHovered),
+                        ? _buildDraggablePlayer(assignedPlayer, positionLabel: pitchPos.label)
+                        : _buildEmptySlot(isHovered, pitchPos.label),
                   );
                 },
               )
                   : (assignedPlayer != null
-                  ? SizedBox(width: 55, height: 75, child: Center(child: _buildPlayerMarker(assignedPlayer)))
+                  ? SizedBox(
+                  width: 60,
+                  height: 95,
+                  child: Center(child: _buildPlayerMarker(assignedPlayer, positionLabel: pitchPos.label)))
                   : const SizedBox.shrink()),
             );
           }).toList(),
