@@ -72,7 +72,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     }
   }
 
-  // Deschiderea modalului de selectare a echipei
   void _openJoinModal() {
     showModalBottomSheet(
       context: context,
@@ -81,7 +80,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
       builder: (_) => _SelectTeamToJoinModal(
         tournamentId: widget.tournamentId,
         onTeamJoined: () {
-          _fetchData(); // Refreshează pagina după join
+          _fetchData();
         },
       ),
     );
@@ -352,7 +351,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                             if (isOpen)
                               Expanded(
                                 child: ElevatedButton(
-                                  // Am înlocuit _joinTournament cu _openJoinModal
                                   onPressed: _openJoinModal,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: _cardSurface,
@@ -466,6 +464,21 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     );
   }
 
+  Widget _buildBadgePlaceholder() {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: _bgDark,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Center(
+        child: Icon(Icons.shield, color: _textSecondary.withOpacity(0.5), size: 16),
+      ),
+    );
+  }
+
   Widget _buildMatchesTab() {
     if (matches.isEmpty) {
       return Center(child: Text("No matches scheduled yet.", style: TextStyle(color: _textSecondary)));
@@ -499,12 +512,21 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      match.homeTeamName,
-                      textAlign: TextAlign.right,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            match.homeTeamName,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        _buildBadgePlaceholder(),
+                      ],
                     ),
                   ),
 
@@ -527,12 +549,21 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                   ),
 
                   Expanded(
-                    child: Text(
-                      match.awayTeamName,
-                      textAlign: TextAlign.left,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildBadgePlaceholder(),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            match.awayTeamName,
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -545,7 +576,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   }
 }
 
-// Widget-ul (Modalul) care permite selectarea echipei pentru a participa
 class _SelectTeamToJoinModal extends StatefulWidget {
   final String tournamentId;
   final VoidCallback onTeamJoined;
@@ -579,7 +609,6 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
 
       if (mounted) {
         setState(() {
-          // Filtrăm doar echipele unde ești căpitan
           myCaptainTeams = teams.where((t) => t.captainUsername == currentUsername).toList();
           isLoading = false;
         });

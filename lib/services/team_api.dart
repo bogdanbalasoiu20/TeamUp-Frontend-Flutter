@@ -89,4 +89,20 @@ class TeamApi {
           (json) => TeamModel.fromJson(json),
     );
   }
+
+
+  static Future<void> updatePosition({
+    required String teamId,
+    required String userId,
+    required String squadType,
+    required int slotIndex,
+  }) async {
+    await ApiService.put(
+      "/api/teams/$teamId/members/$userId/position",
+      {
+        "squadType": squadType,
+        "slotIndex": slotIndex,
+      },
+    );
+  }
 }

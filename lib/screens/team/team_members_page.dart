@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
@@ -7,6 +8,13 @@ import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import '../../models/user_search_result.dart';
 import '../../services/friend_api.dart';
+
+class PitchPosition {
+  final int slotIndex;
+  final Alignment alignment;
+
+  PitchPosition({required this.slotIndex, required this.alignment});
+}
 
 class TeamDetailsPage extends StatefulWidget {
   final String teamId;
@@ -28,7 +36,31 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   List<TeamMemberModel> members = [];
   String? currentUser;
 
-  final int maxOnPitch = 5;
+  final List<PitchPosition> _pitchPositions = [
+
+    // --- ATACANȚI ---
+    PitchPosition(slotIndex: 11, alignment: const Alignment(-0.65, -0.85)),
+    PitchPosition(slotIndex: 12, alignment: const Alignment(-0.25, -0.90)),
+    PitchPosition(slotIndex: 13, alignment: const Alignment(0.25, -0.90)),
+    PitchPosition(slotIndex: 14, alignment: const Alignment(0.65, -0.85)),
+
+    // --- MIJLOCAȘI ---
+    PitchPosition(slotIndex: 6, alignment: const Alignment(-0.80, -0.30)),
+    PitchPosition(slotIndex: 7, alignment: const Alignment(-0.40, -0.20)),
+    PitchPosition(slotIndex: 8, alignment: const Alignment(0.0, -0.15)),
+    PitchPosition(slotIndex: 9, alignment: const Alignment(0.40, -0.20)),
+    PitchPosition(slotIndex: 10, alignment: const Alignment(0.80, -0.30)),
+
+    // --- FUNDAȘI ---
+    PitchPosition(slotIndex: 1, alignment: const Alignment(-0.80, 0.40)),
+    PitchPosition(slotIndex: 2, alignment: const Alignment(-0.40, 0.50)),
+    PitchPosition(slotIndex: 3, alignment: const Alignment(0.0, 0.55)),
+    PitchPosition(slotIndex: 4, alignment: const Alignment(0.40, 0.50)),
+    PitchPosition(slotIndex: 5, alignment: const Alignment(0.80, 0.40)),
+
+    // --- PORTAR ---
+    PitchPosition(slotIndex: 0, alignment: const Alignment(0.0, 0.90)),
+  ];
 
   @override
   void initState() {
@@ -69,14 +101,83 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   bool get isCaptain => team?.captainUsername == currentUser;
   bool get isMember => members.any((m) => m.username == currentUser);
 
-  List<TeamMemberModel> get startingPlayers {
-    if (members.length <= maxOnPitch) return members;
-    return members.sublist(0, maxOnPitch);
+  List<TeamMemberModel> get pitchPlayers =>
+      members.where((m) => m.squadType == SquadType.PITCH).toList()
+        ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
+
+  List<TeamMemberModel> get benchPlayers =>
+      members.where((m) => m.squadType == SquadType.BENCH).toList()
+        ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
+
+  // --- LOGICA PENTRU DRAG AND DROP ---
+  Future<void> _handleSwap(TeamMemberModel movingPlayer, SquadType targetType, int? targetIndex) async {
+    if (!isCaptain) return;
+    HapticFeedback.lightImpact();
+
+    final oldType = movingPlayer.squadType;
+    final oldIndex = movingPlayer.slotIndex;
+
+    if (targetType == SquadType.BENCH && targetIndex == null) {
+      targetIndex = benchPlayers.isEmpty
+          ? 0
+          : benchPlayers.map((e) => e.slotIndex).reduce((a, b) => a > b ? a : b) + 1;
+    }
+
+    if (oldType == targetType && oldIndex == targetIndex) return;
+
+    TeamMemberModel? existingPlayer;
+    if (targetType == SquadType.PITCH) {
+      try {
+        existingPlayer = pitchPlayers.firstWhere((p) => p.slotIndex == targetIndex);
+      } catch (_) {}
+    }
+
+    // UPDATE VIZUAL INSTANT
+    setState(() {
+      members.removeWhere((m) => m.userId == movingPlayer.userId);
+      members.add(_cloneMember(movingPlayer, targetType, targetIndex!));
+
+      if (existingPlayer != null) {
+        members.removeWhere((m) => m.userId == existingPlayer!.userId);
+        members.add(_cloneMember(existingPlayer, oldType, oldIndex));
+      }
+    });
+
+    try {
+      await TeamApi.updatePosition(
+        teamId: widget.teamId,
+        userId: movingPlayer.userId,
+        squadType: targetType.name,
+        slotIndex: targetIndex!,
+      );
+
+      if (existingPlayer != null) {
+        await TeamApi.updatePosition(
+          teamId: widget.teamId,
+          userId: existingPlayer.userId,
+          squadType: oldType.name,
+          slotIndex: oldIndex,
+        );
+      }
+    } catch (e) {
+      _fetchData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to save position: $e"), backgroundColor: Colors.red.shade900),
+        );
+      }
+    }
   }
 
-  List<TeamMemberModel> get bench {
-    if (members.length <= maxOnPitch) return [];
-    return members.sublist(maxOnPitch);
+  TeamMemberModel _cloneMember(TeamMemberModel m, SquadType newType, int newIndex) {
+    return TeamMemberModel(
+      userId: m.userId,
+      username: m.username,
+      role: m.role,
+      joinedAt: m.joinedAt,
+      squadType: newType,
+      slotIndex: newIndex,
+    );
   }
 
   Future<void> _leaveTeam() async {
@@ -173,33 +274,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
         );
       },
     );
-  }
-
-  List<List<TeamMemberModel>> _getFormationRows() {
-    List<TeamMemberModel> activePlayers = startingPlayers;
-    if (activePlayers.isEmpty) return [];
-    List<List<TeamMemberModel>> rows = [];
-    int total = activePlayers.length;
-
-    if (total == 1) return [[activePlayers[0]]];
-    if (total == 2) return [[activePlayers[0]], [activePlayers[1]]];
-
-    rows.add([activePlayers[0]]);
-
-    int remaining = total - 1;
-    int rowsCount = remaining >= 6 ? 3 : 2;
-    int perRow = (remaining / rowsCount).ceil();
-
-    int currentIndex = 1;
-    for (int i = 0; i < rowsCount; i++) {
-      List<TeamMemberModel> row = [];
-      for (int j = 0; j < perRow && currentIndex < total; j++) {
-        row.add(activePlayers[currentIndex++]);
-      }
-      if (row.isNotEmpty) rows.add(row);
-    }
-
-    return rows.reversed.toList();
   }
 
   Widget _buildTopBar() {
@@ -371,13 +445,66 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     );
   }
 
+  Widget _buildEmptySlot(bool isHovered) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isHovered ? _accentGreen.withOpacity(0.3) : Colors.white.withOpacity(0.08),
+            border: Border.all(
+              color: isHovered ? _accentGreen : Colors.white.withOpacity(0.2),
+              width: isHovered ? 2 : 1,
+            ),
+          ),
+          child: Icon(
+            Icons.add,
+            color: isHovered ? Colors.white : Colors.white.withOpacity(0.3),
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          height: 18,
+          color: Colors.transparent,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDraggablePlayer(TeamMemberModel member) {
+    Widget playerWidget = _buildPlayerMarker(member);
+
+    if (!isCaptain) return playerWidget;
+
+    return Draggable<TeamMemberModel>(
+      data: member,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Opacity(
+          opacity: 0.8,
+          child: playerWidget,
+        ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: playerWidget,
+      ),
+      child: playerWidget,
+    );
+  }
+
   Widget _buildPitch() {
     final Color pitchGreen = const Color(0xFF163324);
     final Color lineOpacity = Colors.white.withOpacity(0.15);
 
     return Container(
       width: double.infinity,
-      height: 450,
+      height: 520,
       decoration: BoxDecoration(
         color: pitchGreen,
         borderRadius: BorderRadius.circular(20),
@@ -434,18 +561,37 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _getFormationRows().map((rowMembers) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: rowMembers.map((m) => _buildPlayerMarker(m)).toList(),
-                );
-              }).toList(),
-            ),
-          ),
+
+          ..._pitchPositions.map((pitchPos) {
+            TeamMemberModel? assignedPlayer;
+            try {
+              assignedPlayer = pitchPlayers.firstWhere((p) => p.slotIndex == pitchPos.slotIndex);
+            } catch (_) {}
+
+            return Align(
+              alignment: pitchPos.alignment,
+              child: isCaptain
+                  ? DragTarget<TeamMemberModel>(
+                onWillAccept: (data) => true,
+                onAccept: (member) => _handleSwap(member, SquadType.PITCH, pitchPos.slotIndex),
+                builder: (context, candidateData, rejectedData) {
+                  final isHovered = candidateData.isNotEmpty;
+
+                  return Container(
+                    width: 55,
+                    height: 75,
+                    alignment: Alignment.center,
+                    child: assignedPlayer != null
+                        ? _buildDraggablePlayer(assignedPlayer)
+                        : _buildEmptySlot(isHovered),
+                  );
+                },
+              )
+                  : (assignedPlayer != null
+                  ? SizedBox(width: 55, height: 75, child: Center(child: _buildPlayerMarker(assignedPlayer)))
+                  : const SizedBox.shrink()),
+            );
+          }).toList(),
         ],
       ),
     );
@@ -469,36 +615,45 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
               ),
             ),
             Text(
-              "${bench.length} reserves",
+              "${benchPlayers.length} reserves",
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: _cardSurface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          child: bench.isEmpty
-              ? Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Text(
-                "No players on the bench.",
-                style: TextStyle(color: _textSecondary, fontStyle: FontStyle.italic),
+
+        DragTarget<TeamMemberModel>(
+          onWillAccept: (data) => true,
+          onAccept: (member) => _handleSwap(member, SquadType.BENCH, null),
+          builder: (context, candidateData, rejectedData) {
+            final isHovered = candidateData.isNotEmpty;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isHovered ? _accentGreen.withOpacity(0.1) : _cardSurface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isHovered ? _accentGreen : Colors.white.withOpacity(0.05),
+                ),
               ),
-            ),
-          )
-              : Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            alignment: WrapAlignment.center,
-            children: bench.map((member) => _buildPlayerMarker(member)).toList(),
-          ),
+              child: benchPlayers.isEmpty
+                  ? Center(
+                child: Text(
+                  isHovered ? "Drop player here" : "No players on the bench.",
+                  style: TextStyle(
+                      color: isHovered ? _accentGreen : _textSecondary, fontStyle: FontStyle.italic),
+                ),
+              )
+                  : Wrap(
+                spacing: 24,
+                runSpacing: 24,
+                alignment: WrapAlignment.center,
+                children: benchPlayers.map((member) => _buildDraggablePlayer(member)).toList(),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -618,7 +773,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  "${startingPlayers.length} on pitch",
+                                  "${pitchPlayers.length} on pitch",
                                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ],
