@@ -33,7 +33,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   List<TournamentMatchModel> matches = [];
   List<TournamentStandingModel> standings = [];
   String? currentUsername;
-
   String? joinedTeamName;
 
   @override
@@ -62,6 +61,14 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
 
         final matchesData = results[1] as List<dynamic>;
         matches = matchesData.map((e) => TournamentMatchModel.fromJson(e)).toList();
+
+        matches.sort((a, b) {
+          int dayComparison = a.matchDay.compareTo(b.matchDay);
+          if (dayComparison != 0) {
+            return dayComparison;
+          }
+          return a.homeTeamName.compareTo(b.homeTeamName);
+        });
 
         final standingsData = results[2] as List<dynamic>;
         standings = standingsData.map((e) => TournamentStandingModel.fromJson(e)).toList();
@@ -259,145 +266,75 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   }
 
   Widget _buildActionButtons(bool isOpen, bool isCreator) {
-    // 1. Cazul în care turneul NU MAI ESTE DESCHIS (e Ongoing sau Finished)
-    if (!isOpen) {
-      if (joinedTeamName != null) {
-        // Pastram informația ca esti inscris chiar daca a inceput
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: _accentGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        "Joined with $joinedTeamName",
-                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      }
-      // Daca a inceput si nici nu esti inscris, nu afisam butoane
-      return const SizedBox.shrink();
-    }
-
-    // 2. Cazul în care turneul ESTE DESCHIS (OPEN)
-    if (isCreator) {
-      // ESTI ORGANIZATOR: Trebuie să vedem mereu butonul de START pe 50% din ecran
+    if (joinedTeamName != null) {
       return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: joinedTeamName != null
-            // Daca te-ai inscris, aratam capsula de joined pe cealalta jumatate
-                ? Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               decoration: BoxDecoration(
                 color: _accentGreen.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: _accentGreen.withOpacity(0.3)),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: _accentGreen, size: 18),
-                  const SizedBox(width: 4),
+                  Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
+                  const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      "Joined ($joinedTeamName)",
-                      style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, fontSize: 13),
+                      "Joined with $joinedTeamName",
+                      style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-            )
-            // Daca nu te-ai inscris, aratam butonul de JOIN
-                : ElevatedButton(
-              onPressed: _openJoinModal,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _cardSurface,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                side: BorderSide(color: _accentGreen.withOpacity(0.3)),
-              ),
-              child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Butonul de START
-          Expanded(
-            child: ElevatedButton(
-              onPressed: _startTournament,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _accentGreen,
-                foregroundColor: Colors.black,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              ),
-              child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ),
         ],
       );
-    } else {
-      // NU ESTI ORGANIZATOR (Jucator normal)
-      if (joinedTeamName != null) {
-        // Te-ai inscris: Capsula de "Joined" pe mijloc
+    }
+
+    if (isOpen) {
+      if (isCreator) {
         return Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: _accentGreen.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _openJoinModal,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _cardSurface,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  side: BorderSide(color: _accentGreen.withOpacity(0.3)),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        "Joined with $joinedTeamName",
-                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _startTournament,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentGreen,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
+                child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
         );
       } else {
-        // Nu te-ai inscris: Buton de Join centrat
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -419,6 +356,8 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
         );
       }
     }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildTournamentHeaderInfo(bool isOpen, bool isCreator) {
@@ -756,8 +695,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
       itemBuilder: (context, index) {
         final match = matches[index];
         final isFinished = match.status.toUpperCase() == "FINISHED" || match.status.toUpperCase() == "DONE";
+        final bool isFirstInMatchDay = index == 0 || matches[index - 1].matchDay != match.matchDay;
 
-        return Container(
+        Widget matchCard = Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
@@ -770,11 +710,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
           ),
           child: Column(
             children: [
-              Text(
-                "Matchday ${match.matchDay}",
-                style: TextStyle(color: _textSecondary, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.0),
-              ),
-              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -863,6 +798,30 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
             ],
           ),
         );
+
+        if (isFirstInMatchDay) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (index != 0) const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, left: 8),
+                child: Text(
+                  "ROUND ${match.matchDay}",
+                  style: TextStyle(
+                    color: _accentGreen,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+              matchCard,
+            ],
+          );
+        }
+
+        return matchCard;
       },
     );
   }

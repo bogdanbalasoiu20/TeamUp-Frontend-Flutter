@@ -100,7 +100,7 @@ Future<void> showFinishMatchDialog({
                         border: Border.all(color: accentGreen.withOpacity(0.3)),
                       ),
                       child: Text(
-                        "DAY ${match.matchDay}",
+                        "ROUND ${match.matchDay}",
                         style: TextStyle(
                           color: accentGreen,
                           fontSize: 11,
