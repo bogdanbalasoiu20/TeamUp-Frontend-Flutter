@@ -11,6 +11,7 @@ import 'package:team_up_fe_new/models/tournament_standing.dart';
 import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
+import 'package:team_up_fe_new/widgets/finish_match_dialog.dart';
 
 class TournamentDetailsPage extends StatefulWidget {
   final String tournamentId;
@@ -31,6 +32,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   TournamentModel? tournament;
   List<TournamentMatchModel> matches = [];
   List<TournamentStandingModel> standings = [];
+  String? currentUsername;
 
   @override
   void initState() {
@@ -41,6 +43,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   Future<void> _fetchData() async {
     setState(() => isLoading = true);
     try {
+      final prefs = await SharedPreferences.getInstance();
+      currentUsername = prefs.getString("username");
+
       final results = await Future.wait([
         TournamentApi.getTournament(widget.tournamentId),
         TournamentApi.getMatches(widget.tournamentId),
@@ -264,6 +269,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     }
 
     final bool isOpen = tournament!.status.toUpperCase() == "OPEN";
+    final bool isCreator = tournament!.creatorUsername == currentUsername;
 
     return DefaultTabController(
       length: 2,
@@ -363,20 +369,21 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                                   child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
                               ),
-                            if (isOpen) const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: _startTournament,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _accentGreen,
-                                  foregroundColor: Colors.black,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            if (isOpen && isCreator) const SizedBox(width: 12),
+                            if (isOpen && isCreator)
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _startTournament,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _accentGreen,
+                                    foregroundColor: Colors.black,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  ),
+                                  child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
-                                child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
                               ),
-                            ),
                           ],
                         ),
                       ],
@@ -484,12 +491,14 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
       return Center(child: Text("No matches scheduled yet.", style: TextStyle(color: _textSecondary)));
     }
 
+    final bool isCreator = tournament?.creatorUsername == currentUsername;
+
     return ListView.builder(
       padding: const EdgeInsets.all(24),
       itemCount: matches.length,
       itemBuilder: (context, index) {
         final match = matches[index];
-        final isFinished = match.status.toUpperCase() == "FINISHED";
+        final isFinished = match.status.toUpperCase() == "FINISHED" || match.status.toUpperCase() == "DONE";
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -568,6 +577,34 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                   ),
                 ],
               ),
+
+
+              if (isCreator && !isFinished) ...[
+                const SizedBox(height: 16),
+                Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () {
+                    showFinishMatchDialog(
+                      context: context,
+                      match: match,
+                      onMatchFinished: () {
+                        _fetchData();
+                      },
+                    );
+                  },
+                  icon: Icon(Icons.edit_note_rounded, color: _accentGreen, size: 20),
+                  label: Text(
+                    "ENTER SCORE",
+                    style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+
             ],
           ),
         );

@@ -11,6 +11,8 @@ class TournamentModel {
   final DateTime startsAt;
   final DateTime endsAt;
 
+  final String creatorUsername;
+
   TournamentModel({
     required this.id,
     required this.name,
@@ -21,6 +23,7 @@ class TournamentModel {
     required this.status,
     required this.startsAt,
     required this.endsAt,
+    required this.creatorUsername
   });
 
   factory TournamentModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +37,7 @@ class TournamentModel {
       status: json["status"],
       startsAt: DateTime.parse(json["startsAt"]),
       endsAt: DateTime.parse(json["endsAt"]),
+      creatorUsername: json["creatorUsername"],
     );
   }
 }
