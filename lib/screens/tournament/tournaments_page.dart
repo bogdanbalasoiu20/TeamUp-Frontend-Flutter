@@ -146,10 +146,10 @@ class _TournamentsPageState extends State<TournamentsPage> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     children: [
-                      _buildFilterChip("All", "🔥"),
-                      _buildFilterChip("Open", "🟢"),
-                      _buildFilterChip("Ongoing", "🏆"),
-                      _buildFilterChip("Finished", "🏁"),
+                      _buildFilterChip("All"),
+                      _buildFilterChip("Open"),
+                      _buildFilterChip("Ongoing"),
+                      _buildFilterChip("Finished"),
                     ],
                   ),
                 ),
@@ -214,7 +214,7 @@ class _TournamentsPageState extends State<TournamentsPage> {
     );
   }
 
-  Widget _buildFilterChip(String label, String emoji) {
+  Widget _buildFilterChip(String label) {
     final bool isSelected = selectedFilter == label;
     return GestureDetector(
       onTap: () {
@@ -232,8 +232,6 @@ class _TournamentsPageState extends State<TournamentsPage> {
         ),
         child: Row(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 14)),
-            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(

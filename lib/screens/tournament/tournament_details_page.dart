@@ -34,6 +34,8 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   List<TournamentStandingModel> standings = [];
   String? currentUsername;
 
+  String? joinedTeamName;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +52,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
         TournamentApi.getTournament(widget.tournamentId),
         TournamentApi.getMatches(widget.tournamentId),
         TournamentApi.getStandings(widget.tournamentId),
+        TeamApi.getMyTeams().catchError((_) => <TeamModel>[]),
       ]);
 
       if (!mounted) return;
@@ -62,6 +65,16 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
 
         final standingsData = results[2] as List<dynamic>;
         standings = standingsData.map((e) => TournamentStandingModel.fromJson(e)).toList();
+
+        final myTeams = results[3] as List<TeamModel>;
+
+        joinedTeamName = null;
+        for (var myTeam in myTeams) {
+          if (standings.any((s) => s.teamName == myTeam.name)) {
+            joinedTeamName = myTeam.name;
+            break;
+          }
+        }
 
         isLoading = false;
       });
@@ -245,6 +258,228 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     );
   }
 
+  Widget _buildActionButtons(bool isOpen, bool isCreator) {
+    // 1. Cazul în care turneul NU MAI ESTE DESCHIS (e Ongoing sau Finished)
+    if (!isOpen) {
+      if (joinedTeamName != null) {
+        // Pastram informația ca esti inscris chiar daca a inceput
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: _accentGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "Joined with $joinedTeamName",
+                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+      // Daca a inceput si nici nu esti inscris, nu afisam butoane
+      return const SizedBox.shrink();
+    }
+
+    // 2. Cazul în care turneul ESTE DESCHIS (OPEN)
+    if (isCreator) {
+      // ESTI ORGANIZATOR: Trebuie să vedem mereu butonul de START pe 50% din ecran
+      return Row(
+        children: [
+          Expanded(
+            child: joinedTeamName != null
+            // Daca te-ai inscris, aratam capsula de joined pe cealalta jumatate
+                ? Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+              decoration: BoxDecoration(
+                color: _accentGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _accentGreen.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle_rounded, color: _accentGreen, size: 18),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      "Joined ($joinedTeamName)",
+                      style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            )
+            // Daca nu te-ai inscris, aratam butonul de JOIN
+                : ElevatedButton(
+              onPressed: _openJoinModal,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _cardSurface,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                side: BorderSide(color: _accentGreen.withOpacity(0.3)),
+              ),
+              child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Butonul de START
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _startTournament,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accentGreen,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // NU ESTI ORGANIZATOR (Jucator normal)
+      if (joinedTeamName != null) {
+        // Te-ai inscris: Capsula de "Joined" pe mijloc
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: _accentGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "Joined with $joinedTeamName",
+                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      } else {
+        // Nu te-ai inscris: Buton de Join centrat
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 240,
+              child: ElevatedButton(
+                onPressed: _openJoinModal,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentGreen,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text("JOIN TOURNAMENT", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+              ),
+            ),
+          ],
+        );
+      }
+    }
+  }
+
+  Widget _buildTournamentHeaderInfo(bool isOpen, bool isCreator) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildMapSection(),
+
+          Text(
+            tournament!.name,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          Row(
+            children: [
+              Icon(Icons.location_on_rounded, color: _textSecondary, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  tournament!.venueName,
+                  style: TextStyle(color: _textSecondary, fontSize: 14),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.calendar_month_rounded, color: _textSecondary, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  _formatDateRange(tournament!.startsAt, tournament!.endsAt),
+                  style: TextStyle(color: _textSecondary, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          _buildActionButtons(isOpen, isCreator),
+
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -295,125 +530,43 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
             ),
 
             SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopBar(),
-
-                  const SizedBox(height: 16),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildMapSection(),
-
-                        Text(
-                          tournament!.name,
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Icon(Icons.location_on_rounded, color: _textSecondary, size: 16),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                tournament!.venueName,
-                                style: TextStyle(color: _textSecondary, fontSize: 14),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.calendar_month_rounded, color: _textSecondary, size: 16),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                _formatDateRange(tournament!.startsAt, tournament!.endsAt),
-                                style: TextStyle(color: _textSecondary, fontSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        Row(
-                          children: [
-                            if (isOpen)
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: _openJoinModal,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _cardSurface,
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                    side: BorderSide(color: _accentGreen.withOpacity(0.3)),
-                                  ),
-                                  child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                            if (isOpen && isCreator) const SizedBox(width: 12),
-                            if (isOpen && isCreator)
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: _startTournament,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _accentGreen,
-                                    foregroundColor: Colors.black,
-                                    elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  ),
-                                  child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+              child: NestedScrollView(
+                headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+                  return <Widget>[
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTopBar(),
+                          _buildTournamentHeaderInfo(isOpen, isCreator),
+                        ],
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  TabBar(
-                    indicatorColor: _accentGreen,
-                    labelColor: _accentGreen,
-                    unselectedLabelColor: _textSecondary,
-                    dividerColor: Colors.white.withOpacity(0.05),
-                    indicatorWeight: 3,
-                    labelStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                    tabs: const [
-                      Tab(text: "STANDINGS"),
-                      Tab(text: "MATCHES"),
-                    ],
-                  ),
-
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _buildStandingsTab(),
-                        _buildMatchesTab(),
-                      ],
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _SliverAppBarDelegate(
+                        TabBar(
+                          indicatorColor: _accentGreen,
+                          labelColor: _accentGreen,
+                          unselectedLabelColor: _textSecondary,
+                          dividerColor: Colors.white.withOpacity(0.05),
+                          indicatorWeight: 3,
+                          labelStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                          tabs: const [
+                            Tab(text: "STANDINGS"),
+                            Tab(text: "MATCHES"),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ];
+                },
+                body: TabBarView(
+                  children: [
+                    _buildStandingsTab(),
+                    _buildMatchesTab(),
+                  ],
+                ),
               ),
             ),
           ],
@@ -424,7 +577,59 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
 
   Widget _buildStandingsTab() {
     if (standings.isEmpty) {
-      return Center(child: Text("No standings yet.", style: TextStyle(color: _textSecondary)));
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: _accentGreen.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.emoji_events_rounded,
+                          size: 48,
+                          color: _accentGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "No Teams Enrolled",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "The leaderboard will appear here once teams start joining the tournament.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
 
     return SingleChildScrollView(
@@ -488,7 +693,59 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
 
   Widget _buildMatchesTab() {
     if (matches.isEmpty) {
-      return Center(child: Text("No matches scheduled yet.", style: TextStyle(color: _textSecondary)));
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: _accentGreen.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.calendar_month_rounded,
+                          size: 48,
+                          color: _accentGreen,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Schedule Pending",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "The match schedule will be automatically generated and displayed here once the tournament officially starts.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: _textSecondary,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
     }
 
     final bool isCreator = tournament?.creatorUsername == currentUsername;
@@ -578,7 +835,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                 ],
               ),
 
-
               if (isCreator && !isFinished) ...[
                 const SizedBox(height: 16),
                 Divider(color: Colors.white.withOpacity(0.05), height: 1),
@@ -604,12 +860,36 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                   ),
                 ),
               ],
-
             ],
           ),
         );
       },
     );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverAppBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: const Color(0xFF091210),
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return true;
   }
 }
 
