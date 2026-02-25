@@ -34,6 +34,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   List<TournamentStandingModel> standings = [];
   String? currentUsername;
   String? joinedTeamName;
+  bool _isDescriptionExpanded = false;
 
   @override
   void initState() {
@@ -360,6 +361,74 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     return const SizedBox.shrink();
   }
 
+  Widget _buildDescriptionDropdown() {
+    if (tournament!.description == null || tournament!.description!.trim().isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isDescriptionExpanded = !_isDescriptionExpanded;
+            });
+          },
+          child: Container(
+            color: Colors.transparent,
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: _isDescriptionExpanded ? _accentGreen : _textSecondary,
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+
+                Text(
+                  "Description & Format",
+                  style: TextStyle(
+                    color: _isDescriptionExpanded ? Colors.white : _textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(width: 4),
+
+                Icon(
+                  _isDescriptionExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  color: _isDescriptionExpanded ? _accentGreen : _textSecondary,
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        AnimatedCrossFade(
+          firstChild: const SizedBox(width: double.infinity, height: 0),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(left: 22, top: 4, bottom: 8),
+            child: Text(
+              tournament!.description!,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+          crossFadeState: _isDescriptionExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 200),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTournamentHeaderInfo(bool isOpen, bool isCreator) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -408,6 +477,8 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
               ),
             ],
           ),
+
+          _buildDescriptionDropdown(),
 
           const SizedBox(height: 20),
 

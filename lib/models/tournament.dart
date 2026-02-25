@@ -7,6 +7,10 @@ class TournamentModel {
   final double venueLatitude;
   final double venueLongitude;
 
+  final int maxTeams;
+  final String? description;
+  final int playersPerTeam;
+
   final String status;
   final DateTime startsAt;
   final DateTime endsAt;
@@ -20,10 +24,13 @@ class TournamentModel {
     required this.venueName,
     required this.venueLatitude,
     required this.venueLongitude,
+    required this.maxTeams,
+    required this.playersPerTeam,
     required this.status,
     required this.startsAt,
     required this.endsAt,
-    required this.creatorUsername
+    required this.creatorUsername,
+    this.description,
   });
 
   factory TournamentModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +41,9 @@ class TournamentModel {
       venueName: json["venueName"],
       venueLatitude: (json["venueLatitude"] as num).toDouble(),
       venueLongitude: (json["venueLongitude"] as num).toDouble(),
+      maxTeams: json["maxTeams"],
+      playersPerTeam: json["playersPerTeam"],
+      description: json["description"],
       status: json["status"],
       startsAt: DateTime.parse(json["startsAt"]),
       endsAt: DateTime.parse(json["endsAt"]),

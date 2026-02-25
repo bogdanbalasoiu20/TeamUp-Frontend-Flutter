@@ -14,7 +14,12 @@ class CreateTournamentPage extends StatefulWidget {
 
 class _CreateTournamentPageState extends State<CreateTournamentPage> {
   final nameController = TextEditingController();
-  final maxTeamsController = TextEditingController(text: "8");
+
+  // Am scos valorile default pentru a forta utilizatorul sa le completeze
+  final maxTeamsController = TextEditingController();
+  final playersPerTeamController = TextEditingController();
+
+  final descriptionController = TextEditingController();
 
   DateTime? startsAt;
   DateTime? endsAt;
@@ -119,9 +124,16 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
       return;
     }
 
-    final int maxTeams = int.tryParse(maxTeamsController.text) ?? 8;
-    if (maxTeams < 2) {
-      showError("A tournament requires at least 2 teams.");
+    // Validare nouă: Acum că nu au valoare default, verificăm dacă s-a introdus un text valid
+    final int? maxTeams = int.tryParse(maxTeamsController.text);
+    if (maxTeams == null || maxTeams < 2) {
+      showError("Please enter a valid max number of teams (at least 2).");
+      return;
+    }
+
+    final int? playersPerTeam = int.tryParse(playersPerTeamController.text);
+    if (playersPerTeam == null || playersPerTeam < 1) {
+      showError("Please enter a valid number of players per team.");
       return;
     }
 
@@ -132,6 +144,8 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
         name: nameController.text.trim(),
         venueId: selectedVenue!.id,
         maxTeams: maxTeams,
+        playersPerTeam: playersPerTeam,
+        description: descriptionController.text.trim().isEmpty ? null : descriptionController.text.trim(),
         startsAt: startsAt!.toUtc(),
         endsAt: endsAt!.toUtc(),
       );
@@ -249,7 +263,6 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
                       children: [
                         const SizedBox(height: 10),
 
-
                         _buildSectionLabel("Tournament Venue"),
                         const SizedBox(height: 8),
                         Container(
@@ -347,7 +360,7 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
 
                         _buildModernInput(
                           controller: nameController,
-                          hint: "Tournament Name (e.g. Summer Cup)",
+                          hint: "Tournament Name ",
                           icon: Icons.emoji_events_outlined,
                         ),
 
@@ -355,8 +368,17 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
 
                         _buildModernInput(
                           controller: maxTeamsController,
-                          hint: "Max Teams (e.g. 8, 16, 32)",
+                          hint: "Max number of teams",
                           icon: Icons.groups_outlined,
+                          keyboardType: TextInputType.number,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _buildModernInput(
+                          controller: playersPerTeamController,
+                          hint: "Players per team (except goalkeeper)",
+                          icon: Icons.person_outline,
                           keyboardType: TextInputType.number,
                         ),
 
@@ -386,6 +408,15 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
                               ),
                             ),
                           ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        _buildModernInput(
+                          controller: descriptionController,
+                          hint: "Tournament Description & Rules (Optional)",
+                          icon: Icons.description_outlined,
+                          maxLines: 4,
                         ),
 
                         const SizedBox(height: 40),
@@ -451,6 +482,7 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
     required String hint,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -461,11 +493,26 @@ class _CreateTournamentPageState extends State<CreateTournamentPage> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        maxLines: maxLines,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: _textSecondary.withOpacity(0.7)),
-          prefixIcon: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+          hintStyle: TextStyle(
+            color: _textSecondary.withOpacity(0.7),
+            fontSize: 14, // Scăzut puțin pentru a încăpea perfect textul lung
+          ),
+          prefixIcon: maxLines == 1
+              ? Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22)
+              : Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 18.0),
+                child: Icon(icon, color: _accentGreen.withOpacity(0.8), size: 22),
+              ),
+            ],
+          ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),

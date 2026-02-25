@@ -10,6 +10,8 @@ class TournamentApi {
     required String name,
     required String venueId,
     required int maxTeams,
+    required int playersPerTeam,
+    String? description,
     required DateTime startsAt,
     required DateTime endsAt,
   }) async {
@@ -20,6 +22,8 @@ class TournamentApi {
         "name": name,
         "venueId": venueId,
         "maxTeams": maxTeams,
+        "playersPerTeam": playersPerTeam,
+        "description": description,
         "startsAt": startsAt.toIso8601String(),
         "endsAt": endsAt.toIso8601String(),
       },

@@ -417,9 +417,8 @@ class _TournamentsPageState extends State<TournamentsPage> {
                         ),
                         Row(
                           children: [
-                            _buildMiniTag(Icons.sports_soccer, "5v5"),
+                            _buildMiniTag(Icons.sports_soccer, tournament.playersPerTeam.toString() + "v"+tournament.playersPerTeam.toString()),
                             const SizedBox(width: 8),
-                            _buildMiniTag(Icons.emoji_events, "Prize"),
                           ],
                         )
                       ],
