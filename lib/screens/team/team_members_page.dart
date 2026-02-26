@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/team.dart';
+import 'package:team_up_fe_new/models/team_full_profile.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
+import 'package:team_up_fe_new/models/team_statistics.dart';
 import 'package:team_up_fe_new/screens/team/team_statistics_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
@@ -40,6 +42,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   bool isLoading = true;
   TeamModel? team;
   List<TeamMemberModel> members = [];
+  TeamStatisticsModel? teamStats;
   String? currentUser;
 
   final List<PitchPosition> _pitchPositions = [
@@ -81,14 +84,17 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       currentUser = prefs.getString("username");
 
       final results = await Future.wait([
-        TeamApi.getTeam(widget.teamId),
+        TeamApi.getTeamProfile(widget.teamId),
         TeamApi.getMembers(widget.teamId),
       ]);
 
       if (!mounted) return;
 
+      final profile = results[0] as TeamFullProfileModel;
+
       setState(() {
-        team = results[0] as TeamModel;
+        team = profile.team;
+        teamStats = profile.statistics;
         members = results[1] as List<TeamMemberModel>;
         isLoading = false;
       });
@@ -359,7 +365,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
         Expanded(
           child: _buildStatBox(
             label: "W-D-L",
-            value: "${team!.wins}-${team!.draws}-${team!.losses}",
+            value: "${teamStats?.wins ?? 0}-${teamStats?.draws ?? 0}-${teamStats?.losses ?? 0}",
             icon: Icons.emoji_events_rounded,
             color: _accentGreen,
           ),

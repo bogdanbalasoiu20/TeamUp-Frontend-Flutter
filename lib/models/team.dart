@@ -4,9 +4,6 @@ class TeamModel {
   final String captainUsername;
   final double teamRating;
   final double teamChemistry;
-  final int wins;
-  final int draws;
-  final int losses;
   final DateTime createdAt;
 
   TeamModel({
@@ -15,9 +12,6 @@ class TeamModel {
     required this.captainUsername,
     required this.teamRating,
     required this.teamChemistry,
-    required this.wins,
-    required this.draws,
-    required this.losses,
     required this.createdAt,
   });
 
@@ -28,9 +22,6 @@ class TeamModel {
       captainUsername: json["captainUsername"],
       teamRating: (json["teamRating"] as num).toDouble(),
       teamChemistry: (json["teamChemistry"] as num).toDouble(),
-      wins: json["wins"],
-      draws: json["draws"],
-      losses: json["losses"],
       createdAt: DateTime.parse(json["createdAt"]),
     );
   }

@@ -447,38 +447,59 @@ class TeamCardWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: accentGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: accentGreen.withOpacity(0.3), width: 1.5),
+                      ),
+                      child: Icon(Icons.shield_rounded, color: accentGreen, size: 32),
+                    ),
+                    const SizedBox(width: 16),
+
                     Expanded(
-                      child: Text(
-                        team.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            team.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Captain: @${team.captainUsername}",
+                            style: TextStyle(color: textSecondary, fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                    Icon(Icons.shield, color: accentGreen, size: 24),
                   ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Captain: @${team.captainUsername}",
-                  style: TextStyle(color: textSecondary, fontSize: 14),
                 ),
 
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(color: Colors.white10, height: 1),
                 ),
 
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatColumn("Rating", team.teamRating.toStringAsFixed(1), Icons.star, Colors.amber),
-                    _buildStatColumn("Chem", "${team.teamChemistry.toInt()}%", Icons.science, Colors.cyan),
-                    _buildStatColumn("W-D-L", "${team.wins}-${team.draws}-${team.losses}", Icons.emoji_events, accentGreen),
+                    _buildStatColumn("RATING", team.teamRating.toStringAsFixed(1), Icons.star_rounded, Colors.amber),
+
+                    Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
+
+                    _buildStatColumn("CHEMISTRY", "${team.teamChemistry.toInt()}%", Icons.science_rounded, Colors.cyan),
                   ],
                 )
               ],
@@ -493,19 +514,20 @@ class TeamCardWidget extends StatelessWidget {
     return Column(
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 6),
             Text(
               value,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
             ),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF8A9E96), fontSize: 12),
+          style: const TextStyle(color: Color(0xFF8A9E96), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5),
         ),
       ],
     );
