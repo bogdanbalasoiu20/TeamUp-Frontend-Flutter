@@ -267,75 +267,145 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   }
 
   Widget _buildActionButtons(bool isOpen, bool isCreator) {
-    if (joinedTeamName != null) {
+    // 1. Cazul în care turneul NU MAI ESTE DESCHIS (e Ongoing sau Finished)
+    if (!isOpen) {
+      if (joinedTeamName != null) {
+        // Pastram informația ca esti inscris chiar daca a inceput
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: _accentGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "Joined with $joinedTeamName",
+                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+      // Daca a inceput si nici nu esti inscris, nu afisam butoane
+      return const SizedBox.shrink();
+    }
+
+    // 2. Cazul în care turneul ESTE DESCHIS (OPEN)
+    if (isCreator) {
+      // ESTI ORGANIZATOR: Trebuie să vedem mereu butonul de START pe 50% din ecran
       return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+          Expanded(
+            child: joinedTeamName != null
+            // Daca te-ai inscris, aratam capsula de joined pe cealalta jumatate
+                ? Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
               decoration: BoxDecoration(
                 color: _accentGreen.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: _accentGreen.withOpacity(0.3)),
               ),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.check_circle_rounded, color: _accentGreen, size: 18),
+                  const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      "Joined with $joinedTeamName",
-                      style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
+                      "Joined ($joinedTeamName)",
+                      style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, fontSize: 13),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
+            )
+            // Daca nu te-ai inscris, aratam butonul de JOIN
+                : ElevatedButton(
+              onPressed: _openJoinModal,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _cardSurface,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                side: BorderSide(color: _accentGreen.withOpacity(0.3)),
+              ),
+              child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Butonul de START
+          Expanded(
+            child: ElevatedButton(
+              onPressed: _startTournament,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accentGreen,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ),
         ],
       );
-    }
-
-    if (isOpen) {
-      if (isCreator) {
+    } else {
+      // NU ESTI ORGANIZATOR (Jucator normal)
+      if (joinedTeamName != null) {
+        // Te-ai inscris: Capsula de "Joined" pe mijloc
         return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _openJoinModal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _cardSurface,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  side: BorderSide(color: _accentGreen.withOpacity(0.3)),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: _accentGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _accentGreen.withOpacity(0.3)),
                 ),
-                child: const Text("JOIN", style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _startTournament,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
-                  foregroundColor: Colors.black,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: _accentGreen, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        "Joined with $joinedTeamName",
+                        style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-                child: const Text("START TOURNAMENT", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
         );
       } else {
+        // Nu te-ai inscris: Buton de Join centrat
         return Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -357,8 +427,6 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
         );
       }
     }
-
-    return const SizedBox.shrink();
   }
 
   Widget _buildDescriptionDropdown() {

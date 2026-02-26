@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
+import 'package:team_up_fe_new/screens/team/team_statistics_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import '../../models/user_search_result.dart';
@@ -780,6 +781,42 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
                         const SizedBox(height: 32),
 
                         _buildStatsGrid(),
+
+                        const SizedBox(height: 16), // Spatiere
+
+                        // BUTONUL NOU ADAUGAT PENTRU PAGINA DE STATISTICI
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Navigam catre noua pagina
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TeamStatisticsPage(teamId: widget.teamId),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white.withOpacity(0.05),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.bar_chart_rounded, color: _accentGreen, size: 20),
+                                const SizedBox(width: 8),
+                                const Text("VIEW FULL STATISTICS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+                              ],
+                            ),
+                          ),
+                        ),
 
                         const SizedBox(height: 40),
 

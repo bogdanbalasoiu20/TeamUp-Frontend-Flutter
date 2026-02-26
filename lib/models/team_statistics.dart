@@ -1,4 +1,5 @@
-class TournamentStandingModel {
+class TeamStatisticsModel {
+  final String teamId;
   final String teamName;
   final int played;
   final int wins;
@@ -6,10 +7,11 @@ class TournamentStandingModel {
   final int losses;
   final int goalsFor;
   final int goalsAgainst;
-  final int points;
-  final int? finalPosition;
+  final int tournamentsPlayed;
+  final int tournamentsWon;
 
-  TournamentStandingModel({
+  TeamStatisticsModel({
+    required this.teamId,
     required this.teamName,
     required this.played,
     required this.wins,
@@ -17,12 +19,13 @@ class TournamentStandingModel {
     required this.losses,
     required this.goalsFor,
     required this.goalsAgainst,
-    required this.points,
-    required this.finalPosition
+    required this.tournamentsPlayed,
+    required this.tournamentsWon,
   });
 
-  factory TournamentStandingModel.fromJson(Map<String, dynamic> json) {
-    return TournamentStandingModel(
+  factory TeamStatisticsModel.fromJson(Map<String, dynamic> json) {
+    return TeamStatisticsModel(
+      teamId: json["teamId"],
       teamName: json["teamName"],
       played: json["played"],
       wins: json["wins"],
@@ -30,8 +33,8 @@ class TournamentStandingModel {
       losses: json["losses"],
       goalsFor: json["goalsFor"],
       goalsAgainst: json["goalsAgainst"],
-      points: json["points"],
-      finalPosition: json["finalPosition"]
+      tournamentsPlayed: json["tournamentsPlayed"],
+      tournamentsWon: json["tournamentsWon"],
     );
   }
 }

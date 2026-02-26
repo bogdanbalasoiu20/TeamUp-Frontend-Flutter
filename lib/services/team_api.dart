@@ -1,4 +1,5 @@
 import 'package:team_up_fe_new/models/team.dart';
+import 'package:team_up_fe_new/models/team_full_profile.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
 import 'package:team_up_fe_new/models/page_model.dart';
 import '../exceptions/api_service.dart';
@@ -104,5 +105,10 @@ class TeamApi {
         "slotIndex": slotIndex,
       },
     );
+  }
+
+  static Future<TeamFullProfileModel> getTeamProfile(String teamId) async {
+    final response = await ApiService.get("${ApiService.baseUrl}/api/teams/$teamId/profile");
+    return TeamFullProfileModel.fromJson(response["data"]);
   }
 }
