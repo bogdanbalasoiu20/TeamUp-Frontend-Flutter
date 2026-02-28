@@ -7,25 +7,25 @@ import 'package:stomp_dart_client/stomp_config.dart';
 import 'package:stomp_dart_client/stomp_frame.dart';
 
 import '../../models/message.dart';
-import '../../services/match_chat_api.dart';
+import '../../services/team_chat_api.dart';
 
-class MatchChatTab extends StatefulWidget {
-  final String matchId;
+class TeamChatTab extends StatefulWidget {
+  final String teamId;
   final String currentUserId;
   final bool isAllowedToChat;
 
-  const MatchChatTab({
+  const TeamChatTab({
     super.key,
-    required this.matchId,
+    required this.teamId,
     required this.currentUserId,
     required this.isAllowedToChat,
   });
 
   @override
-  State<MatchChatTab> createState() => _MatchChatTabState();
+  State<TeamChatTab> createState() => _TeamChatTabState();
 }
 
-class _MatchChatTabState extends State<MatchChatTab> {
+class _TeamChatTabState extends State<TeamChatTab> {
   final List<ChatMessage> messages = [];
   final ScrollController _chatScroll = ScrollController();
   final TextEditingController _msgController = TextEditingController();
@@ -53,7 +53,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
     if (_historyLoaded) return;
     _historyLoaded = true;
 
-    final list = await MatchChatApi.fetchMessages(widget.matchId);
+    final list = await TeamChatApi.fetchMessages(widget.teamId);
     setState(() => messages.addAll(list));
     _scrollToBottom();
   }
@@ -72,7 +72,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
 
         onConnect: (frame) {
           stompClient!.subscribe(
-            destination: "/topic/matches/${widget.matchId}/chat",
+            destination: "/topic/teams/${widget.teamId}/chat",
             callback: (StompFrame frame) {
               if (frame.body == null) return;
 
@@ -141,7 +141,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
             ),
             const SizedBox(height: 20),
             const Text(
-              "Chat Locked",
+              "Chat Blocat",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -150,7 +150,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              "Join the match to access the team chat.",
+              "Trebuie să faci parte din echipă pentru a accesa chat-ul.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -209,7 +209,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
             child: Text(
-              isMe ? "Tu" : msg.senderUsername,
+              isMe ? "You" : msg.senderUsername,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -225,7 +225,14 @@ class _MatchChatTabState extends State<MatchChatTab> {
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 12,
+        bottom: MediaQuery.of(context).viewInsets.bottom > 0
+            ? MediaQuery.of(context).viewInsets.bottom + 12
+            : 24,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFF091210),
         border: Border(
@@ -246,7 +253,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
                 style: const TextStyle(color: Colors.white),
                 cursorColor: _accentGreen,
                 decoration: InputDecoration(
-                  hintText: "Type a message...",
+                  hintText: "Scrie un mesaj...",
                   hintStyle: TextStyle(color: _textSecondary),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -280,10 +287,9 @@ class _MatchChatTabState extends State<MatchChatTab> {
     if (text.isEmpty) return;
 
     _msgController.clear();
-    FocusScope.of(context).unfocus();
 
     stompClient?.send(
-      destination: "/app/matches/${widget.matchId}/chat.send",
+      destination: "/app/teams/${widget.teamId}/chat.send",
       body: jsonEncode({"content": text}),
     );
   }

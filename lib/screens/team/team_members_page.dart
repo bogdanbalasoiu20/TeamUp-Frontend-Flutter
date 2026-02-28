@@ -6,6 +6,7 @@ import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/models/team_full_profile.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
 import 'package:team_up_fe_new/models/team_statistics.dart';
+import 'package:team_up_fe_new/screens/chat/team_chat_tab.dart';
 import 'package:team_up_fe_new/screens/team/team_statistics_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
@@ -33,7 +34,7 @@ class TeamDetailsPage extends StatefulWidget {
   State<TeamDetailsPage> createState() => _TeamDetailsPageState();
 }
 
-class _TeamDetailsPageState extends State<TeamDetailsPage> {
+class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProviderStateMixin {
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
   final Color _accentGreen = const Color(0xFF00E676);
@@ -44,6 +45,8 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   List<TeamMemberModel> members = [];
   TeamStatisticsModel? teamStats;
   String? currentUser;
+
+  late TabController _tabController;
 
   final List<PitchPosition> _pitchPositions = [
     // --- ATACANȚI ---
@@ -74,7 +77,14 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -113,6 +123,14 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
   bool get isCaptain => team?.captainUsername == currentUser;
   bool get isMember => members.any((m) => m.username == currentUser);
 
+  String _getCurrentUserId() {
+    try {
+      return members.firstWhere((m) => m.username == currentUser).userId;
+    } catch (e) {
+      return "";
+    }
+  }
+
   List<TeamMemberModel> get pitchPlayers =>
       members.where((m) => m.squadType == SquadType.PITCH).toList()
         ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
@@ -121,7 +139,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       members.where((m) => m.squadType == SquadType.BENCH).toList()
         ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
 
-  // --- LOGICA PENTRU DRAG AND DROP ---
   Future<void> _handleSwap(TeamMemberModel movingPlayer, SquadType targetType, int? targetIndex) async {
     if (!isCaptain) return;
     HapticFeedback.lightImpact();
@@ -144,7 +161,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
       } catch (_) {}
     }
 
-    // UPDATE VIZUAL INSTANT
     setState(() {
       members.removeWhere((m) => m.userId == movingPlayer.userId);
       members.add(_cloneMember(movingPlayer, targetType, targetIndex!));
@@ -693,6 +709,203 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
     );
   }
 
+  Widget _buildSquadTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: _cardSurface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: _accentGreen.withOpacity(0.5), width: 2),
+                ),
+                child: Center(
+                  child: Icon(Icons.shield_rounded, color: _accentGreen, size: 40),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      team!.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Created ${team!.createdAt.year}",
+                      style: TextStyle(color: _textSecondary, fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+
+          _buildStatsGrid(),
+
+          const SizedBox(height: 16),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TeamStatisticsPage(teamId: widget.teamId),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white.withOpacity(0.05),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_rounded, color: _accentGreen, size: 20),
+                  const SizedBox(width: 8),
+                  const Text("VIEW FULL STATISTICS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 40),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "TACTICAL VIEW",
+                    style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "${pitchPlayers.length} on pitch",
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              if (isCaptain)
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.transparent,
+                      isScrollControlled: true,
+                      builder: (_) => _AddPlayerModal(
+                        teamId: widget.teamId,
+                        currentMembers: members,
+                        onAdded: () {
+                          _fetchData();
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _accentGreen.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _accentGreen.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.person_add_alt_1_rounded, color: _accentGreen, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          "ADD",
+                          style: TextStyle(
+                            color: _accentGreen,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          _buildPitch(),
+
+          _buildSubstitutions(),
+
+          const SizedBox(height: 32),
+
+          if (isMember && !isCaptain)
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _leaveTeam,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _cardSurface,
+                  foregroundColor: Colors.redAccent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  side: BorderSide(color: Colors.redAccent.withOpacity(0.3)),
+                ),
+                child: const Text("LEAVE TEAM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+
+          if (!isMember)
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: const Text("Request feature coming soon!"), backgroundColor: _accentGreen),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentGreen,
+                  foregroundColor: Colors.black,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text("REQUEST TO JOIN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              ),
+            ),
+
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -741,202 +954,38 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildTopBar(),
+
+                // AM ADAUGAT TAB BAR-UL
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicatorColor: _accentGreen,
+                    indicatorWeight: 3,
+                    labelColor: _accentGreen,
+                    unselectedLabelColor: _textSecondary,
+                    dividerColor: Colors.transparent,
+                    tabs: const [
+                      Tab(text: "SQUAD"),
+                      Tab(text: "CHAT"),
+                    ],
+                  ),
+                ),
+
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: _cardSurface,
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(color: _accentGreen.withOpacity(0.5), width: 2),
-                              ),
-                              child: Center(
-                                child: Icon(Icons.shield_rounded, color: _accentGreen, size: 40),
-                              ),
-                            ),
-                            const SizedBox(width: 20),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    team!.name,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "Created ${team!.createdAt.year}",
-                                    style: TextStyle(color: _textSecondary, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // TAB 1: SQUAD
+                      _buildSquadTab(),
 
-                        _buildStatsGrid(),
-
-                        const SizedBox(height: 16), // Spatiere
-
-                        // BUTONUL NOU ADAUGAT PENTRU PAGINA DE STATISTICI
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Navigam catre noua pagina
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => TeamStatisticsPage(teamId: widget.teamId),
-                                ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.05),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                side: BorderSide(color: Colors.white.withOpacity(0.1)),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.bar_chart_rounded, color: _accentGreen, size: 20),
-                                const SizedBox(width: 8),
-                                const Text("VIEW FULL STATISTICS", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5)),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 40),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "TACTICAL VIEW",
-                                  style: TextStyle(
-                                    color: _textSecondary,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "${pitchPlayers.length} on pitch",
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            if (isCaptain)
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: Colors.transparent,
-                                    isScrollControlled: true,
-                                    builder: (_) => _AddPlayerModal(
-                                      teamId: widget.teamId,
-                                      currentMembers: members,
-                                      onAdded: () {
-                                        _fetchData();
-                                      },
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: _accentGreen.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: _accentGreen.withOpacity(0.3)),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.person_add_alt_1_rounded, color: _accentGreen, size: 16),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "ADD",
-                                        style: TextStyle(
-                                          color: _accentGreen,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        _buildPitch(),
-
-                        _buildSubstitutions(),
-
-                        const SizedBox(height: 32),
-
-                        if (isMember && !isCaptain)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: _leaveTeam,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _cardSurface,
-                                foregroundColor: Colors.redAccent,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                side: BorderSide(color: Colors.redAccent.withOpacity(0.3)),
-                              ),
-                              child: const Text("LEAVE TEAM", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            ),
-                          ),
-
-                        if (!isMember)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: const Text("Request feature coming soon!"), backgroundColor: _accentGreen),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _accentGreen,
-                                foregroundColor: Colors.black,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                              child: const Text("REQUEST TO JOIN", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            ),
-                          ),
-
-                        const SizedBox(height: 40),
-                      ],
-                    ),
+                      // TAB 2: CHAT
+                      TeamChatTab(
+                        teamId: widget.teamId,
+                        currentUserId: _getCurrentUserId(),
+                        isAllowedToChat: isMember,
+                      ),
+                    ],
                   ),
                 ),
               ],
