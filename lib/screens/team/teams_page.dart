@@ -252,6 +252,7 @@ class _MyTeamsTabState extends State<_MyTeamsTab> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: _showCreateTeamDialog,
         backgroundColor: _accentGreen,
         foregroundColor: Colors.black,
