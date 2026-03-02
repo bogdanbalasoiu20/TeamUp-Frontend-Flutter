@@ -100,6 +100,84 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
     );
   }
 
+  Widget _buildDetailedRating() {
+    if (fullProfile == null) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "SQUAD RATINGS",
+              style: TextStyle(
+                color: _textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          decoration: BoxDecoration(
+            color: _cardSurface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.05)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildCircularStat("ATT", fullProfile!.team.rating.attack, Colors.redAccent),
+              _buildCircularStat("MID", fullProfile!.team.rating.midfield, Colors.blueAccent),
+              _buildCircularStat("DEF", fullProfile!.team.rating.defense, Colors.amber),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircularStat(String label, int value, Color color) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: 64,
+              height: 64,
+              child: CircularProgressIndicator(
+                value: value / 100,
+                backgroundColor: Colors.white.withOpacity(0.05),
+                color: color,
+                strokeWidth: 6,
+                strokeCap: StrokeCap.round,
+              ),
+            ),
+            Text(
+              value.toString(),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
+            letterSpacing: 1.0,
+          ),
+        )
+      ],
+    );
+  }
+
   Widget _buildBentoMetrics(TeamStatisticsModel stats) {
     double winRate = stats.played > 0 ? (stats.wins / stats.played) : 0.0;
     int winPercentage = (winRate * 100).toInt();
@@ -173,7 +251,6 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
               ),
             ),
             const SizedBox(width: 16),
-
             Expanded(
               flex: 4,
               child: SizedBox(
@@ -324,7 +401,6 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
                     ],
                   ),
                 ),
-
                 if (tourney.finalPosition > 0)
                   Container(
                     margin: const EdgeInsets.only(left: 16),
@@ -433,7 +509,12 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildBentoMetrics(fullProfile!.statistics),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 32), // Spațiu înainte de rating
+
+                        // AM ADĂUGAT AICI SECȚIUNEA DE RATING
+                        _buildDetailedRating(),
+
+                        const SizedBox(height: 32), // Spațiu înainte de istoric
                         _buildTournamentHistorySection(fullProfile!.tournamentHistory),
                         const SizedBox(height: 40),
                       ],
@@ -447,7 +528,6 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
       ),
     );
   }
-
 
   Widget _buildClearGoalsBox(int gf, int ga) {
     return Container(

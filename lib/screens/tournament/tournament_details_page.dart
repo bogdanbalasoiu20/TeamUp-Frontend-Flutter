@@ -1119,10 +1119,62 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
                       team.name,
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(
-                      "Rating: ${team.rating.overall}",
-                      style: TextStyle(color: Colors.white.withOpacity(0.5)),
-                    ),
+                    subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              team.rating.overall.toString(),
+                              style: const TextStyle(
+                                color: Colors.amber,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 8),
+
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.cyan.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.science_rounded, color: Colors.cyan, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${team.teamChemistry.toInt()}%",
+                              style: const TextStyle(
+                                color: Colors.cyan,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                     trailing: ElevatedButton(
                       onPressed: () => _joinWithTeam(team.id),
                       style: ElevatedButton.styleFrom(
