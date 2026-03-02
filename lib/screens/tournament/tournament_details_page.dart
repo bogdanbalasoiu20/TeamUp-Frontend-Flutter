@@ -1120,7 +1120,7 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      "Rating: ${team.teamRating.toStringAsFixed(1)}",
+                      "Rating: ${team.rating.overall}",
                       style: TextStyle(color: Colors.white.withOpacity(0.5)),
                     ),
                     trailing: ElevatedButton(

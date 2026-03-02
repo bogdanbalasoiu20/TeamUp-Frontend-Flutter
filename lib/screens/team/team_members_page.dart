@@ -363,7 +363,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         Expanded(
           child: _buildStatBox(
             label: "RATING",
-            value: team!.teamRating.toStringAsFixed(1),
+            value: team!.rating.overall.toString(),
             icon: Icons.star_rounded,
             color: Colors.amber,
           ),
