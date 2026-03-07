@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class MapApi {
-  static const String base = "https://teamup-backend-omi4.onrender.com";
+  static const String base = "https://teamup-backend-kx26.onrender.com";
 
   static Future<List<dynamic>> fetchBBox(
       double minLat, double minLng, double maxLat, double maxLng) async {

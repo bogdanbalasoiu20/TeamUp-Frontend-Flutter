@@ -13,6 +13,10 @@ import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import '../../models/user_search_result.dart';
 import '../../services/friend_api.dart';
 
+import 'package:team_up_fe_new/models/team_chemistry_link.dart';
+import 'package:team_up_fe_new/models/team_chemistry_reponse.dart';
+import 'package:team_up_fe_new/services/chemistry_api.dart';
+
 class PitchPosition {
   final int slotIndex;
   final String label;
@@ -45,6 +49,8 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
   List<TeamMemberModel> members = [];
   TeamStatisticsModel? teamStats;
   String? currentUser;
+
+  List<TeamChemistryLinkModel> chemistryLinks = [];
 
   late TabController _tabController;
 
@@ -98,6 +104,13 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         TeamApi.getMembers(widget.teamId),
       ]);
 
+      TeamChemistryResponseModel? chemResponse;
+      try {
+        chemResponse = await ChemistryApi.getTeamChemistry(widget.teamId);
+      } catch (e) {
+        debugPrint("Eroare la chemistry: $e");
+      }
+
       if (!mounted) return;
 
       final profile = results[0] as TeamFullProfileModel;
@@ -106,6 +119,9 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         team = profile.team;
         teamStats = profile.statistics;
         members = results[1] as List<TeamMemberModel>;
+        if (chemResponse != null) {
+          chemistryLinks = chemResponse.links;
+        }
         isLoading = false;
       });
     } catch (e) {
@@ -187,6 +203,9 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
           slotIndex: oldIndex,
         );
       }
+
+      _fetchData();
+
     } catch (e) {
       _fetchData();
       if (mounted) {
@@ -609,6 +628,16 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
             ),
           ),
 
+          Positioned.fill(
+            child: CustomPaint(
+              painter: ChemistryLinksPainter(
+                links: chemistryLinks,
+                pitchPlayers: pitchPlayers,
+                pitchPositions: _pitchPositions,
+              ),
+            ),
+          ),
+
           ..._pitchPositions.map((pitchPos) {
             TeamMemberModel? assignedPlayer;
             try {
@@ -955,7 +984,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
               children: [
                 _buildTopBar(),
 
-                // AM ADAUGAT TAB BAR-UL
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: TabBar(
@@ -1196,5 +1224,64 @@ class _AddPlayerModalState extends State<_AddPlayerModal> {
         ],
       ),
     );
+  }
+}
+
+class ChemistryLinksPainter extends CustomPainter {
+  final List<TeamChemistryLinkModel> links;
+  final List<TeamMemberModel> pitchPlayers;
+  final List<PitchPosition> pitchPositions;
+
+  ChemistryLinksPainter({
+    required this.links,
+    required this.pitchPlayers,
+    required this.pitchPositions,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const double playerWidth = 60.0;
+    const double playerHeight = 95.0;
+
+    for (var link in links) {
+      final pA = pitchPlayers.where((p) => p.userId == link.playerA || p.username == link.playerA).firstOrNull;
+      final pB = pitchPlayers.where((p) => p.userId == link.playerB || p.username == link.playerB).firstOrNull;
+
+      if (pA != null && pB != null) {
+        final posA = pitchPositions.firstWhere((pos) => pos.slotIndex == pA.slotIndex);
+        final posB = pitchPositions.firstWhere((pos) => pos.slotIndex == pB.slotIndex);
+
+        final offsetA = Offset(
+          size.width / 2 + posA.alignment.x * (size.width - playerWidth) / 2,
+          size.height / 2 + posA.alignment.y * (size.height - playerHeight) / 2,
+        );
+        final offsetB = Offset(
+          size.width / 2 + posB.alignment.x * (size.width - playerWidth) / 2,
+          size.height / 2 + posB.alignment.y * (size.height - playerHeight) / 2,
+        );
+
+        Color linkColor;
+        if (link.chemistry >= 70) {
+          linkColor = const Color(0xFF00E676); // Verde
+        } else if (link.chemistry >= 60) {
+          linkColor = Colors.amber; // Galben
+        } else {
+          linkColor = Colors.redAccent; // Roșu
+        }
+
+        final paint = Paint()
+          ..color = linkColor.withOpacity(0.6)
+          ..strokeWidth = 3.5
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
+
+        canvas.drawLine(offsetA, offsetB, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant ChemistryLinksPainter oldDelegate) {
+    return true;
   }
 }

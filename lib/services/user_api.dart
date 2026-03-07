@@ -4,7 +4,7 @@ import '../models/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserApi {
-  static const baseUrl = "https://teamup-backend-omi4.onrender.com/api/users";
+  static const baseUrl = "https://teamup-backend-kx26.onrender.com/api/users";
 
   static Future<UserProfile> fetchProfile(String username) async {
     final prefs = await SharedPreferences.getInstance();

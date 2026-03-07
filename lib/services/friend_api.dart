@@ -3,7 +3,7 @@ import 'package:team_up_fe_new/models/friend_request.dart';
 import 'package:team_up_fe_new/models/friendship.dart';
 import '../models/user_search_result.dart';
 
-const String baseUrl = "https://teamup-backend-omi4.onrender.com";
+const String baseUrl = "https://teamup-backend-kx26.onrender.com";
 
 class FriendApi {
   static Future<List<UserSearchResult>> searchUsers(String query) async {

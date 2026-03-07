@@ -4,7 +4,7 @@ import 'package:team_up_fe_new/models/match_participants_response.dart';
 import '../models/participant.dart';
 
 class MatchParticipantApi{
-  static const String baseUrl = "https://teamup-backend-omi4.onrender.com";
+  static const String baseUrl = "https://teamup-backend-kx26.onrender.com";
 
   static Future<MatchParticipantsResponse> fetchParticipants(String matchId) async {
     final data = await ApiService.get("$baseUrl/api/matches/$matchId/participants");
@@ -63,7 +63,7 @@ class MatchParticipantApi{
 
   static Future<List<Participant>> fetchWaitlist(String matchId) async {
     final response = await ApiService.get(
-      "https://teamup-backend-omi4.onrender.com/api/matches/$matchId/participants",
+      "https://teamup-backend-kx26.onrender.com/api/matches/$matchId/participants",
     );
 
     final data = response["data"];

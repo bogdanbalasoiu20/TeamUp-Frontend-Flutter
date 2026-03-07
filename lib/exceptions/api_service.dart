@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///api layer over http.post/get etc
 ///sends responses to backend and throws ApiExceptions when the server responses with success=false
 class ApiService {
-  static const String baseUrl = "https://teamup-backend-omi4.onrender.com";
+  static const String baseUrl = "https://teamup-backend-kx26.onrender.com";
 
   /// POST generic
   static Future<dynamic> post(String path, dynamic body) async {

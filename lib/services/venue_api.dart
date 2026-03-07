@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/venue.dart';
 
 class VenueApi {
-  static const baseUrl = "https://teamup-backend-omi4.onrender.com/api/venues";
+  static const baseUrl = "https://teamup-backend-kx26.onrender.com/api/venues";
 
   static Future<List<Venue>> searchMap(String query) async {
     final uri = Uri.parse(

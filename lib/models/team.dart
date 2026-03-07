@@ -4,7 +4,7 @@ class TeamModel {
   final String id;
   final String name;
   final String captainUsername;
-  final double teamChemistry;
+  final int teamChemistry;
   final DateTime createdAt;
   final TeamRatingModel rating;
 
@@ -22,7 +22,7 @@ class TeamModel {
       id: json["id"],
       name: json["name"],
       captainUsername: json["captainUsername"],
-      teamChemistry: (json["teamChemistry"] as num).toDouble(),
+      teamChemistry: json["teamChemistry"],
       createdAt: DateTime.parse(json["createdAt"]),
       rating: TeamRatingModel.fromJson(json["rating"]),
     );

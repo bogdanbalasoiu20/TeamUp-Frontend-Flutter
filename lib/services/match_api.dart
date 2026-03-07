@@ -7,7 +7,7 @@ import 'package:team_up_fe_new/models/match.dart';
 import 'package:team_up_fe_new/models/match_info.dart';
 
 class MatchApi {
-  static const baseUrl = "https://teamup-backend-omi4.onrender.com/api/matches";
+  static const baseUrl = "https://teamup-backend-kx26.onrender.com/api/matches";
 
  
   static Future<bool> createMatch({
@@ -61,7 +61,7 @@ class MatchApi {
   }) async {
     final now = DateTime.now().toUtc();
     final uri = Uri.parse(
-        "https://teamup-backend-omi4.onrender.com/api/matches/nearby-bbox")
+        "https://teamup-backend-kx26.onrender.com/api/matches/nearby-bbox")
         .replace(queryParameters: {
       "minLat": minLat.toString(),
       "minLng": minLng.toString(),

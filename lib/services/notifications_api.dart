@@ -2,7 +2,7 @@ import 'package:team_up_fe_new/exceptions/api_exception.dart';
 import 'package:team_up_fe_new/exceptions/api_service.dart';
 import 'package:team_up_fe_new/models/notification_item.dart';
 
-const String baseUrl = "https://teamup-backend-omi4.onrender.com";
+const String baseUrl = "https://teamup-backend-kx26.onrender.com";
 
 class NotificationsApi {
   static Future<List<NotificationItem>> fetchAll({int page = 0}) async {
