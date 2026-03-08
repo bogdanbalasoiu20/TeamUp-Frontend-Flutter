@@ -92,19 +92,22 @@ class TeamApi {
   }
 
 
-  static Future<void> updatePosition({
+  static Future<TeamModel> updatePosition({
     required String teamId,
     required String userId,
     required String squadType,
     required int slotIndex,
   }) async {
-    await ApiService.put(
+
+    final response = await ApiService.put(
       "/api/teams/$teamId/members/$userId/position",
       {
         "squadType": squadType,
         "slotIndex": slotIndex,
       },
     );
+
+    return TeamModel.fromJson(response["data"]);
   }
 
   static Future<TeamFullProfileModel> getTeamProfile(String teamId) async {

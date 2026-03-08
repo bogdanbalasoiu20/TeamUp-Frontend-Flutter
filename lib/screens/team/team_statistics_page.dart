@@ -131,9 +131,9 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildCircularStat("ATT", fullProfile!.team.rating.attack, Colors.redAccent),
-              _buildCircularStat("MID", fullProfile!.team.rating.midfield, Colors.blueAccent),
-              _buildCircularStat("DEF", fullProfile!.team.rating.defense, Colors.amber),
+              _buildCircularStat("ATT", fullProfile!.team.attackRating, Colors.redAccent),
+              _buildCircularStat("MID", fullProfile!.team.midfieldRating, Colors.blueAccent),
+              _buildCircularStat("DEF", fullProfile!.team.defenseRating, Colors.amber),
             ],
           ),
         ),

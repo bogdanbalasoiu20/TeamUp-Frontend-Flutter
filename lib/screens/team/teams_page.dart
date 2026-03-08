@@ -496,7 +496,7 @@ class TeamCardWidget extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildStatColumn("RATING", team.rating.overall.toString(), Icons.star_rounded, Colors.amber),
+                    _buildStatColumn("RATING", team.overallRating.toString(), Icons.star_rounded, Colors.amber),
 
                     Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
 

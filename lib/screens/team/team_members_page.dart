@@ -188,7 +188,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
     });
 
     try {
-      await TeamApi.updatePosition(
+      TeamModel updatedTeam = await TeamApi.updatePosition(
         teamId: widget.teamId,
         userId: movingPlayer.userId,
         squadType: targetType.name,
@@ -196,7 +196,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
       );
 
       if (existingPlayer != null) {
-        await TeamApi.updatePosition(
+        updatedTeam = await TeamApi.updatePosition(
           teamId: widget.teamId,
           userId: existingPlayer.userId,
           squadType: oldType.name,
@@ -204,15 +204,12 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         );
       }
 
-      _fetchData();
+      setState(() {
+        team = updatedTeam;
+      });
 
     } catch (e) {
       _fetchData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to save position: $e"), backgroundColor: Colors.red.shade900),
-        );
-      }
     }
   }
 
@@ -382,7 +379,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         Expanded(
           child: _buildStatBox(
             label: "RATING",
-            value: team!.rating.overall.toString(),
+            value: team!.overallRating.toString(),
             icon: Icons.star_rounded,
             color: Colors.amber,
           ),
@@ -391,7 +388,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         Expanded(
           child: _buildStatBox(
             label: "CHEMISTRY",
-            value: "${team!.teamChemistry.toInt()}%",
+            value: "${team!.teamChemistry}%",
             icon: Icons.science_rounded,
             color: Colors.cyan,
           ),

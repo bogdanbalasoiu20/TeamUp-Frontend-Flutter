@@ -1136,7 +1136,7 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
                             const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
                             const SizedBox(width: 4),
                             Text(
-                              team.rating.overall.toString(),
+                              team.overallRating.toString(),
                               style: const TextStyle(
                                 color: Colors.amber,
                                 fontWeight: FontWeight.bold,
