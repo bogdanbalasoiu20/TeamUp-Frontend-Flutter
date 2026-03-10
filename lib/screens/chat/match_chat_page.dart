@@ -66,7 +66,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
 
     stompClient = StompClient(
       config: StompConfig(
-        url: "wss://teamup-backend-omi4.onrender.com/ws",
+        url: "wss://teamup-backend-kx26.onrender.com/ws",
         stompConnectHeaders: {"Authorization": "Bearer $token"},
         webSocketConnectHeaders: {"Authorization": "Bearer $token"},
 

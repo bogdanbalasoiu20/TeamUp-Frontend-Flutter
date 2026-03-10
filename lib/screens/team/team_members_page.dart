@@ -204,8 +204,11 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         );
       }
 
+      final chemResponse = await ChemistryApi.getTeamChemistry(widget.teamId);
+
       setState(() {
         team = updatedTeam;
+        chemistryLinks = chemResponse.links;
       });
 
     } catch (e) {
