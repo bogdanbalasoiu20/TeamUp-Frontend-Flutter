@@ -1,3 +1,5 @@
+import 'package:team_up_fe_new/models/team_chemistry_link.dart';
+
 class TeamModel {
   final String id;
   final String name;
@@ -10,6 +12,8 @@ class TeamModel {
   final int midfieldRating;
   final int defenseRating;
 
+  final List<TeamChemistryLinkModel> links;
+
   TeamModel({
     required this.id,
     required this.name,
@@ -20,6 +24,7 @@ class TeamModel {
     required this.attackRating,
     required this.midfieldRating,
     required this.defenseRating,
+    required this.links,
   });
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
@@ -33,6 +38,10 @@ class TeamModel {
       attackRating: json["attackRating"],
       midfieldRating: json["midfieldRating"],
       defenseRating: json["defenseRating"],
+      links: (json["chemistryLinks"] as List?)
+          ?.map((e) => TeamChemistryLinkModel.fromJson(e))
+          .toList() ??
+          [],
     );
   }
 }

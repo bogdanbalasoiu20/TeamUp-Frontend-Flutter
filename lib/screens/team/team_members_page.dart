@@ -14,8 +14,6 @@ import '../../models/user_search_result.dart';
 import '../../services/friend_api.dart';
 
 import 'package:team_up_fe_new/models/team_chemistry_link.dart';
-import 'package:team_up_fe_new/models/team_chemistry_reponse.dart';
-import 'package:team_up_fe_new/services/chemistry_api.dart';
 
 class PitchPosition {
   final int slotIndex;
@@ -104,13 +102,6 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         TeamApi.getMembers(widget.teamId),
       ]);
 
-      TeamChemistryResponseModel? chemResponse;
-      try {
-        chemResponse = await ChemistryApi.getTeamChemistry(widget.teamId);
-      } catch (e) {
-        debugPrint("Eroare la chemistry: $e");
-      }
-
       if (!mounted) return;
 
       final profile = results[0] as TeamFullProfileModel;
@@ -119,11 +110,10 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         team = profile.team;
         teamStats = profile.statistics;
         members = results[1] as List<TeamMemberModel>;
-        if (chemResponse != null) {
-          chemistryLinks = chemResponse.links;
-        }
+        chemistryLinks = profile.team.links;
         isLoading = false;
       });
+
     } catch (e) {
       if (!mounted) return;
       setState(() => isLoading = false);
@@ -155,9 +145,19 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
       members.where((m) => m.squadType == SquadType.BENCH).toList()
         ..sort((a, b) => a.slotIndex.compareTo(b.slotIndex));
 
-  Future<void> _handleSwap(TeamMemberModel movingPlayer, SquadType targetType, int? targetIndex) async {
+  Future<void> _handleSwap(
+      TeamMemberModel movingPlayer,
+      SquadType targetType,
+      int? targetIndex,
+      ) async {
+
     if (!isCaptain) return;
+
     HapticFeedback.lightImpact();
+
+    setState(() {
+      chemistryLinks = [];
+    });
 
     final oldType = movingPlayer.squadType;
     final oldIndex = movingPlayer.slotIndex;
@@ -168,47 +168,39 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
           : benchPlayers.map((e) => e.slotIndex).reduce((a, b) => a > b ? a : b) + 1;
     }
 
-    if (oldType == targetType && oldIndex == targetIndex) return;
+    final int newIndex = targetIndex!;
+
+    if (oldType == targetType && oldIndex == newIndex) return;
 
     TeamMemberModel? existingPlayer;
+
     if (targetType == SquadType.PITCH) {
       try {
-        existingPlayer = pitchPlayers.firstWhere((p) => p.slotIndex == targetIndex);
+        existingPlayer = pitchPlayers.firstWhere((p) => p.slotIndex == newIndex);
       } catch (_) {}
     }
 
     setState(() {
       members.removeWhere((m) => m.userId == movingPlayer.userId);
-      members.add(_cloneMember(movingPlayer, targetType, targetIndex!));
+      members.add(_cloneMember(movingPlayer, targetType, newIndex));
 
       if (existingPlayer != null) {
         members.removeWhere((m) => m.userId == existingPlayer!.userId);
-        members.add(_cloneMember(existingPlayer, oldType, oldIndex));
+        members.add(_cloneMember(existingPlayer!, oldType, oldIndex));
       }
     });
 
     try {
-      TeamModel updatedTeam = await TeamApi.updatePosition(
+      final updatedTeam = await TeamApi.updatePosition(
         teamId: widget.teamId,
         userId: movingPlayer.userId,
         squadType: targetType.name,
-        slotIndex: targetIndex!,
+        slotIndex: newIndex,
       );
-
-      if (existingPlayer != null) {
-        updatedTeam = await TeamApi.updatePosition(
-          teamId: widget.teamId,
-          userId: existingPlayer.userId,
-          squadType: oldType.name,
-          slotIndex: oldIndex,
-        );
-      }
-
-      final chemResponse = await ChemistryApi.getTeamChemistry(widget.teamId);
 
       setState(() {
         team = updatedTeam;
-        chemistryLinks = chemResponse.links;
+        chemistryLinks = updatedTeam.links;
       });
 
     } catch (e) {
