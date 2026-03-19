@@ -6,6 +6,9 @@ class TournamentMatchModel {
   final int? scoreAway;
   final String status;
   final int matchDay;
+  final double? oddsHome;
+  final double? oddsDraw;
+  final double? oddsAway;
 
   TournamentMatchModel({
     required this.id,
@@ -15,6 +18,9 @@ class TournamentMatchModel {
     required this.scoreAway,
     required this.status,
     required this.matchDay,
+    required this.oddsHome,
+    required this.oddsDraw,
+    required this.oddsAway
   });
 
   factory TournamentMatchModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +32,9 @@ class TournamentMatchModel {
       scoreAway: json["scoreAway"],
       status: json["status"],
       matchDay: json["matchDay"],
+      oddsHome: json["oddsHome"]?.toDouble(),
+      oddsDraw: json["oddsDraw"]?.toDouble(),
+      oddsAway: json["oddsAway"]?.toDouble(),
     );
   }
 }

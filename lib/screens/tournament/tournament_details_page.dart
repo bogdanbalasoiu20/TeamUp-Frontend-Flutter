@@ -909,6 +909,27 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                 ],
               ),
 
+              if (match.oddsHome != null && match.oddsDraw != null && match.oddsAway != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: _bgDark.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withOpacity(0.03)),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildOddItem("1", match.oddsHome!),
+                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)), // Separator vertical
+                      _buildOddItem("X", match.oddsDraw!),
+                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)), // Separator vertical
+                      _buildOddItem("2", match.oddsAway!),
+                    ],
+                  ),
+                ),
+              ],
+
               if (isCreator && !isFinished) ...[
                 const SizedBox(height: 16),
                 Divider(color: Colors.white.withOpacity(0.05), height: 1),
@@ -962,6 +983,33 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
 
         return matchCard;
       },
+    );
+  }
+
+  Widget _buildOddItem(String label, double odd) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: _textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            odd.toStringAsFixed(2),
+            style: TextStyle(
+              color: _accentGreen,
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
