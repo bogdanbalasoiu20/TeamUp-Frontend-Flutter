@@ -1,8 +1,13 @@
 import 'dart:ui';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../exceptions/api_exception.dart';
 import '../../exceptions/api_service.dart';
+import '../../utils/image_picker.dart';
+import '../../services/user_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/compress_image.dart';
 
 class EditProfilePage extends StatefulWidget {
   final DateTime? birthday;
@@ -10,6 +15,7 @@ class EditProfilePage extends StatefulWidget {
   final String? city;
   final String? description;
   final String? position;
+  final String? photoUrl;
 
   const EditProfilePage({
     super.key,
@@ -18,6 +24,7 @@ class EditProfilePage extends StatefulWidget {
     this.city,
     this.description,
     this.position,
+    this.photoUrl
   });
 
   @override
@@ -32,6 +39,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   DateTime? birthday;
   String? position;
   bool updating = false;
+  String? _imageUrl;
+  bool _uploadingImage = false;
 
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
@@ -50,6 +59,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     birthday = widget.birthday;
     position = widget.position;
+    _imageUrl = widget.photoUrl;
 
     phoneController = TextEditingController(text: widget.phone ?? "");
     cityController = TextEditingController(text: widget.city ?? "");
@@ -80,6 +90,67 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
     if (date == null) return;
     setState(() => birthday = date);
+  }
+
+
+  Future<void> _pickAndUploadImage() async {
+    final pickedFile = await ImagePickerUtil.pickFromGallery();
+    if (pickedFile == null) return;
+
+    final file = File(pickedFile.path);
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("access_token");
+    final userId = prefs.getString("user_id");
+
+    print("USER ID: $userId");
+    print("TOKEN: $token");
+    print("FILE: ${file.path}");
+
+    if (token == null || userId == null) return;
+
+    setState(() => _uploadingImage = true);
+
+    final compressedFile = await compressImage(file);
+
+    if (compressedFile == null) {
+      setState(() => _uploadingImage = false);
+      return;
+    }
+
+    print("COMPRESSED SIZE: ${await compressedFile.length()}");
+
+    final fileSize = await compressedFile.length();
+
+    if (fileSize > 5 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Image too large (max 5MB)")),
+      );
+      setState(() => _uploadingImage = false);
+      return;
+    }
+
+    try {
+      final url = await UserApi.uploadAvatar(
+        filePath: compressedFile.path,
+        token: token,
+      );
+
+      setState(() {
+        _imageUrl = url;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Image updated!")),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+
+    setState(() => _uploadingImage = false);
   }
 
   void showError(String msg) {
@@ -199,6 +270,58 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+
+                        Center(
+                          child: Column(
+                            children: [
+                              GestureDetector(
+                                onTap: _pickAndUploadImage,
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 50,
+                                      backgroundColor: Colors.black,
+                                      backgroundImage:
+                                      _imageUrl != null ? NetworkImage(_imageUrl!) : null,
+                                      child: _imageUrl == null
+                                          ? const Icon(Icons.person, size: 40, color: Colors.white)
+                                          : null,
+                                    ),
+
+                                    if (_uploadingImage)
+                                      const CircularProgressIndicator(),
+
+                                    Positioned(
+                                      bottom: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: _accentGreen,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.camera_alt, size: 18, color: Colors.black),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text(
+                                "Change profile picture",
+                                style: TextStyle(
+                                  color: _textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
 
                         _buildSectionHeader("Personal Info"),
 

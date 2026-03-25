@@ -479,6 +479,7 @@ class _UserProfilePageState extends State<UserProfilePage> with SingleTickerProv
                       description: profile!.description,
                       city: profile!.city,
                       position: profile!.position,
+                      photoUrl: profile!.photoUrl,
                     ),
                   ),
                 ).then((v) { if (v == true) _load(); });

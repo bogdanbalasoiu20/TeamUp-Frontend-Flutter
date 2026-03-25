@@ -48,5 +48,39 @@ class UserApi {
     return data["role"];
   }
 
+
+
+  static Future<String?> uploadAvatar({
+    required String filePath,
+    required String token,
+  }) async {
+    var uri = Uri.parse("$baseUrl/me/upload-avatar");
+
+    var request = http.MultipartRequest("POST", uri);
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', filePath),
+    );
+
+    var response = await request.send();
+
+    print("STATUS: ${response.statusCode}");
+
+    final body = await response.stream.bytesToString();
+    print("BODY: $body");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(body);
+      return json['data'];
+    } else {
+      final json = jsonDecode(body);
+      throw Exception(json['error']?['message'] ?? "Upload failed");
+    }
+
+    return null;
+  }
+
 }
 
