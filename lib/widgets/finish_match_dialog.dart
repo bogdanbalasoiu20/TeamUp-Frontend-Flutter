@@ -5,7 +5,7 @@ import 'package:team_up_fe_new/services/tournament_api.dart';
 Future<void> showFinishMatchDialog({
   required BuildContext context,
   required TournamentMatchModel match,
-  required VoidCallback onMatchFinished,
+  required Function(TournamentMatchModel) onMatchFinished,
 }) async {
   final TextEditingController homeController = TextEditingController();
   final TextEditingController awayController = TextEditingController();
@@ -29,7 +29,6 @@ Future<void> showFinishMatchDialog({
         ),
       );
 
-      onMatchFinished();
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -204,6 +203,22 @@ Future<void> showFinishMatchDialog({
 
                           if (homeScore != null && awayScore != null && homeScore >= 0 && awayScore >= 0) {
                             Navigator.pop(sheetContext);
+
+                            final updatedMatch = TournamentMatchModel(
+                              id: match.id,
+                              homeTeamName: match.homeTeamName,
+                              awayTeamName: match.awayTeamName,
+                              matchDay: match.matchDay,
+                              status: "DONE",
+                              scoreHome: homeScore,
+                              scoreAway: awayScore,
+                              oddsHome: match.oddsHome,
+                              oddsDraw: match.oddsDraw,
+                              oddsAway: match.oddsAway,
+                            );
+
+                            onMatchFinished(updatedMatch);
+
                             submitScore(context, match.id, homeScore, awayScore);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(

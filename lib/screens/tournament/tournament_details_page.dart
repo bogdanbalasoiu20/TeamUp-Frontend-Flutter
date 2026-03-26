@@ -22,11 +22,12 @@ class TournamentDetailsPage extends StatefulWidget {
   State<TournamentDetailsPage> createState() => _TournamentDetailsPageState();
 }
 
-class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
+class _TournamentDetailsPageState extends State<TournamentDetailsPage> with SingleTickerProviderStateMixin{
   final Color _bgDark = const Color(0xFF091210);
   final Color _cardSurface = const Color(0xFF13241E);
   final Color _accentGreen = const Color(0xFF00E676);
   final Color _textSecondary = const Color(0xFF8A9E96);
+  late TabController _tabController;
 
   bool isLoading = true;
   TournamentModel? tournament;
@@ -39,7 +40,15 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.index = 0;
     _fetchData();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchData() async {
@@ -584,9 +593,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
     final bool isOpen = tournament!.status.toUpperCase() == "OPEN";
     final bool isCreator = tournament!.creatorUsername == currentUsername;
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: _bgDark,
         body: Stack(
           children: [
@@ -624,6 +631,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                       pinned: true,
                       delegate: _SliverAppBarDelegate(
                         TabBar(
+                          controller: _tabController,
                           indicatorColor: _accentGreen,
                           labelColor: _accentGreen,
                           unselectedLabelColor: _textSecondary,
@@ -640,6 +648,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                   ];
                 },
                 body: TabBarView(
+                  controller: _tabController,
                   children: [
                     _buildStandingsTab(),
                     _buildMatchesTab(),
@@ -649,8 +658,8 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
             ),
           ],
         ),
-      ),
     );
+
   }
 
   Widget _buildStandingsTab() {
@@ -939,8 +948,13 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> {
                     showFinishMatchDialog(
                       context: context,
                       match: match,
-                      onMatchFinished: () {
-                        _fetchData();
+                      onMatchFinished: (updatedMatch) {
+                        setState(() {
+                          final index = matches.indexWhere((m) => m.id == updatedMatch.id);
+                          if (index != -1) {
+                            matches[index] = updatedMatch;
+                          }
+                        });
                       },
                     );
                   },
