@@ -8,6 +8,7 @@ import 'package:team_up_fe_new/screens/matches/match_details_page.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
 import 'package:team_up_fe_new/services/match_api.dart';
 import 'package:team_up_fe_new/utils/mini_action_button.dart';
+import 'package:team_up_fe_new/widgets/custom_avatar.dart';
 import '../../models/participant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/match_participant_api.dart';
@@ -633,20 +634,11 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.3),
-                border: Border.all(color: _accentGreen.withOpacity(0.3)),
+            CustomAvatar(
+                photoUrl: p.photoUrl,
+                radius: 25,
               ),
-              child: const Icon(
-                Icons.person,
-                size: 28,
-                color: Colors.white,
-              ),
-            ),
+
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -675,7 +667,7 @@ class _MatchOverviewPageState extends State<MatchOverviewPage>
                 size: 18,
               ),
           ],
-        ),
+        )
       ),
     );
   }

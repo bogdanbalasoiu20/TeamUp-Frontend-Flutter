@@ -5,6 +5,7 @@ class Participant{
   final bool bringsBall;
   final DateTime createdAt;
   final bool isCreator;
+  final String? photoUrl;
 
   Participant({
     required this.userID,
@@ -12,7 +13,8 @@ class Participant{
     required this.status,
     required this.bringsBall,
     required this.createdAt,
-    required this.isCreator
+    required this.isCreator,
+    required this.photoUrl
 });
   factory Participant.fromJson(Map<String,dynamic> json){
     return Participant(
@@ -22,6 +24,7 @@ class Participant{
       bringsBall:json["bringsBall"] ?? false,
       createdAt: DateTime.parse(json["joinedAt"]),
       isCreator: json["isCreator"] ?? false,
+      photoUrl: json['photoUrl'] != null ? json['photoUrl'] as String : null,
     );
   }
 }

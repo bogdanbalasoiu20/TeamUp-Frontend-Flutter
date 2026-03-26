@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import 'package:team_up_fe_new/widgets/custom_avatar.dart';
 import '../../services/friend_api.dart';
 import '../../models/friend_request.dart';
 
@@ -105,10 +106,9 @@ class _OutgoingRequestsTabState extends State<OutgoingRequestsTab> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.white.withOpacity(0.1),
-                  child: const Icon(Icons.person, size: 30, color: Colors.white),
+                CustomAvatar(
+                  photoUrl: r.addresseePhotoUrl,
+                  radius: 25,
                 ),
 
                 const SizedBox(width: 16),

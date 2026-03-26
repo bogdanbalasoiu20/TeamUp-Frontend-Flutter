@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import 'package:team_up_fe_new/widgets/custom_avatar.dart';
 import '../../services/friend_api.dart';
 import '../../models/friendship.dart';
 
@@ -126,21 +127,11 @@ class _FriendsTabState extends State<FriendsTab> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _accentGreen.withOpacity(0.5),
-                      width: 1.5,
-                    ),
+                 CustomAvatar(
+                    photoUrl: f.photoUrl,
+                    radius: 25,
                   ),
-                  child: const CircleAvatar(
-                    radius: 24,
-                    backgroundColor: Colors.black,
-                    child: Icon(Icons.person, size: 28, color: Colors.white),
-                  ),
-                ),
+
 
                 const SizedBox(width: 16),
 

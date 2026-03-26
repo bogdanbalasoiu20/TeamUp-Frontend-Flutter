@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:team_up_fe_new/widgets/custom_avatar.dart';
 import '../../services/friend_api.dart';
 import '../../models/friend_request.dart';
 import '../profile/user_profile_page.dart';
@@ -114,10 +115,9 @@ class _IncomingRequestsTabState extends State<IncomingRequestsTab> {
                 ),
               );
             },
-            child: CircleAvatar(
+            child: CustomAvatar(
+              photoUrl: r.requesterPhotoUrl,
               radius: 28,
-              backgroundColor: Colors.white.withOpacity(0.1),
-              child: const Icon(Icons.person, size: 30, color: Colors.white),
             ),
           ),
 

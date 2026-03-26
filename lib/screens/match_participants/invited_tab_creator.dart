@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import 'package:team_up_fe_new/widgets/custom_avatar.dart';
 import '../../../models/invitable_friend.dart';
 import '../../../models/participant.dart';
 import '../../../services/match_participant_api.dart';
@@ -250,20 +251,11 @@ class _InviteFriendsList extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.black.withOpacity(0.3),
-                border: Border.all(color: accentGreen.withOpacity(0.3)),
+             CustomAvatar(
+                photoUrl: f.photoUrl,
+                radius: 25,
               ),
-              child: const Icon(
-                Icons.person,
-                size: 28,
-                color: Colors.white,
-              ),
-            ),
+
             const SizedBox(width: 16),
             Expanded(
               child: Text(
@@ -371,20 +363,29 @@ class _InvitedPlayersList extends StatelessWidget {
             ),
             child: Row(
               children: [
+                // -------- AVATAR ACTUALIZAT AICI --------
                 Container(
-                  width: 50,
-                  height: 50,
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.black.withOpacity(0.3),
-                    border: Border.all(color: accentGreen.withOpacity(0.3)),
+                    border: Border.all(
+                      color: accentGreen.withOpacity(0.5),
+                      width: 1.5,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 28,
-                    color: Colors.white,
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.black,
+                    // Modelul Participant ar trebui să aibă 'photoUrl'
+                    backgroundImage: (p.photoUrl != null && p.photoUrl!.isNotEmpty)
+                        ? NetworkImage("${p.photoUrl!}?t=${DateTime.now().millisecondsSinceEpoch}")
+                        : null,
+                    child: (p.photoUrl == null || p.photoUrl!.isEmpty)
+                        ? const Icon(Icons.person, size: 28, color: Colors.white)
+                        : null,
                   ),
                 ),
+                // ----------------------------------------
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
