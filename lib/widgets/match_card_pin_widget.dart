@@ -207,20 +207,45 @@ class MatchCardPin extends StatelessWidget {
                                   Row(
                                     children: [
                                       SizedBox(
-                                        width: 60,
-                                        height: 28,
+                                        width: 70,
+                                        height: 36,
                                         child: Stack(
-                                          children: [
-                                            _buildAvatarMock(0, Colors.blueGrey, cardSurface),
-                                            _buildAvatarMock(16, Colors.deepPurple, cardSurface),
-                                            _buildAvatarMock(32, Colors.orange, cardSurface),
-                                          ],
+                                          children: match.participantsPreview
+                                              .take(3)
+                                              .toList()
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                            int index = entry.key;
+                                            var user = entry.value;
+
+                                            return _buildAvatarReal(
+                                              index * 16.0,
+                                              user.imageUrl,
+                                              cardSurface,
+                                            );
+                                          }).toList(),
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "+ ${match.joinedPlayers} joined",
-                                        style: TextStyle(color: textSecondary, fontSize: 11),
+                                      const SizedBox(width: 8),
+                                      Builder(
+                                        builder: (_) {
+                                          int shown = match.participantsPreview.length.clamp(0, 3);
+                                          int remaining = match.joinedPlayers - shown;
+
+                                          String text="";
+
+                                          if (match.joinedPlayers == 0) {
+                                            text = "No players yet";
+                                          } else if (remaining > 0) {
+                                            text = "+$remaining joined";
+                                          }
+
+                                          return Text(
+                                            text,
+                                            style: TextStyle(color: textSecondary, fontSize: 12),
+                                          );
+                                        },
                                       ),
                                     ],
                                   ),
@@ -235,7 +260,7 @@ class MatchCardPin extends StatelessWidget {
                                 ],
                               ),
 
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 14),
 
                               Stack(
                                 children: [
@@ -293,19 +318,33 @@ class MatchCardPin extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatarMock(double leftPos, Color color, Color borderColor) {
+  Widget _buildAvatarReal(double leftPos, String? imageUrl, Color borderColor) {
     return Positioned(
       left: leftPos,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: color,
           shape: BoxShape.circle,
           border: Border.all(color: borderColor, width: 2),
         ),
-        child: const Icon(Icons.person, size: 16, color: Colors.white70),
+        child: ClipOval(
+          child: imageUrl != null && imageUrl.isNotEmpty
+              ? Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _fallbackAvatar(),
+          )
+              : _fallbackAvatar(),
+        ),
       ),
+    );
+  }
+
+  Widget _fallbackAvatar() {
+    return Container(
+      color: Colors.grey.shade800,
+      child: const Icon(Icons.person, size: 16, color: Colors.white70),
     );
   }
 }

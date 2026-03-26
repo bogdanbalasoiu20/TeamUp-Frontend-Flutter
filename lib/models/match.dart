@@ -1,3 +1,5 @@
+import 'package:team_up_fe_new/models/user_preview.dart';
+
 class MatchPin {
   final String id;
   final String title;
@@ -8,6 +10,7 @@ class MatchPin {
   final int joinedPlayers;
   final int durationMinutes;
   final double totalPrice;
+  final List<UserPreview> participantsPreview;
 
   MatchPin({
     required this.id,
@@ -18,7 +21,8 @@ class MatchPin {
     required this.maxPlayers,
     required this.joinedPlayers,
     required this.durationMinutes,
-    required this.totalPrice
+    required this.totalPrice,
+    required this.participantsPreview,
   });
 
   factory MatchPin.fromJson(Map<String, dynamic> json) {
@@ -34,6 +38,10 @@ class MatchPin {
       joinedPlayers: json["currentPlayers"] ?? json["players"] ?? 0,
       durationMinutes: json["durationMinutes"] ?? json["duration"] ?? 0,
       totalPrice: (json["totalPrice"] ?? json["price"] ?? 0).toDouble(),
+      participantsPreview: (json["participantsPreview"] as List<dynamic>?)
+          ?.map((e) => UserPreview.fromJson(e))
+          .toList() ??
+          [],
     );
   }
 }
