@@ -8,6 +8,10 @@ import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
 import 'package:team_up_fe_new/services/notifications_api.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:team_up_fe_new/utils/image_picker.dart';
+import 'package:team_up_fe_new/widgets/team_badge_picker.dart';
 
 class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
@@ -163,83 +167,209 @@ class _MyTeamsTabState extends State<_MyTeamsTab> {
 
   Future<void> _showCreateTeamDialog() async {
     final TextEditingController nameController = TextEditingController();
+    XFile? pickedImage;
     bool isCreating = false;
 
     await showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.8), // Fundal mai întunecat pentru contrast
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF091210),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(color: _accentGreen.withOpacity(0.3)),
-              ),
-              title: const Text("Create New Team", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              content: TextField(
-                controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: "Team Name",
-                  hintStyle: TextStyle(color: _textSecondary),
-                  filled: true,
-                  fillColor: _cardSurface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF091210), // _bgDark
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: _accentGreen.withOpacity(0.2), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _accentGreen.withOpacity(0.05),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text("CANCEL", style: TextStyle(color: _textSecondary)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _accentGreen,
-                    foregroundColor: Colors.black,
-                  ),
-                  onPressed: isCreating
-                      ? null
-                      : () async {
-                    if (nameController.text.trim().isEmpty) return;
-
-                    print("CREATE pressed with name: ${nameController.text.trim()}");
-
-                    setDialogState(() => isCreating = true);
-
-                    try {
-                      final team = await TeamApi.createTeam(nameController.text.trim());
-                      print("TEAM CREATED SUCCESSFULLY: ${team.id}");
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        _fetchMyTeams();
-                      }
-                    } catch (e, stack) {
-                      print("CREATE TEAM ERROR:");
-                      print(e);
-                      print(stack);
-
-                      setDialogState(() => isCreating = false);
-
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Error: $e"),
-                            backgroundColor: Colors.red,
+                child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // --- HEADER ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Build Your Squad",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
-                        );
-                      }
-                    }
-                  },
-                  child: isCreating
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
-                      : const Text("CREATE", style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        GestureDetector(
+                          onTap: isCreating ? null : () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.close_rounded, color: _textSecondary, size: 20),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // --- BADGE PICKER ---
+                    TeamBadgePicker(
+                      badgeUrl: pickedImage?.path,
+                      onPick: isCreating
+                          ? () {}
+                          : () async {
+                        final image = await ImagePickerUtil.pickFromGallery();
+                        if (image != null) {
+                          setDialogState(() {
+                            pickedImage = image;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Tap to upload team logo",
+                      style: TextStyle(
+                        color: _textSecondary.withOpacity(0.7),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // --- TEAM NAME INPUT ---
+                    TextField(
+                      controller: nameController,
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      enabled: !isCreating,
+                      decoration: InputDecoration(
+                        labelText: "Team Name",
+                        labelStyle: TextStyle(color: _textSecondary),
+                        floatingLabelStyle: TextStyle(color: _accentGreen),
+                        filled: true,
+                        fillColor: _cardSurface,
+                        //refixIcon: Icon(Icons.shield_outlined, color: _accentGreen.withOpacity(0.8), size: 22),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: _accentGreen, width: 1.5),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // --- CREATE BUTTON ---
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _accentGreen,
+                          foregroundColor: Colors.black,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          disabledBackgroundColor: _cardSurface,
+                        ),
+                        onPressed: isCreating
+                            ? null
+                            : () async {
+                          if (nameController.text.trim().isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text("Team name is required", style: TextStyle(color: Colors.white)),
+                                backgroundColor: Colors.red.shade900,
+                              ),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() => isCreating = true);
+
+                          try {
+                            final team = await TeamApi.createTeam(nameController.text.trim());
+
+                            if (pickedImage != null) {
+                              final prefs = await SharedPreferences.getInstance();
+                              final token = prefs.getString("access_token");
+
+                              if (token != null) {
+                                print("UPLOADING BADGE...");
+                                await TeamApi.uploadTeamBadge(
+                                  teamId: team.id,
+                                  filePath: pickedImage!.path,
+                                  token: token,
+                                );
+                              } else {
+                                print("No token found, skipping badge upload");
+                              }
+                            }
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              _fetchMyTeams();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text("Squad created successfully!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                  backgroundColor: _accentGreen,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            setDialogState(() => isCreating = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Error: $e", style: const TextStyle(color: Colors.white)),
+                                  backgroundColor: Colors.red.shade900,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: isCreating
+                            ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
+                        )
+                            : const Text(
+                          "CREATE SQUAD",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+                ),
+              ),
             );
           },
         );
@@ -457,7 +587,15 @@ class TeamCardWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: accentGreen.withOpacity(0.3), width: 1.5),
                       ),
-                      child: Icon(Icons.shield_rounded, color: accentGreen, size: 32),
+                      child: team.badgeUrl != null
+                          ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          "${team.badgeUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                          : Icon(Icons.shield_rounded, color: accentGreen, size: 32),
                     ),
                     const SizedBox(width: 16),
 

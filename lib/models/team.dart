@@ -14,6 +14,8 @@ class TeamModel {
 
   final List<TeamChemistryLinkModel> links;
 
+  final String? badgeUrl;
+
   TeamModel({
     required this.id,
     required this.name,
@@ -25,6 +27,7 @@ class TeamModel {
     required this.midfieldRating,
     required this.defenseRating,
     required this.links,
+    required this.badgeUrl
   });
 
   factory TeamModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +45,7 @@ class TeamModel {
           ?.map((e) => TeamChemistryLinkModel.fromJson(e))
           .toList() ??
           [],
+      badgeUrl: json["badgeUrl"]
     );
   }
 }

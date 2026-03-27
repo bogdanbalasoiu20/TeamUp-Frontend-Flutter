@@ -52,6 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
       await prefs.setString("username", username);
       await prefs.setString("user_id", userId);
 
+      print("token: "+token);
+
       if (!mounted) return;
 
       Navigator.pushReplacement(

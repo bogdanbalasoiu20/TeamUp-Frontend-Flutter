@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/models/team_full_profile.dart';
 import 'package:team_up_fe_new/models/team_member.dart';
 import 'package:team_up_fe_new/models/page_model.dart';
 import '../exceptions/api_service.dart';
+import 'package:http/http.dart' as http;
 
 class TeamApi {
 
@@ -113,5 +116,36 @@ class TeamApi {
   static Future<TeamFullProfileModel> getTeamProfile(String teamId) async {
     final response = await ApiService.get("${ApiService.baseUrl}/api/teams/$teamId/profile");
     return TeamFullProfileModel.fromJson(response["data"]);
+  }
+
+  static Future<String?> uploadTeamBadge({
+    required String teamId,
+    required String filePath,
+    required String token,
+  }) async {
+    var uri = Uri.parse("${ApiService.baseUrl}/api/teams/$teamId/upload-badge");
+
+    var request = http.MultipartRequest("POST", uri);
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.files.add(
+      await http.MultipartFile.fromPath('file', filePath),
+    );
+
+    var response = await request.send();
+
+    print("STATUS: ${response.statusCode}");
+
+    final body = await response.stream.bytesToString();
+    print("BODY: $body");
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(body);
+      return json['data'];
+    } else {
+      final json = jsonDecode(body);
+      throw Exception(json['error']?['message'] ?? "Upload failed");
+    }
   }
 }
