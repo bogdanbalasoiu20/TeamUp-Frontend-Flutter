@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,8 +11,10 @@ import 'package:team_up_fe_new/screens/chat/team_chat_tab.dart';
 import 'package:team_up_fe_new/screens/team/team_statistics_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import 'package:team_up_fe_new/utils/compress_image.dart';
 import '../../models/user_search_result.dart';
 import '../../services/friend_api.dart';
+import 'package:team_up_fe_new/utils/image_picker.dart';
 
 import 'package:team_up_fe_new/models/team_chemistry_link.dart';
 
@@ -47,6 +50,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
   List<TeamMemberModel> members = [];
   TeamStatisticsModel? teamStats;
   String? currentUser;
+  bool isUploadingBadge = false;
 
   List<TeamChemistryLinkModel> chemistryLinks = [];
 
@@ -134,6 +138,67 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
       return members.firstWhere((m) => m.username == currentUser).userId;
     } catch (e) {
       return "";
+    }
+  }
+
+
+  Future<void> _updateBadge() async {
+    if (!isCaptain) return;
+
+    final pickedFile = await ImagePickerUtil.pickFromGallery();
+    if (pickedFile == null) return;
+
+    setState(() => isUploadingBadge = true);
+
+    try {
+      final file = File(pickedFile.path);
+
+      // Compresia imaginii
+      final compressedFile = await compressImage(file);
+      if (compressedFile == null) {
+        throw Exception("Eroare la compresia imaginii.");
+      }
+
+      // 2. Verificare dimensiune (Max 5MB)
+      final fileSize = await compressedFile.length();
+      if (fileSize > 5 * 1024 * 1024) {
+        throw Exception("Image too large (max 5MB)");
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("access_token");
+
+      if (token == null || token.isEmpty) {
+        throw Exception("Nu ești autentificat!");
+      }
+
+      await TeamApi.uploadTeamBadge(
+        teamId: widget.teamId,
+        filePath: compressedFile.path,
+        token: token,
+      );
+
+      await _fetchData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Squad logo updated!", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            backgroundColor: _accentGreen,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(e.toString(), style: const TextStyle(color: Colors.white)),
+              backgroundColor: Colors.red.shade900
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isUploadingBadge = false);
     }
   }
 
@@ -738,19 +803,57 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
         children: [
           Row(
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: _cardSurface,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: _accentGreen.withOpacity(0.5), width: 2),
-                ),
-                child: Center(
-                  child: Icon(Icons.shield_rounded, color: _accentGreen, size: 40),
+              // --- ZONA BADGE ---
+              GestureDetector(
+                onTap: isCaptain && !isUploadingBadge ? _updateBadge : null,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: _cardSurface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: _accentGreen.withOpacity(0.5), width: 2),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: isUploadingBadge
+                        ? Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: CircularProgressIndicator(color: _accentGreen, strokeWidth: 3),
+                    )
+                        : Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Poza echipei sau Scutul default
+                        (team!.badgeUrl != null && team!.badgeUrl!.isNotEmpty)
+                            ? Image.network(
+                          "${team!.badgeUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                          fit: BoxFit.cover,
+                        )
+                            : Icon(Icons.shield_rounded, color: _accentGreen, size: 40),
+
+                        // Iconita mica de editare pentru capitan
+                        if (isCaptain)
+                          Positioned(
+                            bottom: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: _accentGreen.withOpacity(0.5)),
+                              ),
+                              child: Icon(Icons.edit, color: _accentGreen, size: 12),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 20),
+              // --- ZONA NUME ECHIPA ---
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

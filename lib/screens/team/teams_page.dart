@@ -6,6 +6,7 @@ import 'package:team_up_fe_new/screens/team/team_members_page.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/screens/notifications/notifications_page.dart';
 import 'package:team_up_fe_new/services/notifications_api.dart';
+import 'package:team_up_fe_new/utils/compress_image.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
 import 'dart:io';
@@ -317,12 +318,26 @@ class _MyTeamsTabState extends State<_MyTeamsTab> {
                               final token = prefs.getString("access_token");
 
                               if (token != null) {
-                                print("UPLOADING BADGE...");
-                                await TeamApi.uploadTeamBadge(
-                                  teamId: team.id,
-                                  filePath: pickedImage!.path,
-                                  token: token,
-                                );
+                                print("COMPRIMĂM BADGE-UL...");
+                                final file = File(pickedImage!.path);
+                                final compressedFile = await compressImage(file);
+
+                                if (compressedFile != null) {
+                                  final fileSize = await compressedFile.length();
+
+                                  if (fileSize > 5 * 1024 * 1024) {
+                                    throw Exception("Image too large after compression (max 5MB).");
+                                  }
+
+                                  print("UPLOADING BADGE...");
+                                  await TeamApi.uploadTeamBadge(
+                                    teamId: team.id,
+                                    filePath: compressedFile.path,
+                                    token: token,
+                                  );
+                                } else {
+                                  print("Eroare la compresie, sărim peste upload.");
+                                }
                               } else {
                                 print("No token found, skipping badge upload");
                               }
