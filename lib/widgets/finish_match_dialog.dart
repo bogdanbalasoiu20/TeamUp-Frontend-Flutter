@@ -215,6 +215,8 @@ Future<void> showFinishMatchDialog({
                               oddsHome: match.oddsHome,
                               oddsDraw: match.oddsDraw,
                               oddsAway: match.oddsAway,
+                              homeTeamBadgeUrl: match.homeTeamBadgeUrl,
+                              awayTeamBadgeUrl: match.awayTeamBadgeUrl
                             );
 
                             onMatchFinished(updatedMatch);

@@ -8,6 +8,7 @@ class TournamentStandingModel {
   final int goalsAgainst;
   final int points;
   final int? finalPosition;
+  final String? badgeUrl;
 
   TournamentStandingModel({
     required this.teamName,
@@ -18,7 +19,8 @@ class TournamentStandingModel {
     required this.goalsFor,
     required this.goalsAgainst,
     required this.points,
-    required this.finalPosition
+    required this.finalPosition,
+    required this.badgeUrl
   });
 
   factory TournamentStandingModel.fromJson(Map<String, dynamic> json) {
@@ -31,7 +33,8 @@ class TournamentStandingModel {
       goalsFor: json["goalsFor"],
       goalsAgainst: json["goalsAgainst"],
       points: json["points"],
-      finalPosition: json["finalPosition"]
+      finalPosition: json["finalPosition"],
+      badgeUrl: json["badgeUrl"]
     );
   }
 }

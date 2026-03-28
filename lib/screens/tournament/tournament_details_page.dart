@@ -748,7 +748,16 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
             rows: standings.map((s) {
               final gd = s.goalsFor - s.goalsAgainst;
               return DataRow(cells: [
-                DataCell(Text(s.teamName, style: const TextStyle(fontWeight: FontWeight.bold))),
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildTeamBadge(s.badgeUrl, size: 24),
+                      const SizedBox(width: 10),
+                      Text(s.teamName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
                 DataCell(Text(s.played.toString())),
                 DataCell(Text(s.wins.toString())),
                 DataCell(Text(s.draws.toString())),
@@ -763,17 +772,23 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
     );
   }
 
-  Widget _buildBadgePlaceholder() {
+  Widget _buildTeamBadge(String? badgeUrl, {double size = 32}) {
     return Container(
-      width: 32,
-      height: 32,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: _bgDark,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: _accentGreen.withOpacity(0.5), width: 1.5),
       ),
-      child: Center(
-        child: Icon(Icons.shield, color: _textSecondary.withOpacity(0.5), size: 16),
+      child: ClipOval(
+        child: (badgeUrl != null && badgeUrl.isNotEmpty)
+            ? Image.network(
+          "$badgeUrl?t=${DateTime.now().millisecondsSinceEpoch}",
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Icon(Icons.shield, color: _textSecondary.withOpacity(0.5), size: size * 0.5),
+        )
+            : Icon(Icons.shield, color: _textSecondary.withOpacity(0.5), size: size * 0.5),
       ),
     );
   }
@@ -874,7 +889,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                           ),
                         ),
                         const SizedBox(width: 12),
-                        _buildBadgePlaceholder(),
+                        _buildTeamBadge(match.homeTeamBadgeUrl),
                       ],
                     ),
                   ),
@@ -901,7 +916,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        _buildBadgePlaceholder(),
+                        _buildTeamBadge(match.awayTeamBadgeUrl),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -1170,12 +1185,21 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
                   ),
                   child: ListTile(
                     leading: Container(
-                      padding: const EdgeInsets.all(8),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: _accentGreen.withOpacity(0.1),
+                        color: _cardSurface,
                         shape: BoxShape.circle,
+                        border: Border.all(color: _accentGreen.withOpacity(0.5), width: 1.5),
                       ),
-                      child: Icon(Icons.shield_rounded, color: _accentGreen),
+                      child: ClipOval(
+                        child: (team.badgeUrl != null && team.badgeUrl!.isNotEmpty)
+                            ? Image.network(
+                          "${team.badgeUrl}?t=${DateTime.now().millisecondsSinceEpoch}",
+                          fit: BoxFit.cover,
+                        )
+                            : Icon(Icons.shield_rounded, color: _accentGreen, size: 24),
+                      ),
                     ),
                     title: Text(
                       team.name,
@@ -1224,7 +1248,7 @@ class _SelectTeamToJoinModalState extends State<_SelectTeamToJoinModal> {
                             const Icon(Icons.science_rounded, color: Colors.cyan, size: 14),
                             const SizedBox(width: 4),
                             Text(
-                              "${team.teamChemistry.toInt()}%",
+                              "${team.teamChemistry.toInt()}",
                               style: const TextStyle(
                                 color: Colors.cyan,
                                 fontWeight: FontWeight.bold,
