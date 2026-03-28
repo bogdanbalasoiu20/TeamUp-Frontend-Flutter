@@ -752,7 +752,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _buildTeamBadge(s.badgeUrl, size: 24),
+                      _buildTeamBadge(s.badgeUrl, size: 30),
                       const SizedBox(width: 10),
                       Text(s.teamName, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
@@ -874,58 +874,61 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
           child: Column(
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // --- ECHIPA GAZDA ---
                   Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Text(
-                            match.homeTeamName,
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        _buildTeamBadge(match.homeTeamBadgeUrl, size: 50),
+                        const SizedBox(height: 8),
+                        Text(
+                          match.homeTeamName,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: 12),
-                        _buildTeamBadge(match.homeTeamBadgeUrl),
                       ],
                     ),
                   ),
 
-                  Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isFinished ? Colors.black.withOpacity(0.3) : _bgDark,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : _accentGreen.withOpacity(0.3)),
-                    ),
-                    child: Text(
-                      isFinished ? "${match.scoreHome} - ${match.scoreAway}" : "VS",
-                      style: TextStyle(
-                        color: isFinished ? Colors.white : _accentGreen,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
+                  // --- SCOR / VS ---
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6.0),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isFinished ? Colors.black.withOpacity(0.3) : _bgDark,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : _accentGreen.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        isFinished ? "${match.scoreHome} - ${match.scoreAway}" : "VS",
+                        style: TextStyle(
+                          color: isFinished ? Colors.white : _accentGreen,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
 
+                  // --- ECHIPA OASPETE ---
                   Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildTeamBadge(match.awayTeamBadgeUrl),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            match.awayTeamName,
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        _buildTeamBadge(match.awayTeamBadgeUrl, size: 50),
+                        const SizedBox(height: 8),
+                        Text(
+                          match.awayTeamName,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -933,6 +936,7 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                 ],
               ),
 
+              // --- COTE  ---
               if (match.oddsHome != null && match.oddsDraw != null && match.oddsAway != null) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -945,9 +949,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                   child: Row(
                     children: [
                       _buildOddItem("1", match.oddsHome!),
-                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)), // Separator vertical
+                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
                       _buildOddItem("X", match.oddsDraw!),
-                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)), // Separator vertical
+                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
                       _buildOddItem("2", match.oddsAway!),
                     ],
                   ),
@@ -955,9 +959,9 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
               ],
 
               if (isCreator && !isFinished) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Divider(color: Colors.white.withOpacity(0.05), height: 1),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextButton.icon(
                   onPressed: () {
                     showFinishMatchDialog(
@@ -973,14 +977,20 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
                       },
                     );
                   },
-                  icon: Icon(Icons.edit_note_rounded, color: _accentGreen, size: 20),
+                  icon: Icon(Icons.edit_note_rounded, color: _accentGreen, size: 18),
                   label: Text(
                     "ENTER SCORE",
-                    style: TextStyle(color: _accentGreen, fontWeight: FontWeight.bold, letterSpacing: 1.0),
+                    style: TextStyle(
+                      color: _accentGreen,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.0,
+                      fontSize: 12, // Font mai mic
+                    ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    minimumSize: const Size(0, 36),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ],
