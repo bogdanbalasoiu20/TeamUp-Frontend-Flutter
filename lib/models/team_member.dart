@@ -10,6 +10,7 @@ class TeamMemberModel {
   final DateTime joinedAt;
   final SquadType squadType;
   final int slotIndex;
+  final String? photoUrl;
 
   TeamMemberModel({
     required this.userId,
@@ -18,6 +19,7 @@ class TeamMemberModel {
     required this.joinedAt,
     required this.squadType,
     required this.slotIndex,
+    required this.photoUrl
   });
 
   factory TeamMemberModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +32,7 @@ class TeamMemberModel {
             (e) => e.name == json["squadType"],
       ),
       slotIndex: json["slotIndex"],
+      photoUrl: json["photoUrl"] ?? "",
     );
   }
 }

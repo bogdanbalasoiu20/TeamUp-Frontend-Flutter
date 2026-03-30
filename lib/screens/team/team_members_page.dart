@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -281,6 +282,7 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
       joinedAt: m.joinedAt,
       squadType: newType,
       slotIndex: newIndex,
+      photoUrl: m.photoUrl
     );
   }
 
@@ -514,7 +516,18 @@ class _TeamDetailsPageState extends State<TeamDetailsPage> with SingleTickerProv
                     BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 6, offset: const Offset(0, 4)),
                   ],
                 ),
-                child: const Icon(Icons.person, color: Colors.white, size: 24),
+                child: ClipOval(
+                  child: member.photoUrl != null && member.photoUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                    imageUrl: member.photoUrl!,
+                    fit: BoxFit.cover,
+                    width: 44,
+                    height: 44,
+                    placeholder: (_, __) => Container(color: Colors.black26),
+                    errorWidget: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
+                  )
+                      : const Icon(Icons.person, color: Colors.white, size: 24),
+                ),
               ),
               if (isUserCaptain)
                 Positioned(
