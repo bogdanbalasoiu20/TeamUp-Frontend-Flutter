@@ -192,8 +192,8 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
             ],
           ),
           child: Icon(
-            Icons.sports_soccer,
-            size: isSelected ? 35 : 28,
+            Icons.location_on_rounded,
+            size: isSelected ? 32 : 26,
             color: isSelected ? _bgDark : Colors.white,
           ),
         ),

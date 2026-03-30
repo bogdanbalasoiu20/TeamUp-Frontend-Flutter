@@ -24,15 +24,23 @@ class TeamMemberModel {
 
   factory TeamMemberModel.fromJson(Map<String, dynamic> json) {
     return TeamMemberModel(
-      userId: json["userId"],
-      username: json["username"],
-      role: json["role"],
-      joinedAt: DateTime.parse(json["joinedAt"]),
-      squadType: SquadType.values.firstWhere(
+      userId: json["userId"] ?? "",
+      username: json["username"] ?? "",
+      role: json["role"] ?? "",
+      joinedAt: json["joinedAt"] != null
+          ? DateTime.parse(json["joinedAt"])
+          : DateTime.now(),
+
+      squadType: json["squadType"] != null
+          ? SquadType.values.firstWhere(
             (e) => e.name == json["squadType"],
-      ),
-      slotIndex: json["slotIndex"],
-      photoUrl: json["photoUrl"] ?? "",
+        orElse: () => SquadType.BENCH,
+      )
+          : SquadType.BENCH,
+
+      slotIndex: json["slotIndex"] ?? 0,
+
+      photoUrl: json["photoUrl"] as String?,
     );
   }
 }

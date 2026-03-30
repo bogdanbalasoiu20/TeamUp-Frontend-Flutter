@@ -851,177 +851,191 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
     }
 
     final bool isCreator = tournament?.creatorUsername == currentUsername;
+    final Map<int, List<TournamentMatchModel>> groupedMatches = {};
+    for (var match in matches) {
+      groupedMatches.putIfAbsent(match.matchDay, () => []).add(match);
+    }
+
+    final sortedRounds = groupedMatches.keys.toList()..sort();
 
     return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: matches.length,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      itemCount: sortedRounds.length,
       itemBuilder: (context, index) {
-        final match = matches[index];
-        final isFinished = match.status.toUpperCase() == "FINISHED" || match.status.toUpperCase() == "DONE";
-        final bool isFirstInMatchDay = index == 0 || matches[index - 1].matchDay != match.matchDay;
+        final round = sortedRounds[index];
+        final roundMatches = groupedMatches[round]!;
 
-        Widget matchCard = Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            color: _cardSurface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withOpacity(0.04)),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- ECHIPA GAZDA ---
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTeamBadge(match.homeTeamBadgeUrl, size: 50),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.homeTeamName,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // --- SCOR / VS ---
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6.0),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isFinished ? Colors.black.withOpacity(0.3) : _bgDark,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : _accentGreen.withOpacity(0.3)),
-                      ),
-                      child: Text(
-                        isFinished ? "${match.scoreHome} - ${match.scoreAway}" : "VS",
-                        style: TextStyle(
-                          color: isFinished ? Colors.white : _accentGreen,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // --- ECHIPA OASPETE ---
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildTeamBadge(match.awayTeamBadgeUrl, size: 50),
-                        const SizedBox(height: 8),
-                        Text(
-                          match.awayTeamName,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+        return Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: _cardSurface.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.05)),
+            ),
+            child: ExpansionTile(
+              initiallyExpanded: index == 0,
+              iconColor: _accentGreen,
+              collapsedIconColor: _textSecondary,
+              title: Text(
+                "ROUND $round",
+                style: TextStyle(
+                  color: _accentGreen,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
               ),
-
-              // --- COTE  ---
-              if (match.oddsHome != null && match.oddsDraw != null && match.oddsAway != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _bgDark.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.03)),
-                  ),
-                  child: Row(
-                    children: [
-                      _buildOddItem("1", match.oddsHome!),
-                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
-                      _buildOddItem("X", match.oddsDraw!),
-                      Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
-                      _buildOddItem("2", match.oddsAway!),
-                    ],
-                  ),
-                ),
-              ],
-
-              if (isCreator && !isFinished) ...[
-                const SizedBox(height: 12),
-                Divider(color: Colors.white.withOpacity(0.05), height: 1),
-                const SizedBox(height: 4),
-                TextButton.icon(
-                  onPressed: () {
-                    showFinishMatchDialog(
-                      context: context,
-                      match: match,
-                      onMatchFinished: (updatedMatch) {
-                        setState(() {
-                          final index = matches.indexWhere((m) => m.id == updatedMatch.id);
-                          if (index != -1) {
-                            matches[index] = updatedMatch;
-                          }
-                        });
-                      },
-                    );
-                  },
-                  icon: Icon(Icons.edit_note_rounded, color: _accentGreen, size: 18),
-                  label: Text(
-                    "ENTER SCORE",
-                    style: TextStyle(
-                      color: _accentGreen,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.0,
-                      fontSize: 12, // Font mai mic
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    minimumSize: const Size(0, 36),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                ),
-              ],
-            ],
+              childrenPadding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+              children: roundMatches.map((match) => _buildMatchCard(match, isCreator)).toList(),
+            ),
           ),
         );
+      },
+    );
+  }
 
-        if (isFirstInMatchDay) {
-          return Column(
+
+  Widget _buildMatchCard(TournamentMatchModel match, bool isCreator) {
+    final isFinished = match.status.toUpperCase() == "FINISHED" || match.status.toUpperCase() == "DONE";
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.04)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (index != 0) const SizedBox(height: 16),
+              // --- ECHIPA GAZDA ---
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTeamBadge(match.homeTeamBadgeUrl, size: 50),
+                    const SizedBox(height: 8),
+                    Text(
+                      match.homeTeamName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // --- SCOR / VS ---
               Padding(
-                padding: const EdgeInsets.only(bottom: 12, left: 8),
-                child: Text(
-                  "ROUND ${match.matchDay}",
-                  style: TextStyle(
-                    color: _accentGreen,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
+                padding: const EdgeInsets.only(top: 6.0),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isFinished ? Colors.black.withOpacity(0.3) : _bgDark,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isFinished ? Colors.white.withOpacity(0.05) : _accentGreen.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    isFinished ? "${match.scoreHome} - ${match.scoreAway}" : "VS",
+                    style: TextStyle(
+                      color: isFinished ? Colors.white : _accentGreen,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-              matchCard,
-            ],
-          );
-        }
 
-        return matchCard;
-      },
+              // --- ECHIPA OASPETE ---
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTeamBadge(match.awayTeamBadgeUrl, size: 50),
+                    const SizedBox(height: 8),
+                    Text(
+                      match.awayTeamName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // --- COTE  ---
+          if (match.oddsHome != null && match.oddsDraw != null && match.oddsAway != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: _bgDark.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.03)),
+              ),
+              child: Row(
+                children: [
+                  _buildOddItem("1", match.oddsHome!),
+                  Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
+                  _buildOddItem("X", match.oddsDraw!),
+                  Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
+                  _buildOddItem("2", match.oddsAway!),
+                ],
+              ),
+            ),
+          ],
+
+          if (isCreator && !isFinished) ...[
+            const SizedBox(height: 12),
+            Divider(color: Colors.white.withOpacity(0.05), height: 1),
+            const SizedBox(height: 4),
+            TextButton.icon(
+              onPressed: () {
+                showFinishMatchDialog(
+                  context: context,
+                  match: match,
+                  onMatchFinished: (updatedMatch) {
+                    setState(() {
+                      final index = matches.indexWhere((m) => m.id == updatedMatch.id);
+                      if (index != -1) {
+                        matches[index] = updatedMatch;
+                      }
+                    });
+                  },
+                );
+              },
+              icon: Icon(Icons.edit_note_rounded, color: _accentGreen, size: 18),
+              label: Text(
+                "ENTER SCORE",
+                style: TextStyle(
+                  color: _accentGreen,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
+                  fontSize: 12,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                minimumSize: const Size(0, 36),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 
