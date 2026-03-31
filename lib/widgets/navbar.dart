@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:team_up_fe_new/screens/main_pages/discover_page.dart';
 import 'package:team_up_fe_new/screens/main_pages/home_page.dart';
 import 'package:team_up_fe_new/screens/map/match_map_page.dart';
 import 'package:team_up_fe_new/screens/team/teams_page.dart';
@@ -8,6 +7,9 @@ import 'package:team_up_fe_new/screens/tournament/tournaments_page.dart';
 class TeamUpNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTabSelected;
+
+  final Color _cardSurface = const Color(0xFF13241E);
+  final Color _accentGreen = const Color(0xFF00E676);
 
   const TeamUpNavBar({
     super.key,
@@ -18,69 +20,73 @@ class TeamUpNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardSurface,
+        border: Border(
+          top: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.5),
+            blurRadius: 15,
+            offset: const Offset(0, -4),
           ),
         ],
       ),
-      height: 58,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _navIcon(index: 0, icon: Icons.home_rounded),
-          _navIcon(index: 1, icon: Icons.stadium),
-          _centerCreateButton(),
-          _navIcon(index: 3, icon: Icons.auto_awesome_rounded),
-          _navIcon(index: 4, icon: Icons.pending_rounded
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _navItem(index: 0, icon: Icons.home_rounded, label: "Home"),
+              _navItem(index: 1, icon: Icons.map_outlined, label: "Map"),
+              _navItem(index: 2, icon: Icons.groups_rounded, label: "Teams"),
+              _navItem(index: 3, icon: Icons.emoji_events_rounded, label: "Tourney"),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _navIcon({required int index, required IconData icon}) {
+  Widget _navItem({required int index, required IconData icon, required String label}) {
     final bool isActive = currentIndex == index;
 
     return GestureDetector(
       onTap: () => onTabSelected(index),
       behavior: HitTestBehavior.opaque,
-      child: Icon(
-        icon,
-        size: 24,
-        color: isActive ? const Color(0xFF2E8B57) : Colors.grey.shade600,
-      ),
-    );
-  }
-
-  Widget _centerCreateButton() {
-    return GestureDetector(
-      onTap: () => onTabSelected(2),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF003B2F),
-              Color(0xFF0A6F4A),
-              Color(0xFF46C264),
-            ],
-          ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? _accentGreen.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
-        child: const Icon(Icons.groups_rounded , color: Colors.white, size: 22),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 26,
+              color: isActive ? _accentGreen : Colors.white54,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                color: isActive ? _accentGreen : Colors.white54,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -96,8 +102,7 @@ class _HomeShellState extends State<HomeShell> {
     HomePage(),
     MatchesMapPage(),
     TeamsPage(),
-    DiscoverPage(),
-    TournamentsPage()
+    TournamentsPage(),
   ];
 
   void _onTabSelected(int index) {
@@ -107,6 +112,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF091210),
       body: IndexedStack(
         index: currentIndex,
         children: pages,
@@ -118,6 +124,3 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 }
-
-
-
