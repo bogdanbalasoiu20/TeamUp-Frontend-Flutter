@@ -205,55 +205,45 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       greeting = "Good afternoon";
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    greeting,
-                    style: TextStyle(
-                      color: _textSecondary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                ],
+        Row(
+          children: [
+            Text(
+              greeting,
+              style: TextStyle(
+                color: _textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
               ),
-              const SizedBox(height: 4),
-              Text(
-                _username,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Ready for your next match?",
-                style: TextStyle(
-                  color: _accentGreen,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+            ),
+
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _username,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+            height: 1.1,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "Ready for your next match?",
+          style: TextStyle(
+            color: _accentGreen,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
           ),
         ),
-
-        const SizedBox(width: 16),
-
       ],
     );
   }
@@ -262,6 +252,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final matches = _data?.upcoming.matches ?? [];
     final tournaments = _data?.upcoming.tournaments ?? [];
     final stats = _data?.stats;
+    final userStats = _data?.userStats;
 
     if (matches.isEmpty && tournaments.isEmpty && stats == null) {
       return _buildEmptyState();
@@ -270,13 +261,26 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (stats != null) ...[
-          _buildSectionTitle("ACTIVITY THIS MONTH"),
+
+        if (stats != null || userStats != null) ...[
+          _buildSectionTitle("MY DASHBOARD"),
           const SizedBox(height: 12),
-          _buildCombinedStatsCard(stats),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildProfilePill(userStats),
+
+                const SizedBox(width: 16),
+
+                Expanded(child: _buildCompactStatsCard(stats)),
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
         ],
 
+        // --- NEXT MATCHES ---
         if (matches.isNotEmpty) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -304,6 +308,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           const SizedBox(height: 24),
         ],
 
+        // --- UPCOMING TOURNAMENTS ---
         if (tournaments.isNotEmpty) ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,195 +350,198 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildCombinedStatsCard(dynamic stats) {
+  Widget _buildProfilePill(dynamic userStats) {
+    if (userStats == null) {
+      return Container(
+        width: 86,
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Center(child: CircularProgressIndicator(color: _accentGreen)),
+      );
+    }
+
+    return Container(
+      width: 86,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+      decoration: BoxDecoration(
+        color: _cardSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 5)
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+
+            child: ClipOval(
+              child: (userStats.avatarUrl != null && userStats.avatarUrl!.isNotEmpty)
+                  ? Image.network(
+                "${userStats.avatarUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: _textSecondary, size: 24),
+              )
+                  : Icon(Icons.person_rounded, color: _textSecondary, size: 24),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                userStats.rating.toString(),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    height: 1.0
+                ),
+              ),
+
+              if (userStats.ratingChange != 0) ...[
+                const SizedBox(width: 4),
+                Icon(
+                  userStats.ratingChange > 0 ? Icons.north_east_rounded : Icons.south_east_rounded,
+                  color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
+                  size: 12,
+                ),
+                Text(
+                  userStats.ratingChange.abs().toString(),
+                  style: TextStyle(
+                    color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ],
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            userStats.position ?? "N/A",
+            style: TextStyle(
+                color: _textSecondary,
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompactStatsCard(dynamic stats) {
+    if (stats == null) return const SizedBox();
+
     final bool isPositiveTrend = stats.percentageChange >= 0;
 
     return Container(
-      width: double.infinity,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            _cardSurface,
-            _bgDark,
-          ],
-        ),
+        color: _cardSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 5)),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(19),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -20,
-              bottom: -20,
-              child: Icon(
-                Icons.analytics_rounded,
-                size: 130,
-                color: Colors.white.withOpacity(0.02),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(width: 4, color: _accentGreen),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // TOP: TOTAL
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "TOTAL ACTIVITIES",
-                            style: TextStyle(
-                                color: _textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.0
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                stats.totalThisMonth.toString(),
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.0
-                                ),
-                              ),
-                              if (stats.percentageChange != 0.0) ...[
-                                const SizedBox(width: 12),
-                                Container(
-                                  margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isPositiveTrend ? _accentGreen.withOpacity(0.15) : Colors.red.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isPositiveTrend ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                                        color: isPositiveTrend ? _accentGreen : Colors.redAccent,
-                                        size: 12,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        "${stats.percentageChange.abs().toStringAsFixed(0)}%",
-                                        style: TextStyle(
-                                          color: isPositiveTrend ? _accentGreen : Colors.redAccent,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: _accentGreen.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(Icons.insights_rounded, color: _accentGreen, size: 20),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Divider(color: Colors.white.withOpacity(0.05), height: 1),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: _bgDark,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(Icons.sports_soccer_rounded, color: _accentGreen, size: 14),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  stats.openMatchesThisMonth.toString(),
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, height: 1.0),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Matches",
-                                  style: TextStyle(color: _textSecondary, fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(width: 1, height: 30, color: Colors.white.withOpacity(0.1)),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: _bgDark,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 14),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  stats.tournamentsThisMonth.toString(),
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, height: 1.0),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "Tournaments",
-                                  style: TextStyle(color: _textSecondary, fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Text("ACTIVITY THIS MONTH", style: TextStyle(color: _textSecondary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                  const SizedBox(height: 4),
+                  Text(
+                    stats.totalThisMonth.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, height: 1.0),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
+              if (stats.percentageChange != 0.0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isPositiveTrend ? _accentGreen.withOpacity(0.15) : Colors.red.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(isPositiveTrend ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: isPositiveTrend ? _accentGreen : Colors.redAccent, size: 10),
+                      const SizedBox(width: 2),
+                      Text(
+                        "${stats.percentageChange.abs().toStringAsFixed(0)}%",
+                        style: TextStyle(color: isPositiveTrend ? _accentGreen : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+
+          Divider(color: Colors.white.withOpacity(0.05), height: 1),
+
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.sports_soccer_rounded, color: _accentGreen, size: 12),
+                        const SizedBox(width: 4),
+                        Text(stats.openMatchesThisMonth.toString(), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Text("Matches", style: TextStyle(color: _textSecondary, fontSize: 10)),
+                  ],
+                ),
+              ),
+              Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 12),
+                        const SizedBox(width: 4),
+                        Text(stats.tournamentsThisMonth.toString(), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Text("Tourneys", style: TextStyle(color: _textSecondary, fontSize: 10)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
