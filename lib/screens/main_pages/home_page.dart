@@ -5,6 +5,9 @@ import 'package:team_up_fe_new/models/home_model.dart';
 
 import 'package:team_up_fe_new/models/upcoming_match.dart';
 import 'package:team_up_fe_new/models/upcoming_tournament.dart';
+import 'package:team_up_fe_new/screens/match_participants/match_participants_page.dart';
+import 'package:team_up_fe_new/screens/profile/user_profile_page.dart';
+import 'package:team_up_fe_new/screens/tournament/tournament_details_page.dart';
 import 'package:team_up_fe_new/services/home_api.dart';
 
 import 'package:team_up_fe_new/screens/matches/finish_match_screen.dart';
@@ -353,7 +356,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Widget _buildProfilePill(dynamic userStats) {
     if (userStats == null) {
       return Container(
-        width: 86,
+        width: 110,
         decoration: BoxDecoration(
           color: _cardSurface,
           borderRadius: BorderRadius.circular(20),
@@ -362,86 +365,89 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       );
     }
 
-    return Container(
-      width: 86,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
-      decoration: BoxDecoration(
-        color: _cardSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5)
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-
-            child: ClipOval(
-              child: (userStats.avatarUrl != null && userStats.avatarUrl!.isNotEmpty)
-                  ? Image.network(
-                "${userStats.avatarUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: _textSecondary, size: 24),
-              )
-                  : Icon(Icons.person_rounded, color: _textSecondary, size: 24),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => UserProfilePage(username: _username))
+        );
+      },
+      child: Container(
+        width: 110,
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 5)
             ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                userStats.rating.toString(),
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    height: 1.0
-                ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _accentGreen.withOpacity(0.5), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                        color: _accentGreen.withOpacity(0.1),
+                        blurRadius: 8,
+                        spreadRadius: 1
+                    )
+                  ]
               ),
-
-              if (userStats.ratingChange != 0) ...[
-                const SizedBox(width: 4),
-                Icon(
-                  userStats.ratingChange > 0 ? Icons.north_east_rounded : Icons.south_east_rounded,
-                  color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
-                  size: 12,
-                ),
-                Text(
-                  userStats.ratingChange.abs().toString(),
-                  style: TextStyle(
-                    color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ],
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            userStats.position ?? "N/A",
-            style: TextStyle(
-                color: _textSecondary,
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5
+              child: ClipOval(
+                child: (userStats.avatarUrl != null && userStats.avatarUrl!.isNotEmpty)
+                    ? Image.network(
+                  "${userStats.avatarUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Icon(Icons.person_rounded, color: _textSecondary, size: 35),
+                )
+                    : Icon(Icons.person_rounded, color: _textSecondary, size: 35),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  userStats.rating.toString(),
+                  style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, height: 1.0),
+                ),
+                if (userStats.ratingChange != 0) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    userStats.ratingChange > 0 ? Icons.north_east_rounded : Icons.south_east_rounded,
+                    color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
+                    size: 12,
+                  ),
+                  Text(
+                    userStats.ratingChange.abs().toString(),
+                    style: TextStyle(
+                      color: userStats.ratingChange > 0 ? _accentGreen : Colors.redAccent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              userStats.position ?? "N/A",
+              style: TextStyle(color: _textSecondary, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -465,53 +471,63 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // TOP: TOTAL
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // --- TOP: TOTAL ---
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Textul are acum tot spațiul din lume
+              Text(
+                "ACTIVITY THIS MONTH",
+                style: TextStyle(color: _textSecondary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+              ),
+              const SizedBox(height: 8),
+
+              // Numărul și procentajul stau frumos unul lângă altul
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center, // Le aliniem pe centru vertical
                 children: [
-                  Text("ACTIVITY THIS MONTH", style: TextStyle(color: _textSecondary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
-                  const SizedBox(height: 4),
                   Text(
                     stats.totalThisMonth.toString(),
                     style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, height: 1.0),
                   ),
+
+                  if (stats.percentageChange != 0.0) ...[
+                    const SizedBox(width: 12), // Spațiu între număr și procentaj
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isPositiveTrend ? _accentGreen.withOpacity(0.15) : Colors.red.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(isPositiveTrend ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: isPositiveTrend ? _accentGreen : Colors.redAccent, size: 10),
+                          const SizedBox(width: 2),
+                          Text(
+                            "${stats.percentageChange.abs().toStringAsFixed(0)}%",
+                            style: TextStyle(color: isPositiveTrend ? _accentGreen : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
-              if (stats.percentageChange != 0.0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isPositiveTrend ? _accentGreen.withOpacity(0.15) : Colors.red.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(isPositiveTrend ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: isPositiveTrend ? _accentGreen : Colors.redAccent, size: 10),
-                      const SizedBox(width: 2),
-                      Text(
-                        "${stats.percentageChange.abs().toStringAsFixed(0)}%",
-                        style: TextStyle(color: isPositiveTrend ? _accentGreen : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
 
           Divider(color: Colors.white.withOpacity(0.05), height: 1),
 
+          // --- BOTTOM: BREAKDOWN (Centrate) ---
           Row(
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.sports_soccer_rounded, color: _accentGreen, size: 12),
                         const SizedBox(width: 4),
@@ -523,12 +539,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 ),
               ),
               Container(width: 1, height: 24, color: Colors.white.withOpacity(0.1)),
-              const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(Icons.emoji_events_rounded, color: Colors.amber, size: 12),
                         const SizedBox(width: 4),
@@ -552,265 +568,267 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ? (match.currentPlayers / match.maxPlayers).clamp(0.0, 1.0)
         : 0.0;
 
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _cardSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _bgDark,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_month_rounded, color: _accentGreen, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      DateFormat("dd MMM • HH:mm").format(match.startsAt),
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-              if (isFull)
+    return GestureDetector(
+      onTap: () {
+         Navigator.push(context, MaterialPageRoute(builder: (_) => MatchOverviewPage(matchId: match.id)));
+      },
+      child: Container(
+        width: 260,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _bgDark,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
-                  child: const Text(
-                    "FULL",
-                    style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_month_rounded, color: _accentGreen, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        DateFormat("dd MMM • HH:mm").format(match.startsAt),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                match.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                  letterSpacing: -0.5,
+                if (isFull)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      "FULL",
+                      style: TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  match.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: -0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
-              if (match.location != null)
+                const SizedBox(height: 6),
+                if (match.location != null)
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          match.location!,
+                          style: TextStyle(color: _textSecondary, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        match.location!,
-                        style: TextStyle(color: _textSecondary, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Text("Players joined", style: TextStyle(color: _textSecondary, fontSize: 11)),
+                    Text(
+                      "${match.currentPlayers} / ${match.maxPlayers}",
+                      style: TextStyle(
+                        color: isFull ? _textSecondary : _accentGreen,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Players joined", style: TextStyle(color: _textSecondary, fontSize: 11)),
-                  Text(
-                    "${match.currentPlayers} / ${match.maxPlayers}",
-                    style: TextStyle(
-                      color: isFull ? _textSecondary : _accentGreen,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 6,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _bgDark,
+                    borderRadius: BorderRadius.circular(3),
                   ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Container(
-                height: 6,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: _bgDark,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: fillPercentage,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isFull ? _textSecondary : _accentGreen,
-                      borderRadius: BorderRadius.circular(3),
-                      boxShadow: isFull ? [] : [
-                        BoxShadow(color: _accentGreen.withOpacity(0.5), blurRadius: 4, offset: const Offset(0, 1))
-                      ],
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: fillPercentage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isFull ? _textSecondary : _accentGreen,
+                        borderRadius: BorderRadius.circular(3),
+                        boxShadow: isFull ? [] : [
+                          BoxShadow(color: _accentGreen.withOpacity(0.5), blurRadius: 4, offset: const Offset(0, 1))
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHorizontalTournamentCard(UpcomingTournamentModel tournament) {
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _cardSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.amber.withOpacity(0.15)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-
-          // --- DATA ---
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: _bgDark,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amber.withOpacity(0.1)),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => TournamentDetailsPage(tournamentId: tournament.id)));
+      },
+      child: Container(
+        width: 260,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _cardSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.amber.withOpacity(0.15)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.calendar_month_rounded, color: Colors.amber, size: 14),
-                const SizedBox(width: 6),
-                Text(
-                  DateFormat("dd MMM").format(tournament.startsAt),
-                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-
-          // --- TITLU SI LOCATIE ---
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tournament.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                  letterSpacing: -0.5,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _bgDark,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.amber.withOpacity(0.1)),
               ),
-              if (tournament.location != null && tournament.location!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        tournament.location!,
-                        style: TextStyle(color: _textSecondary, fontSize: 13),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ],
-          ),
-
-          // ---ECHIPA SI BADGE ---
-          Row(
-            children: [
-              if (tournament.teamBadgeUrl != null && tournament.teamBadgeUrl!.isNotEmpty)
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: _bgDark,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.calendar_month_rounded, color: Colors.amber, size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                    DateFormat("dd MMM").format(tournament.startsAt),
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
-                  child: ClipOval(
-                    child: Image.network(
-                      "${tournament.teamBadgeUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Icon(Icons.shield_rounded, color: _textSecondary, size: 14),
-                    ),
-                  ),
-                )
-              else
-                Icon(
-                    tournament.teamName != null && tournament.teamName!.isNotEmpty
-                        ? Icons.shield_rounded
-                        : Icons.person_rounded,
-                    color: _textSecondary,
-                    size: 20
-                ),
-
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  tournament.teamName != null && tournament.teamName!.isNotEmpty
-                      ? tournament.teamName!
-                      : "Registered",
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tournament.name,
                   style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: -0.5,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-
-        ],
+                if (tournament.location != null && tournament.location!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          tournament.location!,
+                          style: TextStyle(color: _textSecondary, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            Row(
+              children: [
+                if (tournament.teamBadgeUrl != null && tournament.teamBadgeUrl!.isNotEmpty)
+                  Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: _bgDark,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.amber.withOpacity(0.5), width: 1.5),
+                    ),
+                    child: ClipOval(
+                      child: Image.network(
+                        "${tournament.teamBadgeUrl!}?t=${DateTime.now().millisecondsSinceEpoch}",
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(Icons.shield_rounded, color: _textSecondary, size: 14),
+                      ),
+                    ),
+                  )
+                else
+                  Icon(
+                      tournament.teamName != null && tournament.teamName!.isNotEmpty
+                          ? Icons.shield_rounded
+                          : Icons.person_rounded,
+                      color: _textSecondary,
+                      size: 20
+                  ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    tournament.teamName != null && tournament.teamName!.isNotEmpty
+                        ? tournament.teamName!
+                        : "Registered",
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
