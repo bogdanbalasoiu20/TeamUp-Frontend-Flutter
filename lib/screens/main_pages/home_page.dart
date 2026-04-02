@@ -257,14 +257,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     final stats = _data?.stats;
     final userStats = _data?.userStats;
 
-    if (matches.isEmpty && tournaments.isEmpty && stats == null) {
-      return _buildEmptyState();
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
 
+        // --- MY DASHBOARD ---
         if (stats != null || userStats != null) ...[
           _buildSectionTitle("MY DASHBOARD"),
           const SizedBox(height: 12),
@@ -273,9 +271,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildProfilePill(userStats),
-
                 const SizedBox(width: 16),
-
                 Expanded(child: _buildCompactStatsCard(stats)),
               ],
             ),
@@ -284,18 +280,18 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ],
 
         // --- NEXT MATCHES ---
-        if (matches.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSectionTitle("NEXT MATCHES"),
-              Text(
-                  "${matches.length} scheduled",
-                  style: TextStyle(color: _accentGreen, fontSize: 11, fontWeight: FontWeight.bold)
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle("NEXT MATCHES"),
+            Text(
+                "${matches.length} scheduled",
+                style: TextStyle(color: matches.isNotEmpty ? _accentGreen : _textSecondary, fontSize: 11, fontWeight: FontWeight.bold)
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (matches.isNotEmpty)
           SizedBox(
             height: 160,
             child: ListView.separated(
@@ -307,23 +303,25 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 return _buildHorizontalMatchCard(matches[index]);
               },
             ),
-          ),
-          const SizedBox(height: 24),
-        ],
+          )
+        else
+          _buildEmptySectionPlaceholder("No upcoming matches. Explore the map!", Icons.sports_soccer_rounded),
+
+        const SizedBox(height: 24),
 
         // --- UPCOMING TOURNAMENTS ---
-        if (tournaments.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSectionTitle("UPCOMING TOURNAMENTS"),
-              Text(
-                  "${tournaments.length} joined",
-                  style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle("UPCOMING TOURNAMENTS"),
+            Text(
+                "${tournaments.length} joined",
+                style: TextStyle(color: tournaments.isNotEmpty ? Colors.amber : _textSecondary, fontSize: 11, fontWeight: FontWeight.bold)
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (tournaments.isNotEmpty)
           SizedBox(
             height: 160,
             child: ListView.separated(
@@ -335,8 +333,10 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 return _buildHorizontalTournamentCard(tournaments[index]);
               },
             ),
-          ),
-        ],
+          )
+        else
+          _buildEmptySectionPlaceholder("You haven't joined any tournaments yet.", Icons.emoji_events_rounded),
+
       ],
     );
   }
@@ -471,20 +471,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // --- TOP: TOTAL ---
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Textul are acum tot spațiul din lume
               Text(
                 "ACTIVITY THIS MONTH",
                 style: TextStyle(color: _textSecondary, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
               ),
               const SizedBox(height: 8),
 
-              // Numărul și procentajul stau frumos unul lângă altul
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center, // Le aliniem pe centru vertical
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     stats.totalThisMonth.toString(),
@@ -492,7 +489,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                   ),
 
                   if (stats.percentageChange != 0.0) ...[
-                    const SizedBox(width: 12), // Spațiu între număr și procentaj
+                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                       decoration: BoxDecoration(
@@ -519,7 +516,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
           Divider(color: Colors.white.withOpacity(0.05), height: 1),
 
-          // --- BOTTOM: BREAKDOWN (Centrate) ---
           Row(
             children: [
               Expanded(
@@ -703,6 +699,34 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmptySectionPlaceholder(String message, IconData icon) {
+    return Container(
+      width: double.infinity,
+      height: 120,
+      decoration: BoxDecoration(
+        color: _cardSurface.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.02)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: _textSecondary.withOpacity(0.5), size: 32),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            style: TextStyle(
+              color: _textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -141,7 +141,7 @@ class _TeamChatTabState extends State<TeamChatTab> {
             ),
             const SizedBox(height: 20),
             const Text(
-              "Chat Blocat",
+              "Chat Locked",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -150,7 +150,7 @@ class _TeamChatTabState extends State<TeamChatTab> {
             ),
             const SizedBox(height: 8),
             Text(
-              "Trebuie să faci parte din echipă pentru a accesa chat-ul.",
+              "You must be a team member to access the chat.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
