@@ -22,6 +22,7 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
 
   bool isLoading = true;
   TeamFullProfileModel? fullProfile;
+  bool _showAllTournaments = false;
 
   @override
   void initState() {
@@ -357,6 +358,11 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
       );
     }
 
+    // Calculăm câte turnee afișăm (toate sau doar primele 3)
+    final int displayCount = _showAllTournaments ? history.length : 3;
+    final List<TeamTournamentHistoryModel> displayedHistory =
+    history.length > 3 ? history.take(displayCount).toList() : history;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -365,7 +371,9 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
           style: TextStyle(color: _textSecondary, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5),
         ),
         const SizedBox(height: 16),
-        ...history.map((tourney) {
+
+        // Afișăm lista (limitată sau completă)
+        ...displayedHistory.map((tourney) {
           bool isWinner = tourney.finalPosition == 1;
 
           return Container(
@@ -429,6 +437,45 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
             ),
           );
         }).toList(),
+
+        // Butonul "See All / Show Less" (apare doar dacă avem mai mult de 3 turnee)
+        if (history.length > 3)
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _showAllTournaments = !_showAllTournaments; // Schimbăm starea
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: Colors.transparent, // Aspect subtil, fără să arate ca un card greu
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.05)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _showAllTournaments ? "Show Less" : "See All Campaigns (${history.length})",
+                    style: TextStyle(
+                      color: _textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Icon(
+                    _showAllTournaments ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                    color: _textSecondary,
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -509,12 +556,11 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildBentoMetrics(fullProfile!.statistics),
-                        const SizedBox(height: 32), // Spațiu înainte de rating
+                        const SizedBox(height: 32),
 
-                        // AM ADĂUGAT AICI SECȚIUNEA DE RATING
                         _buildDetailedRating(),
 
-                        const SizedBox(height: 32), // Spațiu înainte de istoric
+                        const SizedBox(height: 32),
                         _buildTournamentHistorySection(fullProfile!.tournamentHistory),
                         const SizedBox(height: 40),
                       ],

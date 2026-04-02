@@ -856,35 +856,4 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       ),
     );
   }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: _cardSurface,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.stadium_rounded, color: _accentGreen.withOpacity(0.5), size: 48),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              "No upcoming events",
-              style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "You don't have any matches or tournaments scheduled yet. Head over to the map to find a game!",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: _textSecondary, fontSize: 14, height: 1.5),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

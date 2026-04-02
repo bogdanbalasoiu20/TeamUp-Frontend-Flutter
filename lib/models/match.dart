@@ -8,6 +8,7 @@ class MatchPin {
   final String startsAt;
   final int maxPlayers;
   final int joinedPlayers;
+  final String venueName;
   final int durationMinutes;
   final double totalPrice;
   final List<UserPreview> participantsPreview;
@@ -20,6 +21,7 @@ class MatchPin {
     required this.startsAt,
     required this.maxPlayers,
     required this.joinedPlayers,
+    required this.venueName,
     required this.durationMinutes,
     required this.totalPrice,
     required this.participantsPreview,
@@ -36,6 +38,7 @@ class MatchPin {
       startsAt: json["startsAt"] ?? DateTime.now().toIso8601String(),
       maxPlayers: json["maxPlayers"] ?? json["capacity"] ?? 0,
       joinedPlayers: json["currentPlayers"] ?? json["players"] ?? 0,
+      venueName: json["venueName"],
       durationMinutes: json["durationMinutes"] ?? json["duration"] ?? 0,
       totalPrice: (json["totalPrice"] ?? json["price"] ?? 0).toDouble(),
       participantsPreview: (json["participantsPreview"] as List<dynamic>?)

@@ -162,7 +162,7 @@ class MatchCardPin extends StatelessWidget {
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      "Locație necunoscută",
+                                      match.venueName,
                                       style: TextStyle(color: textSecondary, fontSize: 13),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,

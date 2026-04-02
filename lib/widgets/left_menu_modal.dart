@@ -6,6 +6,7 @@ void showLeftMenuModal(BuildContext context, String username) {
   const Color bgDarkStart = Color(0xFF091210);
   const Color bgDarkEnd = Color(0xFF13241E);
   const Color accentGreen = Color(0xFF00E676);
+  const Color textSecondary = Color(0xFF8A9E96);
 
   showGeneralDialog(
     context: context,
@@ -13,7 +14,6 @@ void showLeftMenuModal(BuildContext context, String username) {
     barrierLabel: "Menu",
     barrierColor: Colors.black.withOpacity(0.6),
     transitionDuration: const Duration(milliseconds: 300),
-
     pageBuilder: (_, __, ___) {
       return Material(
         type: MaterialType.transparency,
@@ -42,6 +42,7 @@ void showLeftMenuModal(BuildContext context, String username) {
               ),
               child: Stack(
                 children: [
+                  // Background Watermark
                   Positioned(
                     right: -40,
                     bottom: 100,
@@ -58,68 +59,45 @@ void showLeftMenuModal(BuildContext context, String username) {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.fromLTRB(24, 60, 24, 30),
-                        decoration: BoxDecoration(
-                            border: Border(bottom: BorderSide(color: Colors.white.withOpacity(0.05)))
-                        ),
+                      // --- Noul Header Simplificat ---
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
                         child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: accentGreen, width: 2),
-                                  boxShadow: [
-                                    BoxShadow(color: accentGreen.withOpacity(0.3), blurRadius: 10)
-                                  ]
-                              ),
-                              child: const CircleAvatar(
-                                radius: 30,
-                                backgroundColor: Colors.white12,
-                                child: Icon(Icons.person, size: 35, color: Colors.white),
+                            const Text(
+                              "Menu",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                letterSpacing: 0.5,
                               ),
                             ),
-
-                            const SizedBox(width: 16),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    username,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 8, height: 8,
-                                        decoration: const BoxDecoration(color: accentGreen, shape: BoxShape.circle),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        "Online",
-                                        style: TextStyle(color: Colors.white54, fontSize: 12),
-                                      )
-                                    ],
-                                  )
-                                ],
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.close_rounded, color: textSecondary, size: 20),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      // O linie subtilă de despărțire
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                      ),
 
+                      const SizedBox(height: 24),
+
+                      // --- Elementele de navigare ---
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Column(
@@ -155,23 +133,24 @@ void showLeftMenuModal(BuildContext context, String username) {
                                 );
                               },
                             ),
-
                           ],
                         ),
                       ),
 
                       const Spacer(),
 
+                      // --- Butonul de Log Out ---
                       Padding(
                         padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
                         child: Container(
                           decoration: BoxDecoration(
-                              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1)))
+                              border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05)))
                           ),
                           padding: const EdgeInsets.only(top: 20),
                           child: InkWell(
                             onTap: () {
                               Navigator.pop(context);
+                              // Aici probabil ai și logica ta de logout propriu-zisă
                             },
                             borderRadius: BorderRadius.circular(12),
                             child: Row(
@@ -207,7 +186,6 @@ void showLeftMenuModal(BuildContext context, String username) {
         ),
       );
     },
-
     transitionBuilder: (_, animation, __, child) {
       return SlideTransition(
         position: Tween<Offset>(
@@ -254,9 +232,7 @@ Widget _buildModernMenuItem({
               ),
               child: Icon(icon, size: 22, color: accentColor),
             ),
-
             const SizedBox(width: 16),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +259,6 @@ Widget _buildModernMenuItem({
                 ],
               ),
             ),
-
             Icon(Icons.chevron_right_rounded, color: Colors.white.withOpacity(0.3), size: 20),
           ],
         ),
