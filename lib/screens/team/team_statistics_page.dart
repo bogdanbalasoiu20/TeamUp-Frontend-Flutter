@@ -358,7 +358,6 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
       );
     }
 
-    // Calculăm câte turnee afișăm (toate sau doar primele 3)
     final int displayCount = _showAllTournaments ? history.length : 3;
     final List<TeamTournamentHistoryModel> displayedHistory =
     history.length > 3 ? history.take(displayCount).toList() : history;
@@ -372,7 +371,6 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
         ),
         const SizedBox(height: 16),
 
-        // Afișăm lista (limitată sau completă)
         ...displayedHistory.map((tourney) {
           bool isWinner = tourney.finalPosition == 1;
 
@@ -438,12 +436,11 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
           );
         }).toList(),
 
-        // Butonul "See All / Show Less" (apare doar dacă avem mai mult de 3 turnee)
         if (history.length > 3)
           GestureDetector(
             onTap: () {
               setState(() {
-                _showAllTournaments = !_showAllTournaments; // Schimbăm starea
+                _showAllTournaments = !_showAllTournaments;
               });
             },
             child: Container(
@@ -451,7 +448,7 @@ class _TeamStatisticsPageState extends State<TeamStatisticsPage> {
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.transparent, // Aspect subtil, fără să arate ca un card greu
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: Colors.white.withOpacity(0.05)),
               ),

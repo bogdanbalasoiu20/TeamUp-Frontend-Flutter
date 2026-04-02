@@ -52,48 +52,57 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
           final totalPlayers = players.length;
           final progress = totalPlayers > 0 ? ratedCount / totalPlayers : 0.0;
 
-          return Stack(
+          return Column(
             children: [
-              // Background Ambient Gradient
-              Positioned(
-                top: -100,
-                right: -100,
-                child: Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF0A6F4A).withOpacity(0.4)
-                  ),
+              // CUSTOM HEADER & PROGRESS
+              _buildHeader(ratedCount, totalPlayers, progress),
+
+              // PLAYERS LIST
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  itemCount: players.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (_, i) {
+                    final p = players[i];
+                    final isRated = _drafts.containsKey(p.userId);
+                    return _buildModernPlayerCard(p, isRated);
+                  },
                 ),
               ),
 
-              Column(
-                children: [
-                  // CUSTOM HEADER & PROGRESS
-                  _buildHeader(ratedCount, totalPlayers, progress),
-
-                  // PLAYERS LIST
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      itemCount: players.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (_, i) {
-                        final p = players[i];
-                        final isRated = _drafts.containsKey(p.userId);
-                        return _buildModernPlayerCard(p, isRated);
-                      },
-                    ),
-                  ),
-
-                  //SUBMIT BUTTON AREA
-                  _buildBottomDock(ratedCount),
-                ],
-              ),
+              //SUBMIT BUTTON AREA
+              _buildBottomDock(ratedCount),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFairPlayBox() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: _accentGreen.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _accentGreen.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.lightbulb_outline_rounded, color: _accentGreen, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Rate honestly to build true player stats. Keep it fair & have fun! ️",
+              style: TextStyle(
+                color: _accentGreen.withOpacity(0.9),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -112,7 +121,7 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       "Match Ratings",
                       style: TextStyle(
                         fontSize: 28,
@@ -126,7 +135,7 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
                       "Who was the MVP today?",
                       style: TextStyle(
                         fontSize: 14,
-                        color: _textSecondary,
+                        color: _accentGreen,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -146,9 +155,14 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
                 )
               ],
             ),
+
             const SizedBox(height: 24),
 
-            // Progress Bar Container
+            _buildFairPlayBox(),
+
+            const SizedBox(height: 16),
+
+            // --- Progress Bar Container ---
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -158,7 +172,6 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
               ),
               child: Row(
                 children: [
-                  // Circular Percent
                   Stack(
                     alignment: Alignment.center,
                     children: [
@@ -235,37 +248,37 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
         ),
         child: Row(
           children: [
-            // AVATAR
+            // --- PHOTO / AVATAR ---
             Container(
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isRated
-                      ? [_accentGreen, const Color(0xFF008C4A)]
-                      : [Colors.grey.shade700, Colors.grey.shade800],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
                 shape: BoxShape.circle,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: _cardSurface,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    p.username.isNotEmpty ? p.username.substring(0, 1).toUpperCase() : "?",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: isRated ? _accentGreen : Colors.white70,
-                    ),
-                  ),
+                border: Border.all(
+                  color: isRated ? _accentGreen : Colors.white.withOpacity(0.1),
+                  width: 2,
                 ),
+              ),
+              child: ClipOval(
+                child: (p.photoUrl != null && p.photoUrl!.isNotEmpty)
+                    ? Image.network(
+                  p.photoUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(p, isRated),
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                            : null,
+                        strokeWidth: 2,
+                        color: _accentGreen,
+                      ),
+                    );
+                  },
+                )
+                    : _buildInitialAvatar(p, isRated),
               ),
             ),
 
@@ -346,6 +359,22 @@ class _RateMatchPlayersPageState extends State<RateMatchPlayersPage> {
       ),
     );
   }
+
+  Widget _buildInitialAvatar(PlayerToRateModel p, bool isRated) {
+    return Container(
+      color: _cardSurface,
+      alignment: Alignment.center,
+      child: Text(
+        p.username.isNotEmpty ? p.username.substring(0, 1).toUpperCase() : "?",
+        style: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w900,
+          color: isRated ? _accentGreen : Colors.white70,
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildBottomDock(int ratedCount) {
     return Container(
