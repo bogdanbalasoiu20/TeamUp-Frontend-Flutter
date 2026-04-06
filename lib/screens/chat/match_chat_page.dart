@@ -209,7 +209,7 @@ class _MatchChatTabState extends State<MatchChatTab> {
           Padding(
             padding: const EdgeInsets.only(top: 6, left: 4, right: 4),
             child: Text(
-              isMe ? "Tu" : msg.senderUsername,
+              isMe ? "You" : msg.senderUsername,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,

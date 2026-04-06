@@ -1,3 +1,5 @@
+import 'package:team_up_fe_new/models/team_preview.dart';
+
 class TournamentModel {
   final String id;
   final String name;
@@ -17,6 +19,9 @@ class TournamentModel {
 
   final String creatorUsername;
 
+  final List<TeamPreview> teamPreview;
+  final int totalTeams;
+
   TournamentModel({
     required this.id,
     required this.name,
@@ -30,6 +35,8 @@ class TournamentModel {
     required this.startsAt,
     required this.endsAt,
     required this.creatorUsername,
+    required this.teamPreview,
+    required this.totalTeams,
     this.description,
   });
 
@@ -48,6 +55,13 @@ class TournamentModel {
       startsAt: DateTime.parse(json["startsAt"]),
       endsAt: DateTime.parse(json["endsAt"]),
       creatorUsername: json["creatorUsername"],
+
+      teamPreview: (json["teamPreview"] as List<dynamic>?)
+          ?.map((e) => TeamPreview.fromJson(e))
+          .toList() ??
+          [],
+
+      totalTeams: json["totalTeams"] ?? 0,
     );
   }
 }

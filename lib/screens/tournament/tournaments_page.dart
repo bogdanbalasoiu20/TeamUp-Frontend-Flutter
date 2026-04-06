@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:team_up_fe_new/models/team_preview.dart';
 import 'package:team_up_fe_new/models/tournament.dart';
 import 'package:team_up_fe_new/screens/tournament/create_tournament_page.dart';
 import 'package:team_up_fe_new/screens/tournament/tournament_details_page.dart';
@@ -252,202 +253,269 @@ class _TournamentsPageState extends State<TournamentsPage> {
     final bool isOpen = tournament.status.toUpperCase() == "OPEN";
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: _cardSurface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.04), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: _cardSurface,
           borderRadius: BorderRadius.circular(24),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => TournamentDetailsPage(tournamentId: tournament.id)),
-            );
-          },
-          child: Stack(
-            children: [
-              Positioned(
-                top: 0,
-                right: 0,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        (isOpen ? _accentGreen : Colors.white).withOpacity(0.05),
-                        Colors.transparent
-                      ],
-                      center: Alignment.topRight,
-                      radius: 1.0,
+          border: Border.all(color: Colors.white.withOpacity(0.04), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TournamentDetailsPage(tournamentId: tournament.id)),
+              );
+            },
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          (isOpen ? _accentGreen : Colors.white).withOpacity(0.05),
+                          Colors.transparent
+                        ],
+                        center: Alignment.topRight,
+                        radius: 1.0,
+                      ),
+                      borderRadius: const BorderRadius.only(topRight: Radius.circular(24)),
                     ),
-                    borderRadius: const BorderRadius.only(topRight: Radius.circular(24)),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 65,
-                          decoration: BoxDecoration(
-                            color: _bgDark,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.05)),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 65,
+                            decoration: BoxDecoration(
+                              color: _bgDark,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white.withOpacity(0.05)),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  month,
+                                  style: TextStyle(color: isOpen ? _accentGreen : _textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  day,
+                                  style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                month,
-                                style: TextStyle(color: isOpen ? _accentGreen : _textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                day,
-                                style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      tournament.name,
-                                      style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        tournament.name,
+                                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      tournament.venueName,
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Icon(Icons.location_on_rounded, color: _textSecondary, size: 14),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        tournament.venueName,
+                                        style: TextStyle(color: _textSecondary, fontSize: 13),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(Icons.access_time_rounded, color: _textSecondary, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "Starts at $timeRange",
                                       style: TextStyle(color: _textSecondary, fontSize: 13),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isOpen ? _accentGreen.withOpacity(0.15) : Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: isOpen ? _accentGreen.withOpacity(0.5) : Colors.transparent),
+                            ),
+                            child: Text(
+                              tournament.status.toUpperCase(),
+                              style: TextStyle(
+                                color: isOpen ? _accentGreen : _textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(Icons.access_time_rounded, color: _textSecondary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    "Starts at $timeRange",
-                                    style: TextStyle(color: _textSecondary, fontSize: 13),
-                                  ),
-                                ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(color: Colors.white.withOpacity(0.05), height: 1),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: 70,
+                                height: 36,
+                                child: Stack(
+                                  children: tournament.teamPreview.isEmpty
+                                      ? [
+                                    _buildAvatarReal(0, null, _cardSurface),
+                                  ]
+                                      : tournament.teamPreview
+                                      .take(3)
+                                      .toList()
+                                      .asMap()
+                                      .entries
+                                      .map((entry) {
+                                    int index = entry.key;
+                                    TeamPreview team = entry.value;
+
+                                    return _buildAvatarReal(
+                                      index * 16.0,
+                                      team.badgeUrl,
+                                      _cardSurface,
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Builder(
+                                builder: (_) {
+                                  int shown = tournament.teamPreview.length;
+                                  int remaining = tournament.totalTeams - shown;
+
+                                  String text;
+
+                                  if (tournament.totalTeams == 0) {
+                                    text = "No teams yet";
+                                  } else if (remaining > 0) {
+                                    text = "+$remaining joined";
+                                  } else {
+                                    text = "";
+                                  }
+
+
+                                  return Text(
+                                    text,
+                                    style: TextStyle(color: _textSecondary, fontSize: 12),
+                                  );
+                                },
                               ),
                             ],
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isOpen ? _accentGreen.withOpacity(0.15) : Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isOpen ? _accentGreen.withOpacity(0.5) : Colors.transparent),
-                          ),
-                          child: Text(
-                            tournament.status.toUpperCase(),
-                            style: TextStyle(
-                              color: isOpen ? _accentGreen : _textSecondary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Divider(color: Colors.white.withOpacity(0.05), height: 1),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            SizedBox(
-                              width: 60,
-                              height: 28,
-                              child: Stack(
-                                children: [
-                                  _buildAvatarMock(0, Colors.blueGrey),
-                                  _buildAvatarMock(16, Colors.deepPurple),
-                                  _buildAvatarMock(32, Colors.orange),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              "+ joined",
-                              style: TextStyle(color: _textSecondary, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            _buildMiniTag(Icons.sports_soccer, tournament.playersPerTeam.toString() + "v"+tournament.playersPerTeam.toString()),
-                            const SizedBox(width: 8),
-                          ],
-                        )
-                      ],
-                    ),
-                  ],
+                          Row(
+                            children: [
+                              _buildMiniTag(Icons.sports_soccer, "${tournament.playersPerTeam}v${tournament.playersPerTeam}"),
+                              const SizedBox(width: 8),
+                            ],
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+        )
+        );
+    }
+
+  Widget _buildAvatarReal(double leftPos, String? imageUrl, Color borderColor) {
+    final bool hasValidUrl = imageUrl != null &&
+        imageUrl.trim().isNotEmpty &&
+        imageUrl.trim().toLowerCase() != "null";
+
+    return Positioned(
+      left: leftPos,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: borderColor, width: 2),
+          color: const Color(0xFF1A382E),
+        ),
+        child: ClipOval(
+          child: hasValidUrl
+              ? Image.network(
+            imageUrl!,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => _fallbackAvatar(),
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return _fallbackAvatar();
+            },
+          )
+              : _fallbackAvatar(),
         ),
       ),
     );
   }
 
-  Widget _buildAvatarMock(double leftPos, Color color) {
-    return Positioned(
-      left: leftPos,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(color: _cardSurface, width: 2),
+  Widget _fallbackAvatar() {
+    return Container(
+      width: 34,
+      height: 34,
+      color: const Color(0xFF1A382E),
+      child: const Center(
+        child: Icon(
+          Icons.shield_rounded,
+          size: 16,
+          color: Color(0xFF00E676),
         ),
-        child: const Icon(Icons.shield, size: 14, color: Colors.white70),
       ),
     );
   }
+
+
+
 
   Widget _buildMiniTag(IconData icon, String text) {
     return Container(
