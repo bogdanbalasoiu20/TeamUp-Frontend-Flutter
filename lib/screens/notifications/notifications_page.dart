@@ -89,6 +89,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Navigator.push(context, MaterialPageRoute(builder: (_) => RateMatchPlayersPage(matchId: n.matchId!)));
         }
         break;
+      case "RATING_UPDATED":
+        final type = n.payload?['type'];
+
+        if (type == "OPEN_MATCH" && n.matchId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MatchOverviewPage(matchId: n.matchId!),
+            ),
+          );
+        } else if (type == "TOURNAMENT") {
+          final tournamentId = n.payload?['tournamentId']?.toString();
+          if (tournamentId != null) {
+            // TODO: navigare
+          }
+        }
+        break;
       default:
         debugPrint("Unhandled type: ${n.type}");
     }
@@ -129,6 +146,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
       case "MATCH_UPDATED":
         return (icon: Icons.edit_calendar_rounded, color: Colors.tealAccent);
+
+      case "RATING_UPDATED":
+        return (icon: Icons.trending_up_rounded, color: _colorRating);
 
       default:
         return (icon: Icons.sports_soccer_rounded, color: _colorMatch);
