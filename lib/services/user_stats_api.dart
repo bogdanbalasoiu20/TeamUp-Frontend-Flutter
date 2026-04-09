@@ -7,6 +7,8 @@ class UserStatsApi {
       "${ApiService.baseUrl}/api/users/$userId/stats",
     );
 
+    print("USER STATS RAW: ${response}");
+
     return UserStats.fromJson(response['data']);
   }
 }

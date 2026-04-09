@@ -41,10 +41,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   PlayerBehaviorUi? _behavior;
   UserStats? _userStats;
 
-  final List<String> _statOptions = [
-    "Overall",
-    "PAC", "SHO", "PAS", "DRI", "DEF", "PHY"
-  ];
+
 
   @override
   void initState() {
@@ -62,6 +59,12 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
         UserStatsApi.getUserStats(widget.userId),
       ]);
 
+      print("CARD: ${results[0]}");
+      print("HISTORY: ${results[1]}");
+      print("LIVE FORM: ${results[2]}");
+      print("BEHAVIOR: ${results[3]}");
+      print("USER STATS: ${results[4]}");
+
       setState(() {
         _card = results[0] as PlayerCardUi;
         _fullHistory = results[1] as List<PlayerCardHistoryPoint>;
@@ -78,13 +81,21 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
 
   double _getValueForAttribute(PlayerCardHistoryPoint point, String attribute) {
     switch (attribute) {
-      case "Overall": return point.overallRating;
-      case "PAC": return point.pace ?? 0;
-      case "SHO": return point.shooting ?? 0;
-      case "PAS": return point.passing ?? 0;
-      case "DRI": return point.dribbling ?? 0;
-      case "DEF": return point.defending ?? 0;
-      case "PHY": return point.physical ?? 0;
+      case "Overall": return point.overallRating.toDouble();
+    // Outfield
+      case "PAC": return (point.pace ?? 0).toDouble();
+      case "SHO": return (point.shooting ?? 0).toDouble();
+      case "PAS": return (point.passing ?? 0).toDouble();
+      case "DRI": return (point.dribbling ?? 0).toDouble();
+      case "DEF": return (point.defending ?? 0).toDouble();
+      case "PHY": return (point.physical ?? 0).toDouble();
+    // Goalkeeper (asigură-te că aceste nume de proprietăți se potrivesc cu modelul tău PlayerCardHistoryPoint)
+      case "DIV": return (point.gkDiving ?? 0).toDouble();
+      case "REF": return (point.gkReflexes ?? 0).toDouble();
+      case "HAN": return (point.gkHandling ?? 0).toDouble();
+      case "SPD": return (point.gkSpeed ?? 0).toDouble();
+      case "KIC": return (point.gkKicking ?? 0).toDouble();
+      case "POS": return (point.gkPositioning ?? 0).toDouble();
       default: return 0;
     }
   }
@@ -574,6 +585,17 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
   }
 
   Widget _buildEvolutionTab() {
+
+    final bool isGoalkeeper = _card?.position?.toLowerCase() == "goalkeeper";
+    final List<String> currentOptions = ["Overall"];
+    currentOptions.addAll(isGoalkeeper ? _fifaGoalkeeperOrder : _fifaOutfieldOrder);
+
+    // 2. Măsură de siguranță: dacă ai selectat anterior "PAC" și treci la portar, resetăm pe "Overall"
+    if (!currentOptions.contains(_selectedAttribute)) {
+      // Putem forța un setState a posteriori, dar pentru afișare e suficient să resetăm variabila
+      _selectedAttribute = "Overall";
+    }
+
     final spots = _generateSpots();
     final currentVal = spots.isNotEmpty ? spots.last.y.round() : 0;
 
@@ -604,7 +626,7 @@ class _PlayerStatsModalContentState extends State<PlayerStatsModalContent> {
                         dropdownColor: _cardSurface,
                         icon: const Icon(Icons.arrow_drop_down, color: _accentGreen),
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                        items: _statOptions.map((String value) {
+                        items: currentOptions.map((String value) {
                           return DropdownMenuItem<String>(value: value, child: Text(value));
                         }).toList(),
                         onChanged: (newValue) {
