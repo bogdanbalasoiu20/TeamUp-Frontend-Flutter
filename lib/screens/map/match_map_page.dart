@@ -12,6 +12,7 @@ import 'package:team_up_fe_new/services/notifications_api.dart';
 import 'package:team_up_fe_new/widgets/left_menu_modal.dart';
 import 'package:team_up_fe_new/widgets/match_card_pin_widget.dart';
 import 'package:team_up_fe_new/widgets/top_bar.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MatchesMapPage extends StatefulWidget {
   const MatchesMapPage({super.key});
@@ -31,12 +32,14 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
   MatchPin? selectedPin;
   bool loading = false;
   int unseenCount = 0;
+  Position? userPosition;
 
   @override
   void initState() {
     super.initState();
     _fetchMatchesOnInit();
     _loadUnseen();
+    _loadUserLocation();
   }
 
   Future<void> _fetchMatchesOnInit() async {
@@ -53,6 +56,33 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
       }
     } catch (e) {
       if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<Position> _getUserLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      throw Exception("Location services are disabled");
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<void> _loadUserLocation() async {
+    try {
+      final pos = await _getUserLocation();
+      if (!mounted) return;
+
+      setState(() {
+        userPosition = pos;
+      });
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -138,6 +168,35 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
           urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
           userAgentPackageName: "teamup",
         ),
+
+        if (userPosition != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(
+                  userPosition!.latitude,
+                  userPosition!.longitude,
+                ),
+                width: 24,
+                height: 24,
+                builder: (_) => Container(
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
         MarkerClusterLayerWidget(
           options: MarkerClusterLayerOptions(
             maxClusterRadius: 45,
