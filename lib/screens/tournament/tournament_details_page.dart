@@ -12,6 +12,7 @@ import 'package:team_up_fe_new/models/team.dart';
 import 'package:team_up_fe_new/services/tournament_api.dart';
 import 'package:team_up_fe_new/services/team_api.dart';
 import 'package:team_up_fe_new/widgets/finish_match_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TournamentDetailsPage extends StatefulWidget {
   final String tournamentId;
@@ -513,7 +514,45 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildMapSection(),
+          //const SizedBox(height: 4),
 
+          GestureDetector(
+            onTap: _openNavigation,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: _cardSurface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _accentGreen.withOpacity(0.4)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.directions_rounded, color: _accentGreen, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "GET DIRECTIONS",
+                    style: TextStyle(
+                      color: _accentGreen,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
           Text(
             tournament!.name,
             style: const TextStyle(
@@ -1064,6 +1103,17 @@ class _TournamentDetailsPageState extends State<TournamentDetailsPage> with Sing
         ],
       ),
     );
+  }
+
+  Future<void> _openNavigation() async {
+    final lat = tournament!.venueLatitude;
+    final lng = tournament!.venueLongitude;
+
+    final uri = Uri.parse(
+      "https://www.google.com/maps/dir/?api=1&destination=$lat,$lng",
+    );
+
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 

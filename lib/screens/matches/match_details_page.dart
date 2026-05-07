@@ -245,15 +245,24 @@ class MatchDetailsTab extends StatelessWidget {
                 )
               ],
             ),
-            child: const Center(
-              child: Text(
-                "Take me there",
-                style: TextStyle(
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.directions_rounded,
                   color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  size: 20,
                 ),
-              ),
+                SizedBox(width: 8),
+                Text(
+                  "Get Directions",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
