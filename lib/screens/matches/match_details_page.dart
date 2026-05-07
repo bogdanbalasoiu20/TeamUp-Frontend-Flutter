@@ -8,6 +8,7 @@ import '../../models/participant.dart';
 import '../../models/match_info.dart';
 import 'package:team_up_fe_new/utils/action_button_animated.dart';
 import 'package:team_up_fe_new/utils/top_banner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MatchDetailsTab extends StatelessWidget {
   final MatchInfo? match;
@@ -226,6 +227,36 @@ class MatchDetailsTab extends StatelessWidget {
             ),
           ],
         ),
+
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: _openNavigation,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: _accentGreen,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: _accentGreen.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
+            ),
+            child: const Center(
+              child: Text(
+                "Take me there",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -427,6 +458,20 @@ class MatchDetailsTab extends StatelessWidget {
           style: TextStyle(color: _textSecondary),
         ),
       ),
+    );
+  }
+
+  Future<void> _openNavigation() async {
+    final lat = match!.lat;
+    final lng = match!.lng;
+
+    final uri = Uri.parse(
+      "https://www.google.com/maps/dir/?api=1&destination=$lat,$lng",
+    );
+
+    await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
     );
   }
 }
