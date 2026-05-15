@@ -33,6 +33,7 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
   bool loading = false;
   int unseenCount = 0;
   Position? userPosition;
+  bool _showLiveLocationText = false;
 
   @override
   void initState() {
@@ -177,18 +178,50 @@ class _MatchesMapPageState extends State<MatchesMapPage> with TickerProviderStat
                   userPosition!.latitude,
                   userPosition!.longitude,
                 ),
-                width: 24,
-                height: 24,
-                builder: (_) => Container(
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
+                width: 120,
+                height: 80,
+                builder: (_) => GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _showLiveLocationText = !_showLiveLocationText;
+                    });
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_showLiveLocationText) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                              color: Colors.black87,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+                              ]
+                          ),
+                          child: const Text(
+                            'Live Location',
+                            style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
