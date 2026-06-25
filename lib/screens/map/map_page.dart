@@ -38,7 +38,7 @@ class _MapPageState extends State<MapPage> {
     await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
-      throw Exception("Location services are disabled");
+      throw Exception("Location services disabled");
     }
 
     LocationPermission permission =
@@ -48,27 +48,42 @@ class _MapPageState extends State<MapPage> {
       permission = await Geolocator.requestPermission();
     }
 
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception("Permission denied forever");
+    }
+
+    final last = await Geolocator.getLastKnownPosition();
+
+    if (last != null) {
+      return last;
+    }
+
     return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.low,
-      timeLimit: const Duration(seconds: 2),
+      desiredAccuracy: LocationAccuracy.high,
     );
   }
 
   Future<void> _loadUserLocation() async {
     try {
       final pos = await _getUserLocation();
-      if (!mounted) return;
 
-      mapController.move(
-        LatLng(pos.latitude, pos.longitude),
-        14,
-      );
+      if (!mounted) return;
 
       setState(() {
         userPosition = pos;
       });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        mapController.move(
+          LatLng(pos.latitude, pos.longitude),
+          14,
+        );
+      });
+
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Location error: $e");
     }
   }
 
